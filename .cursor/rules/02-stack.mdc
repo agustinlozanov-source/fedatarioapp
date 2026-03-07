@@ -1,0 +1,43 @@
+# 02 — Stack Tecnológico
+
+## Frontend Web
+- Next.js 14 + TypeScript + Tailwind CSS
+- Puerto: 3001 (3000 es Avalúos)
+- Componentes propios, sin librerías de UI externas
+
+## Backend API
+- Node.js + Express + TypeScript
+- Puerto: 4001
+
+## Agentes IA (Python)
+- FastAPI + uvicorn
+- Puerto: 5001
+- **Orquestación**: LangGraph (pipeline con estado, pausas, re-intentos)
+- **Transcripción**: OpenAI Whisper API
+- **Agentes**: Claude Sonnet (Extractor, Redactor, Auditor) + Claude Opus para Jurídico cuando se requiera razonamiento complejo
+- **Observabilidad**: LangSmith (trazabilidad por agente, costo por llamada)
+
+## Base de datos
+- Firestore (tiempo real, multi-tenant)
+- Firebase Storage (audios, documentos, PDFs generados)
+- Firebase Auth
+- PostgreSQL + pgvector (memoria de largo plazo, embeddings para búsqueda semántica de actas)
+- Estado: pendiente de conectar
+
+## Generación de documentos
+- python-docx (acta en Word editable)
+- WeasyPrint o ReportLab (PDF firmable)
+
+## Tipos compartidos
+- `@fedatario/shared` → `packages/shared/src/index.ts`
+
+## Puertos
+```
+Web     → localhost:3001
+API     → localhost:4001
+Agents  → localhost:5001
+Avalúos → localhost:3000 (otro proyecto)
+```
+
+## Deploy futuro
+Railway o Render para MVP. Migrar a GCP cuando el volumen lo justifique.

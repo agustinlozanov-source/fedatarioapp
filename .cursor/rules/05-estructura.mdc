@@ -1,0 +1,53 @@
+# 05 — Estructura del Repositorio
+
+```
+fedatario/
+├── .cursor/rules/              ← reglas de contexto Cursor
+├── .design/
+│   ├── referencias/            ← inspiración de diseño
+│   ├── pantallas/              ← screenshots del estado actual
+│   └── componentes/            ← capturas de componentes
+├── apps/
+│   ├── web/                    ← Dashboard Next.js (puerto 3001)
+│   │   └── src/
+│   │       ├── app/(dashboard)/
+│   │       │   ├── instrumentos/   ← lista principal
+│   │       │   ├── nuevo/          ← 3 modos: whisper, formulario, doc
+│   │       │   ├── clientes/       ← directorio compartido con Avalúos
+│   │       │   ├── libro/          ← libro de instrumentos + índice
+│   │       │   └── config/         ← estructura del acta (configurable)
+│   │       ├── components/
+│   │       │   ├── layout/Shell.tsx    ← Sidebar + Topbar
+│   │       │   └── ui/index.tsx        ← Card, KpiCard, PipelineMini, etc.
+│   │       └── lib/
+│   │           ├── mock/data.ts        ← datos mock → Firestore después
+│   │           └── utils/format.ts     ← formatDate, formatMXN, labels
+│   ├── api/                    ← API Gateway Node.js (puerto 4001)
+│   │   └── src/routes/
+│   │       ├── instrumentos.ts
+│   │       ├── clientes.ts
+│   │       └── pipeline.ts
+│   └── agents/                 ← Agentes Python FastAPI (puerto 5001)
+│       ├── main.py
+│       ├── agentes/
+│       │   ├── whisper.py      ← transcripción de audio
+│       │   ├── extractor.py    ← JSON estructurado desde transcripción ✅
+│       │   ├── juridico.py     ← validación LGSM ✅
+│       │   ├── redactor.py     ← genera acta + compendio ✅
+│       │   └── auditor.py      ← QA del pipeline ✅
+│       └── pipeline/
+│           └── orquestador.py  ← LangGraph, dirige todo ✅
+└── packages/
+    └── shared/src/index.ts     ← FUENTE DE VERDAD de todos los tipos
+```
+
+## Dónde va cada cosa
+- **Tipos nuevos** → `packages/shared/src/index.ts`
+- **Páginas nuevas** → `apps/web/src/app/(dashboard)/[nombre]/page.tsx`
+- **Componentes UI** → `apps/web/src/components/ui/index.tsx`
+- **Agentes nuevos** → `apps/agents/agentes/[nombre].py` + registrar en `main.py`
+- **Mock data** → `apps/web/src/lib/mock/data.ts` (temporal hasta Firebase)
+
+## Estado Firebase
+⚠️ Firebase NO conectado. Todo usa mock data.
+Project ID pendiente: `fedatario-app` (mismo problema de cuota que Avalúos)

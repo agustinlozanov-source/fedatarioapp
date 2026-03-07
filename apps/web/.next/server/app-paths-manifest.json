@@ -1,0 +1,10 @@
+{
+  "/(dashboard)/nuevo/page": "app/(dashboard)/nuevo/page.js",
+  "/(dashboard)/instrumentos/page": "app/(dashboard)/instrumentos/page.js",
+  "/(dashboard)/documentos/page": "app/(dashboard)/documentos/page.js",
+  "/(dashboard)/clientes/carga-masiva/page": "app/(dashboard)/clientes/carga-masiva/page.js",
+  "/(dashboard)/clientes/page": "app/(dashboard)/clientes/page.js",
+  "/(dashboard)/clientes/[id]/page": "app/(dashboard)/clientes/[id]/page.js",
+  "/(dashboard)/libro/page": "app/(dashboard)/libro/page.js",
+  "/(dashboard)/config/page": "app/(dashboard)/config/page.js"
+}

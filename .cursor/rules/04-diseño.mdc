@@ -1,0 +1,46 @@
+# 04 — Design System
+
+## Filosofía
+Idéntico a Avalúos — Apple-inspired, blanco/negro dominante, tipografía pesada, espacio negativo generoso. Los dos productos deben sentirse como una misma familia.
+
+## Tipografía
+- **Todo**: `Plus Jakarta Sans` (300–800)
+- **Monospace**: sistema (números de instrumento, RFC, CURP)
+
+## Colores (CSS Variables)
+```css
+--bg: #FFFFFF       --bg2: #F5F5F7      --bg3: #E8E8ED
+--ink: #1D1D1F      --ink3: #6E6E73     --ink4: #86868B
+--blue: #0071E3     --blue-bg: rgba(0,113,227,0.07)
+--green: #1A9640    --green-bg: rgba(48,209,88,0.08)
+--orange: #C47A00   --orange-bg: rgba(255,149,0,0.08)
+--red: #FF3B30      --red-bg: rgba(255,59,48,0.08)
+--purple: #7D3ADA   --purple-bg: rgba(125,58,218,0.08)
+--amber: #FF9500    --amber-bg: rgba(255,149,0,0.08)
+--teal: #5AC8FA     --teal-bg: rgba(90,200,250,0.08)
+```
+
+## Colores por agente (para el pipeline visual)
+- Orquestador: `--blue`
+- Extractor: `--purple`
+- Jurídico: `--amber`
+- Redactor: `--teal`
+- Auditor: `--red`
+- Corredor: `--green`
+
+## Badges de estado del instrumento
+- borrador → badge-gray
+- extraccion → badge-blue
+- validacion_juridica → badge-amber
+- redaccion → badge-teal
+- auditoria → badge-purple
+- revision_corredor → badge-orange
+- firmado → badge-green
+- archivado → badge-gray
+
+## Reglas
+- Nunca hardcodear colores hex — siempre CSS variables
+- Tailwind solo para layout (grid, flex, gap, padding, margin)
+- Números de instrumento y RFC siempre en `font-mono`
+- Botón primario: `background: var(--blue); color: white`
+- Sidebar 240px, Topbar 56px sticky con blur

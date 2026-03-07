@@ -1,0 +1,47 @@
+# 06 — Convenciones y Reglas Generales
+
+## ⛔ GIT — REGLA CRÍTICA
+**NUNCA hacer `git commit` ni `git push` a menos que Agustín lo indique explícitamente.**
+No sugerir commits automáticos. No hacer commits de limpieza. Esperar instrucción directa.
+
+---
+
+## Nombrado
+- Páginas Next.js: `page.tsx` dentro de su carpeta de ruta
+- Componentes: `PascalCase.tsx`
+- Utilidades: `camelCase.ts`
+- Agentes Python: `snake_case.py`
+- Tipos: siempre en `packages/shared/src/index.ts`
+
+## TypeScript
+- `strict: true` — no usar `any`
+- Exportar tipos desde `@fedatario/shared`, nunca redefinir localmente
+- `interface` para objetos de dominio, `type` para uniones y aliases
+
+## React / Next.js
+- Componentes con interactividad → `'use client'`
+- No usar librerías de UI externas (shadcn, MUI, etc.)
+- No instalar dependencias sin necesidad real
+
+## Estilos
+- CSS Variables para colores — nunca hex hardcodeado
+- Tailwind solo para layout y spacing
+- Colores y tipografía siempre con `style={{ }}` usando variables
+
+## Python / Agentes
+- FastAPI + Pydantic para todos los modelos
+- Cada agente tiene su propio archivo y router
+- Respuestas de Claude siempre se parsean como JSON
+- Limpiar backticks antes de `json.loads()` — Claude a veces los incluye
+- Comentar con `# TODO: conectar API key` donde hay mocks
+
+## Flujo de datos
+```
+Web (3001) → API Node (4001) → Agentes Python (5001)
+```
+La web NUNCA llama directamente a los agentes Python.
+
+## Multitenancy
+- Toda operación en Firestore SIEMPRE filtra por `tenantId`
+- El `tenantId` viene del JWT del usuario autenticado
+- Nunca devolver datos de un tenant a otro

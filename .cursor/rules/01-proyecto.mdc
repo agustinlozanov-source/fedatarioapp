@@ -1,0 +1,32 @@
+# 01 — Proyecto: Fedatario
+
+## Qué es
+Plataforma SaaS que automatiza la generación de instrumentos notariales para Corredores Públicos en México usando un pipeline de agentes IA.
+
+## Producto actual
+MVP enfocado en **Actas Constitutivas** únicamente. Otros instrumentos se agregan después.
+
+## Alianza estratégica
+- **Operador tecnológico**: Agustín Lozano
+- **Corredor Público aliado**: fe pública, firma con e.firma SAT, base de casos reales
+- Dataset inicial: 90 actas constitutivas de grupo chino (variaciones controladas = entrenamiento ideal)
+
+## Mercado
+- ~400 Corredores Públicos en México
+- ~5,200 Notarios (mercado secundario)
+
+## Relación con Avalúos
+- Fedatario y Avalúos son productos independientes
+- Único puente: colección `clientes` compartida en Firestore (sin duplicación)
+- Dos repos, dos productos, base de clientes compartida
+
+## El valor inmediato (antes del acta completa)
+El **compendio para secretarias** — documento con todos los datos estructurados para copiar/pegar en sistemas de gobierno notariales. Ya es un enorme ahorro de tiempo.
+
+## Tres puntos de entrada
+1. **Whisper** — grabación de reunión → transcripción automática
+2. **Formulario** — captura manual estructurada en la App
+3. **Documento** — PDF o Word con información del cliente
+
+## Estructura configurable
+Los campos del acta son configurables desde la App (sección Configuración). No requiere código para agregar/modificar campos. Esto es crítico porque la estructura exacta del acta se mapea en reunión del 05-Mar-2025.

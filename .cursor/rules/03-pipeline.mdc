@@ -1,0 +1,69 @@
+# 03 — Pipeline de Agentes
+
+## Flujo principal
+```
+Input → AGT-00 Orquestador → AGT-01 Extractor → AGT-02 Jurídico → AGT-03 Redactor → AGT-04 Auditor → Corredor firma
+```
+
+## Protocolo de datos entre agentes
+- JSON estructurado con contexto acumulado
+- Flag de confianza 0.0–1.0 por campo
+- Si confianza global < 0.7 → pausa y solicita clarificación al Corredor
+
+---
+
+## AGT-00 — Orquestador (LangGraph)
+- Único agente con visión completa del proceso
+- NO genera contenido jurídico — solo dirige
+- Gestiona el estado del pipeline
+- Detecta errores críticos y pausa el flujo
+- Es el punto de contacto con el Corredor para preguntas
+- Decide re-intentos y rutas alternativas
+
+## AGT-01 — Extractor (Claude Sonnet)
+- Input: transcripción de texto libre
+- Output: JSON con campos + score de confianza por campo
+- Detecta cambios de opinión en la transcripción
+- Marca campos incompletos o ambiguos
+
+## AGT-02 — Jurídico (Claude Sonnet / Opus)
+- Input: JSON del Extractor
+- Output: JSON validado + alertas legales
+- Valida contra LGSM y Código de Comercio
+- Detecta restricciones para socios extranjeros
+- Errores CRÍTICOS detienen el pipeline
+- Alertas permiten continuar con marcadores
+
+## AGT-03 — Redactor (Claude Sonnet)
+- Input: JSON validado
+- Output: Acta borrador + Compendio para secretarias
+- Sigue la plantilla del acta (configurable desde la App)
+- Campos de confianza < 0.8 se marcan con asterisco (*)
+- Campos faltantes se insertan como [PENDIENTE: nombre]
+- Genera el compendio listo para copiar/pegar en sistemas de gobierno
+
+## AGT-04 — Auditor (Claude Sonnet)
+- Input: JSON original + Acta generada
+- Output: Score de auditoría (0-100%) + discrepancias + pasajes para revisión
+- Score >= 90%: revisión normal del Corredor
+- Score 75-89%: revisión reforzada con zonas marcadas en amarillo
+- Score < 75%: pipeline pausa, requiere clarificación
+
+---
+
+## Protocolo de errores
+
+| Severidad | Tipo | Acción |
+|-----------|------|--------|
+| CRÍTICO | Dato faltante bloqueante (RFC, % capital no suma 100%) | Pipeline se detiene. Orquestador pregunta. |
+| CRÍTICO | Conflicto legal (combinación imposible LGSM) | Jurídico rechaza. Corredor replantea. |
+| ALERTA | Confianza baja en campo ambiguo | Pipeline continúa, Auditor marca para revisión. |
+| ALERTA | Cambio de opinión detectado | Extractor presenta ambas versiones. Corredor elige. |
+| INFO | Campo opcional no mencionado | Valor por defecto. Auditor lo nota. |
+
+---
+
+## Compendio para secretarias
+Documento generado por el Redactor con los datos clave para captura en sistemas notariales de gobierno. El objetivo es que la secretaria solo copie y pegue — no busque en el expediente.
+
+Campos que van al compendio (configurables en la App → Configuración → toggle "Compendio").
