@@ -129,7 +129,15 @@ async def redactor_generar(datos: InstrumentoRedactorInput):
     """
     try:
         if not datos.socios or len(datos.socios) == 0:
-            raise HTTPException(status_code=400, detail="Se requiere al menos un socio para generar el acta")
+            raise HTTPException(status_code=400, detail="Se requiere al least un socio para generar el acta")
+        
+        # Normalizar datos para asegurar que estén en formato correcto
+        # Nombres en mayúsculas, sin espacios extras
+        for socio in datos.socios:
+            socio.nombre_completo = socio.nombre_completo.upper().strip()
+        
+        datos.denominacion_social = datos.denominacion_social.upper().strip()
+        datos.cud = datos.cud.strip()
         
         resultado = generar_acta(datos)
         return {
