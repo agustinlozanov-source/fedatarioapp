@@ -14,6 +14,12 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import Optional
 from dotenv import load_dotenv
+import traceback
+import logging
+
+# Configure logging
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger(__name__)
 
 import sys
 from pathlib import Path
@@ -122,12 +128,21 @@ async def redactor_generar(datos: InstrumentoRedactorInput):
     Genera el texto completo del acta a partir del expediente.
     """
     try:
+        if not datos.socios or len(datos.socios) == 0:
+            raise HTTPException(status_code=400, detail="Se requiere al menos un socio para generar el acta")
+        
         resultado = generar_acta(datos)
         return {
             "ok": True,
             "data": resultado
         }
+    except HTTPException:
+        raise
     except Exception as e:
+        print(f"\n!!! ERROR EN REDACTOR_GENERAR !!!")
+        print(f"Tipo: {type(e).__name__}")
+        print(f"Mensaje: {str(e)}")
+        print(traceback.format_exc())
         raise HTTPException(status_code=500, detail=str(e))
 
 class AuditorInput(BaseModel):

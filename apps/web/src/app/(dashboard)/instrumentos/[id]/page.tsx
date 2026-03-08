@@ -249,9 +249,18 @@ export default function InstrumentoDetallePage() {
                 </div>
 
                 {!expedienteCompleto && (
-                    <div className="mt-4 flex items-center gap-2 text-xs text-amber-700 bg-amber-50 border border-amber-100 rounded-lg px-3 py-2">
-                        <AlertCircle size={14} />
-                        Expediente incompleto — faltan datos para generar el acta.
+                    <div className="mt-4 flex items-start gap-2 text-xs text-amber-700 bg-amber-50 border border-amber-100 rounded-lg px-3 py-2">
+                        <AlertCircle size={14} className="mt-0.5 flex-shrink-0" />
+                        <div>
+                            <p className="font-semibold">Expediente incompleto</p>
+                            <ul className="mt-1 opacity-80">
+                                {!instrumento.socios?.length && <li>• Se requiere al menos un socio</li>}
+                                {!instrumento.cud && <li>• Falta el CUD (MUA)</li>}
+                                {!instrumento.objeto_social_texto && <li>• Falta el objeto social</li>}
+                                {!instrumento.capital_fijo && <li>• Falta el capital social</li>}
+                                {!instrumento.numero_poliza && <li>• Falta el número de póliza</li>}
+                            </ul>
+                        </div>
                     </div>
                 )}
             </div>
