@@ -156,16 +156,32 @@ export default function InstrumentoDetallePage() {
         }
     }
 
-    // Descargar como .txt (placeholder hasta integrar docx)
-    const descargarTxt = () => {
+    // Descargar como .docx
+    const descargarDocx = async () => {
         if (!borrador) return
-        const blob = new Blob([borrador.textoActa], { type: 'text/plain;charset=utf-8' })
-        const url = URL.createObjectURL(blob)
-        const a = document.createElement('a')
-        a.href = url
-        a.download = `${instrumento?.denominacion_social ?? 'acta'}_borrador.txt`
-        a.click()
-        URL.revokeObjectURL(url)
+        try {
+            const res = await fetch(`${AGENTS_URL}/docx/generar`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    texto_acta: borrador.textoActa,
+                    nombre_archivo: instrumento?.denominacion_social
+                        ?.toLowerCase().replace(/\s+/g, '_') ?? 'acta',
+                    nombres_socios: instrumento?.socios?.map((s: any) => s.nombre_completo) ?? [],
+                    instrumento_id: id
+                })
+            })
+            if (!res.ok) throw new Error('Error generando .docx')
+            const blob = await res.blob()
+            const url  = URL.createObjectURL(blob)
+            const a    = document.createElement('a')
+            a.href     = url
+            a.download = `${instrumento?.denominacion_social ?? 'acta'}_borrador.docx`
+            a.click()
+            URL.revokeObjectURL(url)
+        } catch (e: any) {
+            setError(e.message)
+        }
     }
 
     // ── Render ────────────────────────────────────────────────────────────────
@@ -213,7 +229,7 @@ export default function InstrumentoDetallePage() {
                     <div className="flex gap-3">
                         {borrador && borrador.auditoria.score >= 90 && (
                             <button
-                                onClick={descargarTxt}
+                                onClick={descargarDocx}
                                 className="flex items-center gap-2 px-4 py-2 border border-gray-200 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
                             >
                                 <Download size={15} /> Descargar borrador
@@ -247,8 +263,8 @@ export default function InstrumentoDetallePage() {
                         key={tab}
                         onClick={() => setTabActiva(tab)}
                         className={`px-4 py-2 text-sm font-medium capitalize transition-colors border-b-2 -mb-px ${tabActiva === tab
-                                ? 'border-black text-black'
-                                : 'border-transparent text-gray-400 hover:text-gray-700'
+                            ? 'border-black text-black'
+                            : 'border-transparent text-gray-400 hover:text-gray-700'
                             }`}
                     >
                         {tab === 'borrador' ? `Borrador${borrador ? ` · ${borrador.auditoria.score}/100` : ''}` : 'Expediente'}
@@ -349,8 +365,8 @@ export default function InstrumentoDetallePage() {
                         <>
                             {/* Resultado auditoría */}
                             <div className={`flex items-start gap-3 px-5 py-4 rounded-2xl border ${borrador.auditoria.ok
-                                    ? 'bg-green-50 border-green-100 text-green-800'
-                                    : 'bg-red-50 border-red-100 text-red-800'
+                                ? 'bg-green-50 border-green-100 text-green-800'
+                                : 'bg-red-50 border-red-100 text-red-800'
                                 }`}>
                                 {borrador.auditoria.ok
                                     ? <CheckCircle size={18} className="mt-0.5 flex-shrink-0" />

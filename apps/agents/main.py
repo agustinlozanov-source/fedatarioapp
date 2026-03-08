@@ -5,17 +5,35 @@ Puerto: 5001
 """
 
 import os
+import firebase_admin
+from firebase_admin import credentials, firestore
 from fastapi import FastAPI, HTTPException, UploadFile, File, Form
+from fastapi.responses import StreamingResponse
+import io
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import Optional
 from dotenv import load_dotenv
 
+import sys
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).parent))
+
 from agentes.extractor import extraer_documento, extraer_desde_url
 from agentes.agt04_redactor import generar_acta, InstrumentoRedactorInput
 from agentes.agt05_auditor import auditar_acta, AuditorOutput
+from agentes.agt06_docx import generar_docx
+from agentes.firestore_mapper import firestore_to_redactor_input
+import google.cloud.firestore as firestore_mod
 
 load_dotenv()
+
+# Firebase init
+cred_path = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
+if cred_path and not firebase_admin._apps:
+    cred = credentials.Certificate(cred_path)
+    firebase_admin.initialize_app(cred)
+db = firestore.client()
 
 app = FastAPI(
     title="Fedatario Agents",
@@ -112,6 +130,44 @@ async def auditor_verificar(body: AuditorInput):
     try:
         resultado = auditar_acta(body.texto_acta, body.datos)
         return {"ok": True, "data": resultado}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+class DocxInput(BaseModel):
+    texto_acta: str = ""
+    nombre_archivo: str = "acta_constitutiva"
+    nombres_socios: list[str] = []
+    instrumento_id: str | None = None
+
+@app.post("/docx/generar")
+async def docx_generar(body: DocxInput):
+    """AGT-06 — Genera el .docx con formato del despacho."""
+    try:
+        texto_acta = body.texto_acta
+        nombres_socios = body.nombres_socios or None
+
+        if body.instrumento_id:
+            doc_ref = db.collection("instrumentos").document(body.instrumento_id)
+            snap = doc_ref.get()
+            if not snap.exists:
+                raise HTTPException(status_code=404, detail="Instrumento no encontrado")
+            redactor_input = firestore_to_redactor_input(snap.to_dict())
+            resultado = generar_acta(redactor_input)
+            texto_acta = resultado["texto_acta"]
+            nombres_socios = [s.nombre_completo for s in redactor_input.socios]
+
+        if not texto_acta:
+            raise HTTPException(status_code=400, detail="Se requiere texto_acta o instrumento_id")
+
+        docx_bytes = generar_docx(texto_acta, nombres_socios=nombres_socios)
+        filename = f"{body.nombre_archivo}.docx"
+        return StreamingResponse(
+            io.BytesIO(docx_bytes),
+            media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            headers={"Content-Disposition": f'attachment; filename="{filename}"'}
+        )
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 

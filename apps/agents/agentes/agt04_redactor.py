@@ -708,8 +708,13 @@ def generar_acta(d: InstrumentoRedactorInput) -> dict:
 
     texto_final = "\n".join(secciones)
 
+    # Generar secciones estructuradas para AGT-06
+    from agentes.agt04_secciones import generar_secciones
+    secciones = generar_secciones(d)
+
     return {
         "texto_acta": texto_final,
+        "secciones": secciones,
         "tipo_sociedad": d.tipo_sociedad,
         "num_palabras": len(texto_final.split()),
         "num_socios": len(d.socios),
