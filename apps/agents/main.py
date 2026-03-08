@@ -30,9 +30,19 @@ load_dotenv()
 
 # Firebase init
 cred_path = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
-if cred_path and not firebase_admin._apps:
-    cred = credentials.Certificate(cred_path)
+cred_json = os.getenv("GOOGLE_APPLICATION_CREDENTIALS_JSON")
+
+if not firebase_admin._apps:
+    if cred_json:
+        import json
+        cred_dict = json.loads(cred_json)
+        cred = credentials.Certificate(cred_dict)
+    elif cred_path:
+        cred = credentials.Certificate(cred_path)
+    else:
+        raise Exception("No Firebase credentials found")
     firebase_admin.initialize_app(cred)
+
 db = firestore.client()
 
 app = FastAPI(
