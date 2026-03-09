@@ -24,6 +24,7 @@ interface SocioForm {
   rol: RolSocio;
   porcentaje: number;
   esNuevo: boolean;
+  esExtranjero: boolean;
   nuevoNombre?: string;
   nuevoRfc?: string;
   nuevoEmail?: string;
@@ -158,8 +159,8 @@ export default function NuevoInstrumentoPage() {
 
   // Paso 2 — Socios
   const [socios, setSocios] = useState<SocioForm[]>([
-    { uid: uid(), rol: 'socio', porcentaje: 50, esNuevo: false },
-    { uid: uid(), rol: 'administrador_unico', porcentaje: 50, esNuevo: false },
+    { uid: uid(), rol: 'socio', porcentaje: 50, esNuevo: false, esExtranjero: false },
+    { uid: uid(), rol: 'administrador_unico', porcentaje: 50, esNuevo: false, esExtranjero: false },
   ]);
 
   // Paso 3 — Objeto(s) social(es)
@@ -214,7 +215,7 @@ export default function NuevoInstrumentoPage() {
   const totalPorcentaje = socios.reduce((s, x) => s + (x.porcentaje || 0), 0);
 
   const agregarSocio = () =>
-    setSocios(prev => [...prev, { uid: uid(), rol: 'socio', porcentaje: 0, esNuevo: false }]);
+    setSocios(prev => [...prev, { uid: uid(), rol: 'socio', porcentaje: 0, esNuevo: false, esExtranjero: false }]);
 
   const eliminarSocio = (uid: string) =>
     setSocios(prev => prev.filter(s => s.uid !== uid));
@@ -281,8 +282,10 @@ export default function NuevoInstrumentoPage() {
         if (!clienteId) continue;
         sociosFinales.push({
           clienteId,
+          nombre_completo: socio.cliente?.nombre || socio.nuevoNombre || '',
           rol: socio.rol,
           porcentaje: socio.porcentaje,
+          es_extranjero: socio.esExtranjero,
           datosCompletos: false,
           documentosCompletos: false,
         });
@@ -495,6 +498,26 @@ export default function NuevoInstrumentoPage() {
                       />
                     </div>
                   )}
+
+                  {/* Nacionalidad */}
+                  <div className="flex items-center justify-between px-3 py-2.5 rounded-xl mb-3"
+                    style={{ background: socio.esExtranjero ? 'var(--blue-bg)' : 'var(--bg2)', border: '1px solid var(--border)' }}>
+                    <div>
+                      <div className="text-[12px] font-semibold text-[#1D1D1F]">
+                        {socio.esExtranjero ? '🌐 Extranjero' : '🇲🇽 Mexicano'}
+                      </div>
+                      <div className="text-[10px] text-[#86868B] mt-0.5">
+                        {socio.esExtranjero ? 'Requiere pasaporte y FM2/FM3' : 'Requiere INE, CURP y RFC'}
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => actualizarSocio(socio.uid, { esExtranjero: !socio.esExtranjero })}
+                      className="relative w-10 h-6 rounded-full transition-colors flex-shrink-0"
+                      style={{ background: socio.esExtranjero ? 'var(--blue)' : 'var(--bg3)' }}>
+                      <span className="absolute top-1 w-4 h-4 rounded-full bg-white shadow transition-all"
+                        style={{ left: socio.esExtranjero ? '20px' : '4px' }} />
+                    </button>
+                  </div>
 
                   {/* Rol y porcentaje */}
                   <div className="grid grid-cols-2 gap-3">

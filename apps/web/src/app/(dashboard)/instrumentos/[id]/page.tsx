@@ -2,422 +2,634 @@
 
 import { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
-import { doc, getDoc } from 'firebase/firestore'
+import { doc, getDoc, updateDoc, collection, query, where, getDocs, onSnapshot } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
-import { FileText, Users, Building2, CheckCircle, AlertCircle, Loader2, Download, ChevronLeft, Shield } from 'lucide-react'
+import {
+    FileText, Users, Building2, CheckCircle, AlertCircle,
+    Loader2, Download, ChevronLeft, Shield, Hash, Briefcase,
+    Pencil, Check, X, Circle, Copy
+} from 'lucide-react'
 
-// ── Tipos ──────────────────────────────────────────────────────────────────
+// ── TIPOS ─────────────────────────────────────────────────────────────────────
+
 interface Socio {
-    nombre_completo: string
-    genero: string
-    nacionalidad_pais: string
-    lugar_nacimiento: string
-    fecha_nacimiento: string
-    estado_civil: string
+    nombre_completo: string; genero: string; nacionalidad_pais: string
+    lugar_nacimiento: string; fecha_nacimiento: string; estado_civil: string
     ocupacion: string
-    domicilio: {
-        calle: string; numero: string; colonia: string
-        cp: string; ciudad: string; estado: string
-    }
-    rfc: string; curp: string
-    clave_elector: string; seccion_ine: string; idmex: string
+    domicilio?: { calle: string; numero: string; colonia: string; cp: string; ciudad: string; estado: string }
+    rfc: string; curp: string; clave_elector: string; seccion_ine: string; idmex: string
+    rol?: string; porcentaje?: number; clienteId?: string
+    es_extranjero?: boolean
+}
+
+// Perfil completo del cliente leído de clientes/{id}
+interface ClientePerfil {
+    nombre_completo?: string
+    curp?: string; rfc?: string; fecha_nacimiento?: string
+    lugar_nacimiento?: string; genero?: string; estado_civil?: string
+    ocupacion?: string; nacionalidad?: string; regimen_fiscal?: string
+    clave_elector?: string; seccion_ine?: string; idmex?: string; vigencia_ine?: string
+    numero_pasaporte?: string; vigencia_pasaporte?: string
+    numero_fm?: string; tipo_migratorio?: string; vigencia_fm?: string
+    domicilio?: { calle?: string; numero?: string; colonia?: string; cp?: string; ciudad?: string; estado?: string; pais?: string }
 }
 
 interface Instrumento {
-    id: string
-    tipo_sociedad: string
-    denominacion_social: string
-    numero_poliza?: number
-    libro_registro?: number
-    ciudad_fedatario?: string
-    fecha_instrumento?: string
-    cud?: string
-    solicitante_mua?: string
-    domicilio_social?: string
-    capital_fijo?: number
-    objeto_social_texto?: string
-    socios?: Socio[]
-    estado: string
-    creadoEn?: any
+    id: string; tipo: string; tipo_sociedad?: string
+    denominacion_social?: string; sociedadNombre?: string
+    numero_poliza?: number; numeroInstrumento?: number; libro_registro?: number
+    ciudad_fedatario?: string; fecha_instrumento?: string
+    cud?: string; cudMUA?: string; solicitante_mua?: string
+    domicilio_social?: string; domicilioSocial?: string
+    capital_fijo?: number; capital_social?: number; capitalSocial?: number
+    objeto_social_texto?: string; objetoSocial?: string
+    socios?: Socio[]; estado: string; tenantId?: string
 }
 
-interface Hallazgo {
-    tipo: string; campo: string
-    descripcion: string; encontrado: string; esperado: string
-}
+interface DocInfo { clienteId: string; tipo: string; estado: string; datosExtraidos?: Record<string, any> }
+interface Hallazgo { tipo: string; campo: string; descripcion: string; encontrado: string; esperado: string }
+interface AuditoriaResult { ok: boolean; score: number; errores: Hallazgo[]; advertencias: Hallazgo[]; resumen: string }
+interface BorradorResult { textoActa: string; auditoria: AuditoriaResult; campos_faltantes?: string[] }
 
-interface AuditoriaResult {
-    ok: boolean; score: number
-    errores: Hallazgo[]; advertencias: Hallazgo[]; resumen: string
-}
-
-interface BorradorResult {
-    textoActa: string
-    auditoria: AuditoriaResult
-}
-
-// ── Helpers ─────────────────────────────────────────────────────────────────
 const AGENTS_URL = process.env.NEXT_PUBLIC_AGENTS_URL || 'http://localhost:5001'
 
 const tipoLabel: Record<string, string> = {
-    SA_de_CV: 'Sociedad Anónima de Capital Variable',
-    'S_de_RL_de_CV': 'Sociedad de Responsabilidad Limitada de CV',
+    SA_de_CV: 'Sociedad Anónima de Capital Variable', sa_de_cv: 'Sociedad Anónima de Capital Variable',
+    S_de_RL_de_CV: 'Sociedad de Responsabilidad Limitada de CV', s_de_rl: 'Sociedad de Responsabilidad Limitada de CV',
+}
+const rolLabel: Record<string, string> = {
+    administrador_unico: 'Administrador Único', comisario: 'Comisario', socio: 'Accionista',
+    representante_legal: 'Representante Legal', consejo_administracion: 'Consejo de Administración',
+    secretario_consejo: 'Secretario del Consejo', apoderado: 'Apoderado',
+}
+const DOCS_REQUERIDOS_MX = ['ine', 'curp', 'rfc']
+const DOCS_REQUERIDOS_EX = ['pasaporte', 'fm2', 'rfc']
+const DOC_LABEL: Record<string, string> = {
+    ine: 'INE', curp: 'CURP', rfc: 'RFC',
+    pasaporte: 'Pasaporte', fm2: 'FM2/FM3',
 }
 
-// ── Componente principal ────────────────────────────────────────────────────
+function formatFecha(f?: string) {
+    if (!f) return undefined
+    try { return new Date(f + 'T12:00:00').toLocaleDateString('es-MX', { day: 'numeric', month: 'long', year: 'numeric' }) }
+    catch { return f }
+}
+
+function domicilioStr(d?: ClientePerfil['domicilio']) {
+    if (!d) return undefined
+    const partes = [d.calle, d.numero, d.colonia, d.ciudad, d.estado].filter(Boolean)
+    return partes.length ? partes.join(', ') : undefined
+}
+
+// ── COMPONENTES ───────────────────────────────────────────────────────────────
+
+function CampoEditable({ label, value, onSave, tipo = 'text', fuente }: {
+    label: string
+    value: string | number | undefined
+    onSave: ((val: string) => Promise<void>) | null  // null = solo lectura
+    tipo?: 'text' | 'number' | 'date'
+    fuente?: string  // texto informativo del origen del dato
+}) {
+    const [editing, setEditing] = useState(false)
+    const [draft, setDraft] = useState(String(value ?? ''))
+    const [saving, setSaving] = useState(false)
+    const [copied, setCopied] = useState(false)
+
+    const save = async () => {
+        setSaving(true)
+        await onSave!(draft)
+        setSaving(false)
+        setEditing(false)
+    }
+
+    const copiar = () => {
+        if (!value) return
+        navigator.clipboard.writeText(String(value))
+        setCopied(true)
+        setTimeout(() => setCopied(false), 1500)
+    }
+
+    return (
+        <div className="flex items-start px-5 py-3 gap-4 group">
+            <div className="w-40 flex-shrink-0">
+                <span className="text-xs text-gray-400">{label}</span>
+                {fuente && <div className="text-[10px] text-gray-300 mt-0.5">{fuente}</div>}
+            </div>
+            {editing ? (
+                <div className="flex items-center gap-2 flex-1">
+                    <input type={tipo} value={draft} onChange={e => setDraft(e.target.value)}
+                        className="flex-1 text-sm text-gray-800 font-medium border border-gray-200 rounded-lg px-2 py-0.5 focus:outline-none focus:border-black" autoFocus />
+                    <button onClick={save} disabled={saving} className="p-1 rounded-md hover:bg-green-50 text-green-600 disabled:opacity-40">
+                        {saving ? <Loader2 size={13} className="animate-spin" /> : <Check size={13} />}
+                    </button>
+                    <button onClick={() => { setDraft(String(value ?? '')); setEditing(false) }} className="p-1 rounded-md hover:bg-red-50 text-red-400">
+                        <X size={13} />
+                    </button>
+                </div>
+            ) : (
+                <div className="flex items-center gap-2 flex-1 min-w-0">
+                    <span className="text-sm text-gray-800 font-medium flex-1 truncate">
+                        {value ?? <span className="text-gray-300 italic text-xs">Sin datos</span>}
+                    </span>
+                    <div className="opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1 flex-shrink-0">
+                        {value && (
+                            <button onClick={copiar} className="p-1 rounded-md hover:bg-gray-100 text-gray-400" title="Copiar">
+                                {copied ? <Check size={11} className="text-green-500" /> : <Copy size={11} />}
+                            </button>
+                        )}
+                        {onSave && (
+                            <button onClick={() => { setDraft(String(value ?? '')); setEditing(true) }}
+                                className="p-1 rounded-md hover:bg-gray-100 text-gray-400">
+                                <Pencil size={11} />
+                            </button>
+                        )}
+                    </div>
+                </div>
+            )}
+        </div>
+    )
+}
+
+// ── PÁGINA PRINCIPAL ──────────────────────────────────────────────────────────
+
 export default function InstrumentoDetallePage() {
     const { id } = useParams<{ id: string }>()
     const router = useRouter()
-
     const [instrumento, setInstrumento] = useState<Instrumento | null>(null)
+    const [clientes, setClientes] = useState<Record<string, ClientePerfil>>({})   // clienteId → perfil
+    const [documentosPorSocio, setDocumentosPorSocio] = useState<Record<string, DocInfo[]>>({})
     const [loading, setLoading] = useState(true)
     const [generando, setGenerando] = useState(false)
     const [borrador, setBorrador] = useState<BorradorResult | null>(null)
     const [error, setError] = useState<string | null>(null)
-    const [tabActiva, setTabActiva] = useState<'expediente' | 'borrador'>('expediente')
+    const [tabActiva, setTabActiva] = useState<'expediente' | 'compendio' | 'borrador'>('compendio')
 
-    // Cargar instrumento desde Firestore
+    // ── Cargar instrumento + perfiles de clientes ─────────────────────────────
     useEffect(() => {
         if (!id) return
         const cargar = async () => {
             try {
                 const snap = await getDoc(doc(db, 'instrumentos', id))
                 if (!snap.exists()) { setError('Instrumento no encontrado'); return }
-                setInstrumento({ id: snap.id, ...snap.data() } as Instrumento)
-            } catch (e: any) {
-                setError(e.message)
-            } finally {
-                setLoading(false)
-            }
+                const inst = { id: snap.id, ...snap.data() } as Instrumento
+                setInstrumento(inst)
+
+                // Cargar perfiles de todos los socios con clienteId
+                const clienteIds = (inst.socios ?? []).map(s => s.clienteId).filter(Boolean) as string[]
+                if (clienteIds.length > 0) {
+                    const perfiles: Record<string, ClientePerfil> = {}
+                    await Promise.all(clienteIds.map(async cid => {
+                        try {
+                            const cSnap = await getDoc(doc(db, 'clientes', cid))
+                            if (cSnap.exists()) perfiles[cid] = cSnap.data() as ClientePerfil
+                        } catch {}
+                    }))
+                    setClientes(perfiles)
+                }
+            } catch (e: any) { setError(e.message) }
+            finally { setLoading(false) }
         }
         cargar()
     }, [id])
 
-    // Generar borrador — llama AGT-04 + AGT-05
-    const generarBorrador = async () => {
-        if (!instrumento) return
-        setGenerando(true)
-        setError(null)
-        try {
-            // 1. AGT-04 Redactor
-            const resRedactor = await fetch(`${AGENTS_URL}/redactor/generar`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    numero_poliza: instrumento.numero_poliza ?? 0,
-                    libro_registro: instrumento.libro_registro ?? 5,
-                    ciudad_fedatario: instrumento.ciudad_fedatario ?? 'MATAMOROS',
-                    fecha_instrumento: instrumento.fecha_instrumento ?? new Date().toISOString().split('T')[0],
-                    tipo_sociedad: instrumento.tipo_sociedad,
-                    denominacion_social: instrumento.denominacion_social,
-                    cud: instrumento.cud ?? '',
-                    solicitante_mua: instrumento.solicitante_mua ?? '',
-                    domicilio_social: instrumento.domicilio_social ?? '',
-                    capital_fijo: instrumento.capital_fijo ?? 100000,
-                    objeto_social_texto: instrumento.objeto_social_texto ?? '',
-                    socios: instrumento.socios ?? [],
-                }),
+    // ── Escuchar documentos en tiempo real ────────────────────────────────────
+    useEffect(() => {
+        if (!id || !instrumento) return
+        const clienteIds = (instrumento.socios ?? []).map((s: any) => s.clienteId).filter(Boolean) as string[]
+        if (clienteIds.length === 0) return
+        const q = query(
+            collection(db, 'documentos_portal'),
+            where('instrumentoId', '==', id),
+            where('clienteId', 'in', clienteIds)
+        )
+        const unsub = onSnapshot(q, snap => {
+            const porSocio: Record<string, DocInfo[]> = {}
+            snap.docs.forEach(d => {
+                const data = d.data()
+                const cid = data.clienteId
+                if (!porSocio[cid]) porSocio[cid] = []
+                porSocio[cid].push({ clienteId: cid, tipo: data.tipo, estado: data.estado, datosExtraidos: data.datosExtraidos })
             })
-            const dataRedactor = await resRedactor.json()
-            if (!dataRedactor.ok) throw new Error('Error en AGT-04: ' + JSON.stringify(dataRedactor))
-            const textoActa: string = dataRedactor.data.texto_acta
+            setDocumentosPorSocio(porSocio)
+        })
+        return () => unsub()
+    }, [id, instrumento?.socios])
 
-            // 2. AGT-05 Auditor
-            const resAuditor = await fetch(`${AGENTS_URL}/auditor/verificar`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    texto_acta: textoActa,
-                    datos: {
-                        numero_poliza: instrumento.numero_poliza ?? 0,
-                        libro_registro: instrumento.libro_registro ?? 5,
-                        ciudad_fedatario: instrumento.ciudad_fedatario ?? 'MATAMOROS',
-                        fecha_instrumento: instrumento.fecha_instrumento ?? new Date().toISOString().split('T')[0],
-                        tipo_sociedad: instrumento.tipo_sociedad,
-                        denominacion_social: instrumento.denominacion_social,
-                        cud: instrumento.cud ?? '',
-                        solicitante_mua: instrumento.solicitante_mua ?? '',
-                        domicilio_social: instrumento.domicilio_social ?? '',
-                        capital_fijo: instrumento.capital_fijo ?? 100000,
-                        objeto_social_texto: instrumento.objeto_social_texto ?? '',
-                        socios: instrumento.socios ?? [],
-                    },
-                }),
-            })
-            const dataAuditor = await resAuditor.json()
-            if (!dataAuditor.ok) throw new Error('Error en AGT-05: ' + JSON.stringify(dataAuditor))
+    const guardarCampo = async (campo: string, valor: any) => {
+        if (!id) return
+        await updateDoc(doc(db, 'instrumentos', id), { [campo]: valor })
+        setInstrumento(prev => prev ? { ...prev, [campo]: valor } : prev)
+    }
 
-            setBorrador({ textoActa, auditoria: dataAuditor.data })
-            setTabActiva('borrador')
-        } catch (e: any) {
-            setError(e.message)
-        } finally {
-            setGenerando(false)
+    const guardarCampoCliente = async (clienteId: string, campo: string, valor: string) => {
+        await updateDoc(doc(db, 'clientes', clienteId), { [campo]: valor })
+        setClientes(prev => ({ ...prev, [clienteId]: { ...prev[clienteId], [campo]: valor } }))
+    }
+
+    const getDenominacion = (i: Instrumento) => i.denominacion_social || i.sociedadNombre || ''
+    const getCapital = (i: Instrumento) => i.capitalSocial ?? i.capital_social ?? i.capital_fijo
+    const getObjeto = (i: Instrumento) => i.objeto_social_texto || i.objetoSocial || ''
+    const getCUD = (i: Instrumento) => i.cud || i.cudMUA || ''
+    const getNumPoliza = (i: Instrumento) => i.numero_poliza ?? i.numeroInstrumento
+    const getDomicilio = (i: Instrumento) => i.domicilio_social || i.domicilioSocial || ''
+
+    // Devuelve el perfil del cliente fusionado con los datos del array de socios
+    // Prioridad: clientes/{id} (AGT-02) > instrumento.socios[] (captura manual)
+    const getSocioPerfil = (socio: Socio): ClientePerfil => {
+        const base = clientes[socio.clienteId ?? ''] ?? {}
+        return {
+            nombre_completo: base.nombre_completo || socio.nombre_completo,
+            curp:            base.curp            || socio.curp,
+            rfc:             base.rfc             || socio.rfc,
+            fecha_nacimiento:base.fecha_nacimiento|| socio.fecha_nacimiento,
+            lugar_nacimiento:base.lugar_nacimiento|| socio.lugar_nacimiento,
+            genero:          base.genero          || socio.genero,
+            estado_civil:    base.estado_civil    || socio.estado_civil,
+            ocupacion:       base.ocupacion       || socio.ocupacion,
+            clave_elector:   base.clave_elector   || socio.clave_elector,
+            seccion_ine:     base.seccion_ine     || socio.seccion_ine,
+            idmex:           base.idmex           || socio.idmex,
+            vigencia_ine:    base.vigencia_ine,
+            numero_pasaporte:base.numero_pasaporte,
+            vigencia_pasaporte: base.vigencia_pasaporte,
+            numero_fm:       base.numero_fm,
+            tipo_migratorio: base.tipo_migratorio,
+            vigencia_fm:     base.vigencia_fm,
+            domicilio:       base.domicilio       || socio.domicilio,
+            nacionalidad:    base.nacionalidad,
+            regimen_fiscal:  base.regimen_fiscal,
         }
     }
 
-    // Descargar como .docx
+    const calcularCompletitud = () => {
+        if (!instrumento) return { porcentaje: 0, faltantes: [] as string[] }
+        const faltantes: string[] = []
+        if (!getDenominacion(instrumento)) faltantes.push('Denominación social')
+        if (!getCapital(instrumento)) faltantes.push('Capital social')
+        if (!getObjeto(instrumento)) faltantes.push('Objeto social')
+        if (!getCUD(instrumento)) faltantes.push('CUD del MUA')
+        if (!getDomicilio(instrumento)) faltantes.push('Domicilio social')
+
+        const socios = instrumento.socios ?? []
+        if (socios.length === 0) faltantes.push('Al menos un socio')
+
+        socios.forEach((socio, i) => {
+            const perfil = getSocioPerfil(socio)
+            const nombre = perfil.nombre_completo || `Socio ${i + 1}`
+            if (!perfil.rfc) faltantes.push(`${nombre}: RFC`)
+            if (!perfil.curp && !socio.es_extranjero) faltantes.push(`${nombre}: CURP`)
+            if (!perfil.fecha_nacimiento) faltantes.push(`${nombre}: Fecha de nacimiento`)
+            if (!perfil.estado_civil) faltantes.push(`${nombre}: Estado civil`)
+            if (!perfil.ocupacion) faltantes.push(`${nombre}: Ocupación`)
+        })
+
+        const totalCampos = 5 + Math.max(socios.length, 1) * 5
+        const completados = totalCampos - faltantes.length
+        return { porcentaje: Math.max(0, Math.round((completados / totalCampos) * 100)), faltantes }
+    }
+
+    const generarBorrador = async () => {
+        if (!instrumento) return
+        setGenerando(true); setError(null)
+        try {
+            const res = await fetch(`${AGENTS_URL}/orquestador/generar`, {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ instrumento_id: id, generar_docx: false }),
+            })
+            const data = await res.json()
+            if (!data.ok) throw new Error('Error en orquestador: ' + JSON.stringify(data))
+            const r = data.data
+            setBorrador({
+                textoActa: r.texto_acta,
+                auditoria: { ok: r.auditoria_ok, score: r.score_auditoria, errores: r.errores_auditoria, advertencias: r.advertencias_auditoria, resumen: r.resumen_auditoria },
+                campos_faltantes: r.campos_faltantes,
+            })
+            setTabActiva('borrador')
+        } catch (e: any) { setError(e.message) }
+        finally { setGenerando(false) }
+    }
+
     const descargarDocx = async () => {
-        if (!borrador) return
+        if (!borrador || !instrumento) return
         try {
             const res = await fetch(`${AGENTS_URL}/docx/generar`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     texto_acta: borrador.textoActa,
-                    nombre_archivo: instrumento?.denominacion_social
-                        ?.toLowerCase().replace(/\s+/g, '_') ?? 'acta',
-                    nombres_socios: instrumento?.socios?.map((s: any) => s.nombre_completo) ?? [],
-                    instrumento_id: id
+                    nombre_archivo: getDenominacion(instrumento).toLowerCase().replace(/\s+/g, '_') || 'acta',
+                    nombres_socios: instrumento.socios?.map(s => s.nombre_completo) ?? [],
+                    instrumento_id: id,
                 })
             })
             if (!res.ok) throw new Error('Error generando .docx')
             const blob = await res.blob()
-            const url  = URL.createObjectURL(blob)
-            const a    = document.createElement('a')
-            a.href     = url
-            a.download = `${instrumento?.denominacion_social ?? 'acta'}_borrador.docx`
-            a.click()
+            const url = URL.createObjectURL(blob)
+            const a = document.createElement('a')
+            a.href = url; a.download = `${getDenominacion(instrumento) || 'acta'}_borrador.docx`; a.click()
             URL.revokeObjectURL(url)
-        } catch (e: any) {
-            setError(e.message)
-        }
+        } catch (e: any) { setError(e.message) }
     }
 
-    // ── Render ────────────────────────────────────────────────────────────────
-    if (loading) return (
-        <div className="flex items-center justify-center h-64">
-            <Loader2 className="animate-spin text-gray-400" size={32} />
-        </div>
-    )
-
-    if (error && !instrumento) return (
-        <div className="p-8 text-red-600">{error}</div>
-    )
-
+    if (loading) return <div className="flex items-center justify-center h-64"><Loader2 className="animate-spin text-gray-400" size={32} /></div>
+    if (error && !instrumento) return <div className="p-8 text-red-600">{error}</div>
     if (!instrumento) return null
 
-    const expedienteCompleto = !!(
-        instrumento.socios?.length &&
-        instrumento.cud &&
-        instrumento.objeto_social_texto &&
-        instrumento.capital_fijo &&
-        instrumento.numero_poliza
-    )
+    const { porcentaje, faltantes } = calcularCompletitud()
+    const compendioListo = porcentaje >= 80   // ← no requiere 100% para generar
+    const capital = getCapital(instrumento)
+    const denominacion = getDenominacion(instrumento)
+    const objeto = getObjeto(instrumento)
+    const cud = getCUD(instrumento)
+    const numPoliza = getNumPoliza(instrumento)
+
+    const TABS = [
+        { key: 'compendio', label: `Compendio · ${porcentaje}%` },
+        { key: 'expediente', label: 'Expediente' },
+        { key: 'borrador', label: borrador ? `Borrador · ${borrador.auditoria.score}/100` : 'Borrador' },
+    ] as const
 
     return (
         <div className="max-w-5xl mx-auto px-6 py-8">
-
-            {/* Header */}
+            {/* HEADER */}
             <div className="mb-8">
-                <button
-                    onClick={() => router.push('/instrumentos')}
-                    className="flex items-center gap-2 text-sm text-gray-500 hover:text-gray-800 mb-4 transition-colors"
-                >
+                <button onClick={() => router.push('/instrumentos')} className="flex items-center gap-2 text-sm text-gray-500 hover:text-gray-800 mb-4 transition-colors">
                     <ChevronLeft size={16} /> Instrumentos
                 </button>
                 <div className="flex items-start justify-between">
                     <div>
-                        <p className="text-xs font-mono text-gray-400 uppercase tracking-widest mb-1">
-                            {instrumento.tipo_sociedad?.replace(/_/g, ' ')}
-                        </p>
-                        <h1 className="text-2xl font-bold text-gray-900">{instrumento.denominacion_social}</h1>
-                        {instrumento.numero_poliza && (
-                            <p className="text-sm text-gray-500 mt-1">Póliza #{instrumento.numero_poliza}</p>
-                        )}
+                        <p className="text-xs font-mono text-gray-400 uppercase tracking-widest mb-1">{instrumento.tipo?.replace(/_/g, ' ')}</p>
+                        <h1 className="text-2xl font-bold text-gray-900">{denominacion || '—'}</h1>
+                        {numPoliza && <p className="text-sm text-gray-500 mt-1">Póliza #{numPoliza}</p>}
                     </div>
                     <div className="flex gap-3">
                         {borrador && borrador.auditoria.score >= 90 && (
-                            <button
-                                onClick={descargarDocx}
-                                className="flex items-center gap-2 px-4 py-2 border border-gray-200 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
-                            >
+                            <button onClick={descargarDocx} className="flex items-center gap-2 px-4 py-2 border border-gray-200 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors">
                                 <Download size={15} /> Descargar borrador
                             </button>
                         )}
-                        <button
-                            onClick={generarBorrador}
-                            disabled={generando || !expedienteCompleto}
-                            className="flex items-center gap-2 px-5 py-2 bg-black text-white rounded-xl text-sm font-medium hover:bg-gray-800 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-                        >
-                            {generando
-                                ? <><Loader2 size={15} className="animate-spin" /> Generando...</>
-                                : <><FileText size={15} /> Generar Borrador</>
-                            }
+                        <button onClick={generarBorrador} disabled={generando || !compendioListo}
+                            title={!compendioListo ? `Compendio al ${porcentaje}% — necesitas al menos 80%` : ''}
+                            className="flex items-center gap-2 px-5 py-2 bg-black text-white rounded-xl text-sm font-medium hover:bg-gray-800 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
+                            {generando ? <><Loader2 size={15} className="animate-spin" /> Generando...</> : <><FileText size={15} /> Generar Borrador</>}
                         </button>
                     </div>
                 </div>
 
-                {!expedienteCompleto && (
-                    <div className="mt-4 flex items-start gap-2 text-xs text-amber-700 bg-amber-50 border border-amber-100 rounded-lg px-3 py-2">
-                        <AlertCircle size={14} className="mt-0.5 flex-shrink-0" />
-                        <div>
-                            <p className="font-semibold">Expediente incompleto</p>
-                            <ul className="mt-1 opacity-80">
-                                {!instrumento.socios?.length && <li>• Se requiere al menos un socio</li>}
-                                {!instrumento.cud && <li>• Falta el CUD (MUA)</li>}
-                                {!instrumento.objeto_social_texto && <li>• Falta el objeto social</li>}
-                                {!instrumento.capital_fijo && <li>• Falta el capital social</li>}
-                                {!instrumento.numero_poliza && <li>• Falta el número de póliza</li>}
-                            </ul>
-                        </div>
+                {/* BARRA DE PROGRESO */}
+                <div className="mt-4 bg-white border border-gray-100 rounded-2xl px-5 py-4">
+                    <div className="flex items-center justify-between mb-2">
+                        <span className="text-xs font-semibold text-gray-500">Compendio</span>
+                        <span className="text-xs font-bold" style={{ color: porcentaje >= 80 ? '#1A9640' : '#E65100' }}>{porcentaje}%{porcentaje >= 80 ? ' · Listo para borrador' : ''}</span>
                     </div>
-                )}
+                    <div className="w-full bg-gray-100 rounded-full h-1.5 mb-3">
+                        <div className="h-1.5 rounded-full transition-all" style={{ width: `${porcentaje}%`, background: porcentaje >= 80 ? '#1A9640' : '#0071E3' }} />
+                    </div>
+                    {faltantes.length > 0 && (
+                        <div className="flex flex-wrap gap-1.5">
+                            {faltantes.slice(0, 6).map(f => (
+                                <span key={f} className="text-xs px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-100">{f}</span>
+                            ))}
+                            {faltantes.length > 6 && <span className="text-xs px-2 py-0.5 rounded-full bg-gray-50 text-gray-500">+{faltantes.length - 6} más</span>}
+                        </div>
+                    )}
+                </div>
             </div>
 
-            {/* Tabs */}
+            {/* TABS */}
             <div className="flex gap-1 border-b border-gray-100 mb-6">
-                {(['expediente', 'borrador'] as const).map(tab => (
-                    <button
-                        key={tab}
-                        onClick={() => setTabActiva(tab)}
-                        className={`px-4 py-2 text-sm font-medium capitalize transition-colors border-b-2 -mb-px ${tabActiva === tab
-                            ? 'border-black text-black'
-                            : 'border-transparent text-gray-400 hover:text-gray-700'
-                            }`}
-                    >
-                        {tab === 'borrador' ? `Borrador${borrador ? ` · ${borrador.auditoria.score}/100` : ''}` : 'Expediente'}
+                {TABS.map(tab => (
+                    <button key={tab.key} onClick={() => setTabActiva(tab.key)}
+                        className={`px-4 py-2 text-sm font-medium transition-colors border-b-2 -mb-px ${tabActiva === tab.key ? 'border-black text-black' : 'border-transparent text-gray-400 hover:text-gray-700'}`}>
+                        {tab.label}
                     </button>
                 ))}
             </div>
 
-            {/* Tab: Expediente */}
-            {tabActiva === 'expediente' && (
+            {/* ── TAB COMPENDIO ── */}
+            {tabActiva === 'compendio' && (
                 <div className="space-y-6">
-
-                    {/* Datos de la sociedad */}
+                    {/* Instrumento */}
                     <section>
-                        <h2 className="flex items-center gap-2 text-xs font-semibold text-gray-400 uppercase tracking-widest mb-3">
-                            <Building2 size={13} /> Sociedad
-                        </h2>
+                        <h2 className="flex items-center gap-2 text-xs font-semibold text-gray-400 uppercase tracking-widest mb-3"><Hash size={13} /> Datos del Instrumento</h2>
                         <div className="bg-white border border-gray-100 rounded-2xl divide-y divide-gray-50">
-                            {[
-                                ['Denominación', instrumento.denominacion_social],
-                                ['Tipo', tipoLabel[instrumento.tipo_sociedad] ?? instrumento.tipo_sociedad],
-                                ['Domicilio social', instrumento.domicilio_social],
-                                ['Capital fijo', instrumento.capital_fijo ? `$${instrumento.capital_fijo.toLocaleString('es-MX')} MXN` : '—'],
-                                ['CUD (MUA)', instrumento.cud],
-                                ['Solicitante MUA', instrumento.solicitante_mua],
-                                ['Póliza', instrumento.numero_poliza],
-                                ['Fecha instrumento', instrumento.fecha_instrumento],
-                            ].map(([label, value]) => (
-                                <div key={label as string} className="flex items-baseline px-5 py-3 gap-4">
-                                    <span className="text-xs text-gray-400 w-36 flex-shrink-0">{label}</span>
-                                    <span className="text-sm text-gray-800 font-medium">{value ?? '—'}</span>
-                                </div>
-                            ))}
+                            <CampoEditable label="Número de póliza" value={numPoliza} onSave={null} />
+                            <CampoEditable label="Libro de registro" value={instrumento.libro_registro} onSave={null} />
+                            <CampoEditable label="Fecha del instrumento" value={formatFecha(instrumento.fecha_instrumento)} onSave={null} />
+                            <CampoEditable label="Ciudad fedatario" value={instrumento.ciudad_fedatario} onSave={v => guardarCampo('ciudad_fedatario', v)} />
                         </div>
                     </section>
 
-                    {/* Socios */}
+                    {/* Sociedad */}
                     <section>
-                        <h2 className="flex items-center gap-2 text-xs font-semibold text-gray-400 uppercase tracking-widest mb-3">
-                            <Users size={13} /> Socios ({instrumento.socios?.length ?? 0})
-                        </h2>
-                        <div className="space-y-3">
-                            {(instrumento.socios ?? []).map((socio, i) => (
-                                <div key={i} className="bg-white border border-gray-100 rounded-2xl p-5">
-                                    <div className="flex items-center justify-between mb-3">
-                                        <p className="font-semibold text-gray-900">{socio.nombre_completo}</p>
-                                        <span className="text-xs font-mono bg-gray-50 border border-gray-100 px-2 py-1 rounded-lg text-gray-500">
-                                            {i === 0
-                                                ? instrumento.tipo_sociedad === 'SA_de_CV' ? 'Administrador Único' : 'Gerente General'
-                                                : instrumento.tipo_sociedad === 'SA_de_CV' ? 'Comisario' : 'Socio'}
-                                        </span>
-                                    </div>
-                                    <div className="grid grid-cols-2 gap-x-8 gap-y-2">
-                                        {[
-                                            ['RFC', socio.rfc],
-                                            ['CURP', socio.curp],
-                                            ['Nacimiento', socio.fecha_nacimiento],
-                                            ['Estado civil', socio.estado_civil],
-                                            ['Ocupación', socio.ocupacion],
-                                            ['Domicilio', socio.domicilio ? `${socio.domicilio.calle} ${socio.domicilio.numero}, ${socio.domicilio.colonia}, ${socio.domicilio.cp}` : '—'],
-                                        ].map(([label, value]) => (
-                                            <div key={label as string} className="flex gap-2">
-                                                <span className="text-xs text-gray-400 w-24 flex-shrink-0">{label}</span>
-                                                <span className="text-xs text-gray-700 font-mono">{value ?? '—'}</span>
+                        <h2 className="flex items-center gap-2 text-xs font-semibold text-gray-400 uppercase tracking-widest mb-3"><Building2 size={13} /> Sociedad</h2>
+                        <div className="bg-white border border-gray-100 rounded-2xl divide-y divide-gray-50">
+                            <CampoEditable label="Denominación social" value={denominacion} onSave={v => guardarCampo('denominacion_social', v)} />
+                            <CampoEditable label="Tipo de sociedad" value={tipoLabel[instrumento.tipo] ?? instrumento.tipo} onSave={null} />
+                            <CampoEditable label="Domicilio social" value={getDomicilio(instrumento)} onSave={v => guardarCampo('domicilioSocial', v)} />
+                            <CampoEditable label="Capital social" value={capital} tipo="number" onSave={v => guardarCampo('capitalSocial', Number(v))} />
+                        </div>
+                    </section>
+
+                    {/* MUA */}
+                    <section>
+                        <h2 className="flex items-center gap-2 text-xs font-semibold text-gray-400 uppercase tracking-widest mb-3"><Shield size={13} /> MUA</h2>
+                        <div className="bg-white border border-gray-100 rounded-2xl divide-y divide-gray-50">
+                            <CampoEditable label="CUD" value={cud} onSave={v => guardarCampo('cud', v)} />
+                            <CampoEditable label="Solicitante MUA" value={instrumento.solicitante_mua} onSave={v => guardarCampo('solicitante_mua', v)} />
+                        </div>
+                    </section>
+
+                    {/* Socios — datos desde clientes/{id} */}
+                    <section>
+                        <h2 className="flex items-center gap-2 text-xs font-semibold text-gray-400 uppercase tracking-widest mb-3"><Users size={13} /> Socios</h2>
+                        <div className="space-y-4">
+                            {(instrumento.socios ?? []).map((socio, i) => {
+                                const cid = socio.clienteId
+                                const perfil = getSocioPerfil(socio)
+                                const esExtranjero = socio.es_extranjero ?? false
+                                const docsReq = esExtranjero ? DOCS_REQUERIDOS_EX : DOCS_REQUERIDOS_MX
+                                const docs = cid ? (documentosPorSocio[cid] ?? []) : []
+                                const aprobados = docs.filter(d => d.estado === 'aprobado').map(d => d.tipo)
+
+                                const salvarCliente = cid
+                                    ? (campo: string) => async (v: string) => guardarCampoCliente(cid, campo, v)
+                                    : () => async () => {}
+
+                                return (
+                                    <div key={i} className="bg-white border border-gray-100 rounded-2xl overflow-hidden">
+                                        {/* Cabecera del socio */}
+                                        <div className="flex items-center justify-between px-5 py-3 bg-gray-50 border-b border-gray-100">
+                                            <div className="flex items-center gap-3">
+                                                <div className="w-7 h-7 rounded-full bg-gray-200 flex items-center justify-center text-xs font-bold text-gray-500">
+                                                    {(perfil.nombre_completo || '?').charAt(0)}
+                                                </div>
+                                                <div>
+                                                    <span className="text-sm font-semibold text-gray-800">{perfil.nombre_completo || 'Sin nombre'}</span>
+                                                    {esExtranjero && <span className="ml-2 text-xs bg-blue-50 text-blue-600 px-1.5 py-0.5 rounded-full font-medium">Extranjero</span>}
+                                                </div>
                                             </div>
-                                        ))}
+                                            <span className="text-xs font-medium bg-black text-white px-2.5 py-0.5 rounded-full">{rolLabel[socio.rol || ''] || socio.rol || '—'}</span>
+                                        </div>
+
+                                        <div className="divide-y divide-gray-50">
+                                            {/* Datos personales — desde clientes/{id} */}
+                                            <CampoEditable label="RFC" value={perfil.rfc} fuente="RFC / Constancia SAT" onSave={salvarCliente('rfc')} />
+                                            {!esExtranjero && <CampoEditable label="CURP" value={perfil.curp} fuente="CURP / INE" onSave={salvarCliente('curp')} />}
+                                            <CampoEditable label="Fecha de nacimiento" value={formatFecha(perfil.fecha_nacimiento)} fuente="INE / CURP" onSave={null} />
+                                            <CampoEditable label="Lugar de nacimiento" value={perfil.lugar_nacimiento} fuente="CURP" onSave={null} />
+                                            <CampoEditable label="Estado civil" value={perfil.estado_civil} onSave={salvarCliente('estado_civil')} />
+                                            <CampoEditable label="Ocupación" value={perfil.ocupacion} onSave={salvarCliente('ocupacion')} />
+                                            <CampoEditable label="Domicilio" value={domicilioStr(perfil.domicilio)} fuente="INE / Comprobante" onSave={null} />
+
+                                            {/* Campos INE — solo mexicanos */}
+                                            {!esExtranjero && <>
+                                                <CampoEditable label="Clave de elector" value={perfil.clave_elector} fuente="INE" onSave={null} />
+                                                <CampoEditable label="Sección INE" value={perfil.seccion_ine} fuente="INE" onSave={null} />
+                                                <CampoEditable label="IDMEX" value={perfil.idmex} fuente="INE" onSave={null} />
+                                                <CampoEditable label="Vigencia INE" value={perfil.vigencia_ine} fuente="INE" onSave={null} />
+                                            </>}
+
+                                            {/* Campos extranjero */}
+                                            {esExtranjero && <>
+                                                <CampoEditable label="No. Pasaporte" value={perfil.numero_pasaporte} fuente="Pasaporte" onSave={null} />
+                                                <CampoEditable label="Vigencia Pasaporte" value={perfil.vigencia_pasaporte} fuente="Pasaporte" onSave={null} />
+                                                <CampoEditable label="No. FM2/FM3" value={perfil.numero_fm} fuente="FM2/FM3" onSave={null} />
+                                                <CampoEditable label="Tipo migratorio" value={perfil.tipo_migratorio} fuente="FM2/FM3" onSave={null} />
+                                                <CampoEditable label="Vigencia FM" value={perfil.vigencia_fm} fuente="FM2/FM3" onSave={null} />
+                                                <CampoEditable label="Nacionalidad" value={perfil.nacionalidad} fuente="Pasaporte" onSave={salvarCliente('nacionalidad')} />
+                                            </>}
+                                        </div>
+
+                                        {/* Documentos */}
+                                        {cid && (
+                                            <div className="px-5 py-3 border-t border-gray-50 bg-gray-50/50">
+                                                <p className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-2">Documentos</p>
+                                                <div className="flex gap-2 flex-wrap">
+                                                    {docsReq.map(tipo => {
+                                                        const ok = aprobados.includes(tipo)
+                                                        return (
+                                                            <span key={tipo} className="flex items-center gap-1 text-xs px-2 py-1 rounded-full font-medium"
+                                                                style={{ background: ok ? '#E8F5E9' : '#FFF3E0', color: ok ? '#1A9640' : '#E65100' }}>
+                                                                {ok ? <CheckCircle size={11} /> : <Circle size={11} />} {DOC_LABEL[tipo]}
+                                                            </span>
+                                                        )
+                                                    })}
+                                                </div>
+                                            </div>
+                                        )}
                                     </div>
-                                </div>
-                            ))}
+                                )
+                            })}
                         </div>
                     </section>
 
                     {/* Objeto social */}
-                    {instrumento.objeto_social_texto && (
+                    <section>
+                        <h2 className="flex items-center gap-2 text-xs font-semibold text-gray-400 uppercase tracking-widest mb-3"><Briefcase size={13} /> Objeto Social</h2>
+                        <div className="bg-white border border-gray-100 rounded-2xl px-5 py-4">
+                            <p className="text-sm text-gray-700 whitespace-pre-line leading-relaxed">{objeto || <span className="text-gray-300 italic">Sin objeto social</span>}</p>
+                        </div>
+                    </section>
+                </div>
+            )}
+
+            {/* ── TAB EXPEDIENTE ── */}
+            {tabActiva === 'expediente' && (
+                <div className="space-y-6">
+                    <section>
+                        <h2 className="flex items-center gap-2 text-xs font-semibold text-gray-400 uppercase tracking-widest mb-3"><Building2 size={13} /> Sociedad</h2>
+                        <div className="bg-white border border-gray-100 rounded-2xl divide-y divide-gray-50">
+                            {([
+                                ['Denominación', denominacion], ['Tipo', tipoLabel[instrumento.tipo] ?? instrumento.tipo],
+                                ['Domicilio social', getDomicilio(instrumento)],
+                                ['Capital social', capital ? `$${capital.toLocaleString('es-MX')} MXN` : undefined],
+                                ['CUD (MUA)', cud], ['Solicitante MUA', instrumento.solicitante_mua],
+                                ['Póliza', numPoliza], ['Fecha instrumento', instrumento.fecha_instrumento],
+                            ] as [string, any][]).map(([label, value]) => (
+                                <div key={label} className="flex items-baseline px-5 py-3 gap-4">
+                                    <span className="text-xs text-gray-400 w-36 flex-shrink-0">{label}</span>
+                                    <span className="text-sm text-gray-800 font-medium">{value ?? <span className="text-gray-300 italic text-xs">—</span>}</span>
+                                </div>
+                            ))}
+                        </div>
+                    </section>
+                    <section>
+                        <h2 className="flex items-center gap-2 text-xs font-semibold text-gray-400 uppercase tracking-widest mb-3"><Users size={13} /> Socios ({instrumento.socios?.length ?? 0})</h2>
+                        <div className="space-y-3">
+                            {(instrumento.socios ?? []).map((socio, i) => {
+                                const perfil = getSocioPerfil(socio)
+                                return (
+                                    <div key={i} className="bg-white border border-gray-100 rounded-2xl p-5">
+                                        <div className="flex items-center justify-between mb-3">
+                                            <p className="font-semibold text-gray-900">{perfil.nombre_completo || '—'}</p>
+                                            <span className="text-xs font-mono bg-gray-50 border border-gray-100 px-2 py-1 rounded-lg text-gray-500">{rolLabel[socio.rol || ''] || socio.rol || '—'}</span>
+                                        </div>
+                                        <div className="grid grid-cols-2 gap-x-8 gap-y-2">
+                                            {([
+                                                ['RFC', perfil.rfc], ['CURP', perfil.curp],
+                                                ['Nacimiento', perfil.fecha_nacimiento], ['Estado civil', perfil.estado_civil],
+                                                ['Ocupación', perfil.ocupacion],
+                                                ['Domicilio', domicilioStr(perfil.domicilio)],
+                                            ] as [string, any][]).map(([label, value]) => (
+                                                <div key={label} className="flex gap-2">
+                                                    <span className="text-xs text-gray-400 w-24 flex-shrink-0">{label}</span>
+                                                    <span className="text-xs text-gray-700 font-mono">{value ?? '—'}</span>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )
+                            })}
+                        </div>
+                    </section>
+                    {objeto && (
                         <section>
-                            <h2 className="flex items-center gap-2 text-xs font-semibold text-gray-400 uppercase tracking-widest mb-3">
-                                <FileText size={13} /> Objeto Social
-                            </h2>
+                            <h2 className="flex items-center gap-2 text-xs font-semibold text-gray-400 uppercase tracking-widest mb-3"><FileText size={13} /> Objeto Social</h2>
                             <div className="bg-white border border-gray-100 rounded-2xl px-5 py-4">
-                                <p className="text-sm text-gray-700 whitespace-pre-line leading-relaxed">
-                                    {instrumento.objeto_social_texto}
-                                </p>
+                                <p className="text-sm text-gray-700 whitespace-pre-line leading-relaxed">{objeto}</p>
                             </div>
                         </section>
                     )}
                 </div>
             )}
 
-            {/* Tab: Borrador */}
+            {/* ── TAB BORRADOR ── */}
             {tabActiva === 'borrador' && (
                 <div className="space-y-6">
                     {!borrador ? (
                         <div className="flex flex-col items-center justify-center py-24 text-gray-400">
                             <FileText size={40} className="mb-4 opacity-30" />
                             <p className="text-sm">El borrador se generará aquí</p>
-                            <p className="text-xs mt-1 opacity-60">Haz clic en "Generar Borrador" para comenzar</p>
+                            <p className="text-xs mt-1 opacity-60">
+                                {compendioListo ? 'Haz clic en "Generar Borrador"' : `Compendio al ${porcentaje}% — necesitas al menos 80%`}
+                            </p>
                         </div>
                     ) : (
                         <>
-                            {/* Resultado auditoría */}
-                            <div className={`flex items-start gap-3 px-5 py-4 rounded-2xl border ${borrador.auditoria.ok
-                                ? 'bg-green-50 border-green-100 text-green-800'
-                                : 'bg-red-50 border-red-100 text-red-800'
-                                }`}>
-                                {borrador.auditoria.ok
-                                    ? <CheckCircle size={18} className="mt-0.5 flex-shrink-0" />
-                                    : <AlertCircle size={18} className="mt-0.5 flex-shrink-0" />
-                                }
+                            {(borrador.campos_faltantes ?? []).length > 0 && (
+                                <div className="flex items-start gap-2 text-xs text-amber-700 bg-amber-50 border border-amber-100 rounded-xl px-4 py-3">
+                                    <AlertCircle size={14} className="mt-0.5 shrink-0" />
+                                    <div><p className="font-semibold mb-1">Campos incompletos:</p><p>{borrador.campos_faltantes!.join(', ')}</p></div>
+                                </div>
+                            )}
+                            <div className={`flex items-start gap-3 px-5 py-4 rounded-2xl border ${borrador.auditoria.ok ? 'bg-green-50 border-green-100 text-green-800' : 'bg-red-50 border-red-100 text-red-800'}`}>
+                                {borrador.auditoria.ok ? <CheckCircle size={18} className="mt-0.5 flex-shrink-0" /> : <AlertCircle size={18} className="mt-0.5 flex-shrink-0" />}
                                 <div>
                                     <p className="font-semibold text-sm">{borrador.auditoria.resumen}</p>
-                                    {borrador.auditoria.errores.map((e, i) => (
-                                        <p key={i} className="text-xs mt-1 opacity-80">
-                                            ❌ [{e.campo}] {e.descripcion}
-                                        </p>
-                                    ))}
-                                    {borrador.auditoria.advertencias.map((a, i) => (
-                                        <p key={i} className="text-xs mt-1 opacity-80">
-                                            ⚠️ [{a.campo}] {a.descripcion}
-                                        </p>
-                                    ))}
+                                    {borrador.auditoria.errores.map((e, i) => <p key={i} className="text-xs mt-1 opacity-80">❌ [{e.campo}] {e.descripcion}</p>)}
+                                    {borrador.auditoria.advertencias.map((a, i) => <p key={i} className="text-xs mt-1 opacity-80">⚠️ [{a.campo}] {a.descripcion}</p>)}
                                 </div>
-                                <div className="ml-auto text-right">
-                                    <p className="text-2xl font-bold">{borrador.auditoria.score}</p>
-                                    <p className="text-xs opacity-60">/ 100</p>
-                                </div>
+                                <div className="ml-auto text-right"><p className="text-2xl font-bold">{borrador.auditoria.score}</p><p className="text-xs opacity-60">/ 100</p></div>
                             </div>
-
-                            {/* Texto del acta */}
                             <div className="bg-white border border-gray-100 rounded-2xl p-6">
-                                <div className="flex items-center gap-2 mb-4">
-                                    <Shield size={14} className="text-gray-400" />
-                                    <span className="text-xs font-semibold text-gray-400 uppercase tracking-widest">
-                                        Texto del Acta — Borrador
-                                    </span>
-                                </div>
-                                <pre className="text-xs text-gray-700 whitespace-pre-wrap font-mono leading-relaxed max-h-[600px] overflow-y-auto">
-                                    {borrador.textoActa}
-                                </pre>
+                                <div className="flex items-center gap-2 mb-4"><Shield size={14} className="text-gray-400" /><span className="text-xs font-semibold text-gray-400 uppercase tracking-widest">Texto del Acta — Borrador</span></div>
+                                <pre className="text-xs text-gray-700 whitespace-pre-wrap font-mono leading-relaxed max-h-[600px] overflow-y-auto">{borrador.textoActa}</pre>
                             </div>
                         </>
                     )}
                 </div>
             )}
 
-            {/* Error inline */}
             {error && (
                 <div className="mt-4 flex items-center gap-2 text-xs text-red-700 bg-red-50 border border-red-100 rounded-lg px-3 py-2">
                     <AlertCircle size={14} /> {error}

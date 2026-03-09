@@ -35,9 +35,9 @@ export async function crearInstrumento(
     const ref = await addDoc(collection(db, "instrumentos"), {
         ...data,
         tenantId,
-        linkPortalToken: generarToken(),
+        linkPortalToken: (data as any).linkPortalToken || generarToken(),
         linkActivo: true,
-        socios: [],
+        socios: (data as any).socios ?? [],
         seccionesActivas: [],
         pipeline: [],
         estado: 'paso_01_identificacion',
