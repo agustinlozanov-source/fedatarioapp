@@ -6,7 +6,7 @@ import { formatDate } from '@/lib/utils/format';
 
 export default function LibroPage() {
   const firmados = mockInstrumentos.filter(i => i.estado === 'firmado');
-  const totalFolios = mockLibro.reduce((s, l) => s + (l.folioFin - l.folioInicio + 1), 0);
+  const totalFolios = mockLibro.reduce((s, l) => s + ((l.folioFin ?? 0) - (l.folioInicio ?? 0) + 1), 0);
   const porcentajeFirmados = Math.round((firmados.length / mockInstrumentos.length) * 100);
 
   return (
