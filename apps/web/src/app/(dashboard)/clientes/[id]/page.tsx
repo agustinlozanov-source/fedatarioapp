@@ -4,7 +4,8 @@ import { useParams, useRouter } from 'next/navigation';
 import {
     ArrowLeft, Upload, Copy, Check, FileText,
     User, Building2, Loader2, CheckCircle,
-    AlertCircle, Clock, ChevronDown, ChevronUp
+    AlertCircle, Clock, ChevronDown, ChevronUp,
+    Pencil, X
 } from 'lucide-react';
 import { Topbar } from '@/components/layout/Shell';
 import { getCliente, actualizarCliente } from '@/lib/db/clientes';
@@ -34,40 +35,74 @@ const ESTADO_DOC = {
     rechazado: { label: 'Rechazado', color: 'var(--red)', bg: 'var(--red-bg)', icon: AlertCircle },
 };
 
-function CampoCompendio({ label, valorCapturado, valorValidado, onCopiar }: {
+function CampoEditable({ label, value, onSave, tipo = 'text', opciones }: {
     label: string;
-    valorCapturado?: string;
-    valorValidado?: string;
-    onCopiar: (v: string) => void;
+    value?: string;
+    onSave: (val: string) => Promise<void>;
+    tipo?: 'text' | 'date' | 'select';
+    opciones?: string[];
 }) {
-    const valor = valorValidado || valorCapturado || '';
-    const [copiado, setCopiado] = useState(false);
-    if (!valor) return null;
-    const copiar = () => {
-        navigator.clipboard.writeText(valor);
-        setCopiado(true);
-        onCopiar(valor);
-        setTimeout(() => setCopiado(false), 2000);
+    const [editing, setEditing] = useState(false);
+    const [draft, setDraft] = useState(String(value ?? ''));
+    const [saving, setSaving] = useState(false);
+    const [copied, setCopied] = useState(false);
+
+    const save = async () => {
+        setSaving(true);
+        await onSave(draft);
+        setSaving(false);
+        setEditing(false);
     };
+
+    const copiar = () => {
+        if (!value) return;
+        navigator.clipboard.writeText(value);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 1500);
+    };
+
     return (
-        <div className="flex items-center justify-between py-2 border-b border-black/[0.04] last:border-0">
-            <div className="flex-1 min-w-0">
-                <div className="text-[10px] font-bold text-[#86868B] uppercase tracking-[0.06em]">{label}</div>
-                <div className="text-[13px] font-semibold text-[#1D1D1F] mt-0.5">{valor}</div>
-                {valorValidado && valorCapturado && valorValidado !== valorCapturado && (
-                    <div className="text-[10px] text-[var(--orange)] mt-0.5">
-                        ⚠ Capturado: {valorCapturado}
-                    </div>
-                )}
-                {valorValidado && (
-                    <div className="text-[10px] text-[var(--green)] mt-0.5">✓ Validado con documento oficial</div>
-                )}
+        <div className="flex items-start py-2.5 gap-4 group border-b border-black/[0.04] last:border-0">
+            <div className="w-44 flex-shrink-0 pt-0.5">
+                <span className="text-[11px] font-bold text-[#86868B] uppercase tracking-[0.06em]">{label}</span>
             </div>
-            <button onClick={copiar}
-                className="flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] font-semibold ml-3 shrink-0 transition-all"
-                style={{ background: copiado ? 'var(--green-bg)' : 'var(--bg2)', color: copiado ? 'var(--green)' : 'var(--ink4)' }}>
-                {copiado ? <><Check size={11} /> Copiado</> : <><Copy size={11} /> Copiar</>}
-            </button>
+            {editing ? (
+                <div className="flex gap-2 flex-1">
+                    {tipo === 'select' && opciones ? (
+                        <select value={draft} onChange={e => setDraft(e.target.value)} autoFocus
+                            className="flex-1 text-[13px] text-[#1D1D1F] font-semibold border border-gray-200 rounded-lg px-2 py-1 focus:outline-none focus:border-black bg-white">
+                            <option value="">Sin datos</option>
+                            {opciones.map(o => <option key={o} value={o}>{o}</option>)}
+                        </select>
+                    ) : (
+                        <input type={tipo} value={draft} onChange={e => setDraft(e.target.value)}
+                            className="flex-1 text-[13px] text-[#1D1D1F] font-semibold border border-gray-200 rounded-lg px-2 py-1 focus:outline-none focus:border-black" autoFocus />
+                    )}
+                    <button onClick={save} disabled={saving} className="p-1 rounded-md hover:bg-green-50 text-green-600 disabled:opacity-40">
+                        {saving ? <Loader2 size={13} className="animate-spin" /> : <Check size={13} />}
+                    </button>
+                    <button onClick={() => { setDraft(String(value ?? '')); setEditing(false); }} className="p-1 rounded-md hover:bg-red-50 text-red-400">
+                        <X size={13} />
+                    </button>
+                </div>
+            ) : (
+                <div className="flex items-center gap-2 flex-1 min-w-0">
+                    <span className="text-[13px] font-semibold text-[#1D1D1F] flex-1 truncate">
+                        {value ? value : <span className="text-gray-300 italic text-[12px]">Sin datos</span>}
+                    </span>
+                    <div className="flex items-center gap-1 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                        {value && (
+                            <button onClick={copiar} className="p-1 rounded-md hover:bg-gray-100 text-gray-500" title="Copiar">
+                                {copied ? <Check size={11} className="text-green-600" /> : <Copy size={11} />}
+                            </button>
+                        )}
+                        <button onClick={() => { setDraft(String(value ?? '')); setEditing(true); }}
+                            className="p-1 rounded-md hover:bg-gray-100 text-gray-500">
+                            <Pencil size={11} />
+                        </button>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
@@ -96,6 +131,25 @@ export default function ClientePage() {
             setInstrumentos(insts.filter(i => i.socios.some(s => s.clienteId === id)));
         }).finally(() => setCargando(false));
     }, [id]);
+
+    const actualizarCampo = async (campo: string, valor: string) => {
+        await actualizarCliente(id, { [campo]: valor } as any);
+        setCliente(prev => prev ? { ...prev, [campo]: valor } as any : prev);
+    };
+
+    const actualizarDomicilio = async (subcampo: string, valor: string) => {
+        const domActual = typeof (cliente as any)?.domicilio === 'object' ? (cliente as any).domicilio : {};
+        const nuevoDom = { ...domActual, [subcampo]: valor };
+        await actualizarCliente(id, { domicilio: nuevoDom } as any);
+        setCliente(prev => prev ? { ...prev, domicilio: nuevoDom } as any : prev);
+    };
+
+    const actualizarCapacidad = async (key: string, val: boolean) => {
+        const capActual = (cliente as any)?.capacidades || {};
+        const nuevaCap = { ...capActual, [key]: val };
+        await actualizarCliente(id, { capacidades: nuevaCap } as any);
+        setCliente(prev => prev ? { ...prev, capacidades: nuevaCap } as any : prev);
+    };
 
     const subirDoc = async (file: File) => {
         if (!cliente) return;
@@ -245,74 +299,99 @@ export default function ClientePage() {
                 {/* ── COMPENDIO ── */}
                 {tab === 'compendio' && (
                     <div className="space-y-4">
+
+                        {/* Identificación */}
                         <div className="bg-white border border-black/[0.07] rounded-2xl p-5">
-                            <div className="text-[11px] font-bold text-[#86868B] uppercase tracking-[0.06em] mb-3">
-                                Datos validados
-                                <span className="ml-2 text-[10px] font-normal normal-case">Fuente: documentos oficiales</span>
-                            </div>
-                            <CampoCompendio label="Nombre completo"
-                                valorCapturado={cliente.nombre}
-                                valorValidado={(cliente as any).nombreValidado}
-                                onCopiar={() => { }} />
-                            <CampoCompendio label="RFC"
-                                valorCapturado={cliente.rfc}
-                                valorValidado={(cliente as any).rfcValidado}
-                                onCopiar={() => { }} />
-                            <CampoCompendio label="CURP"
-                                valorCapturado={cliente.curp}
-                                valorValidado={(cliente as any).curpValidado}
-                                onCopiar={() => { }} />
-                            <CampoCompendio label="Fecha de nacimiento"
-                                valorCapturado={(cliente as any).fechaNacimiento}
-                                valorValidado={(cliente as any).fechaNacimientoValidada}
-                                onCopiar={() => { }} />
-                            <CampoCompendio label="Lugar de nacimiento"
-                                valorCapturado={(cliente as any).lugarNacimiento}
-                                valorValidado={(cliente as any).lugarNacimientoValidado}
-                                onCopiar={() => { }} />
-                            <CampoCompendio label="Nacionalidad"
-                                valorCapturado={cliente.nacionalidad}
-                                onCopiar={() => { }} />
+                            <div className="text-[11px] font-bold text-[#86868B] uppercase tracking-[0.06em] mb-1">Identificación</div>
+                            <CampoEditable label="Nombre completo" value={(cliente as any).nombre_completo || cliente.nombre} onSave={v => actualizarCampo('nombre_completo', v)} />
+                            <CampoEditable label="RFC" value={cliente.rfc} onSave={v => actualizarCampo('rfc', v)} />
+                            <CampoEditable label="CURP" value={cliente.curp} onSave={v => actualizarCampo('curp', v)} />
+                            <CampoEditable label="Género" value={(cliente as any).genero} onSave={v => actualizarCampo('genero', v)} tipo="select" opciones={['Masculino', 'Femenino', 'Otro']} />
+                            <CampoEditable label="Fecha de nacimiento" value={(cliente as any).fecha_nacimiento} onSave={v => actualizarCampo('fecha_nacimiento', v)} tipo="date" />
+                            <CampoEditable label="Lugar de nacimiento" value={(cliente as any).lugar_nacimiento} onSave={v => actualizarCampo('lugar_nacimiento', v)} />
+                            <CampoEditable label="Nacionalidad" value={(cliente as any).nacionalidad} onSave={v => actualizarCampo('nacionalidad', v)} />
                         </div>
 
+                        {/* Datos personales */}
                         <div className="bg-white border border-black/[0.07] rounded-2xl p-5">
-                            <div className="text-[11px] font-bold text-[#86868B] uppercase tracking-[0.06em] mb-3">Datos directos</div>
-                            <CampoCompendio label="Estado civil" valorCapturado={(cliente as any).estadoCivil} onCopiar={() => { }} />
-                            <CampoCompendio label="Ocupación" valorCapturado={(cliente as any).ocupacion} onCopiar={() => { }} />
-                            <CampoCompendio label="Teléfono" valorCapturado={(cliente as any).telefono} onCopiar={() => { }} />
-                            <CampoCompendio label="Celular" valorCapturado={(cliente as any).celular} onCopiar={() => { }} />
-                            <CampoCompendio label="Correo electrónico" valorCapturado={(cliente as any).email} onCopiar={() => { }} />
-                            {(cliente as any).domicilio && (
-                                <CampoCompendio label="Domicilio"
-                                    valorCapturado={[
-                                        (cliente as any).domicilio?.calle,
-                                        (cliente as any).domicilio?.noExt,
-                                        (cliente as any).domicilio?.colonia,
-                                        (cliente as any).domicilio?.municipio,
-                                        (cliente as any).domicilio?.estado,
-                                    ].filter(Boolean).join(', ')}
-                                    onCopiar={() => { }} />
+                            <div className="text-[11px] font-bold text-[#86868B] uppercase tracking-[0.06em] mb-1">Datos personales</div>
+                            <CampoEditable label="Estado civil" value={(cliente as any).estado_civil} onSave={v => actualizarCampo('estado_civil', v)} tipo="select" opciones={['Soltero/a', 'Casado/a', 'Divorciado/a', 'Viudo/a', 'Unión libre', 'Separado/a']} />
+                            <CampoEditable label="Ocupación" value={(cliente as any).ocupacion} onSave={v => actualizarCampo('ocupacion', v)} />
+                            <CampoEditable label="Régimen fiscal" value={(cliente as any).regimen_fiscal} onSave={v => actualizarCampo('regimen_fiscal', v)} />
+                        </div>
+
+                        {/* Contacto */}
+                        <div className="bg-white border border-black/[0.07] rounded-2xl p-5">
+                            <div className="text-[11px] font-bold text-[#86868B] uppercase tracking-[0.06em] mb-1">Contacto</div>
+                            <CampoEditable label="Correo electrónico" value={(cliente as any).email} onSave={v => actualizarCampo('email', v)} />
+                            <CampoEditable label="Teléfono" value={(cliente as any).telefono} onSave={v => actualizarCampo('telefono', v)} />
+                            <CampoEditable label="Celular" value={(cliente as any).celular} onSave={v => actualizarCampo('celular', v)} />
+                        </div>
+
+                        {/* Documentos de identidad */}
+                        {!(cliente as any).es_extranjero ? (
+                            <div className="bg-white border border-black/[0.07] rounded-2xl p-5">
+                                <div className="text-[11px] font-bold text-[#86868B] uppercase tracking-[0.06em] mb-1">Documentos de identidad</div>
+                                <CampoEditable label="Clave de elector" value={(cliente as any).clave_elector} onSave={v => actualizarCampo('clave_elector', v)} />
+                                <CampoEditable label="Sección INE" value={(cliente as any).seccion_ine} onSave={v => actualizarCampo('seccion_ine', v)} />
+                                <CampoEditable label="IDMEX" value={(cliente as any).idmex} onSave={v => actualizarCampo('idmex', v)} />
+                                <CampoEditable label="Vigencia INE" value={(cliente as any).vigencia_ine} onSave={v => actualizarCampo('vigencia_ine', v)} tipo="date" />
+                            </div>
+                        ) : (
+                            <div className="bg-white border border-black/[0.07] rounded-2xl p-5">
+                                <div className="text-[11px] font-bold text-[#86868B] uppercase tracking-[0.06em] mb-1">Documentos de identidad (extranjero)</div>
+                                <CampoEditable label="N° Pasaporte" value={(cliente as any).numero_pasaporte} onSave={v => actualizarCampo('numero_pasaporte', v)} />
+                                <CampoEditable label="Vigencia pasaporte" value={(cliente as any).vigencia_pasaporte} onSave={v => actualizarCampo('vigencia_pasaporte', v)} tipo="date" />
+                                <CampoEditable label="N° FM (FM2/FM3)" value={(cliente as any).numero_fm} onSave={v => actualizarCampo('numero_fm', v)} />
+                                <CampoEditable label="Tipo migratorio" value={(cliente as any).tipo_migratorio} onSave={v => actualizarCampo('tipo_migratorio', v)} />
+                                <CampoEditable label="Vigencia FM" value={(cliente as any).vigencia_fm} onSave={v => actualizarCampo('vigencia_fm', v)} tipo="date" />
+                            </div>
+                        )}
+
+                        {/* Domicilio */}
+                        <div className="bg-white border border-black/[0.07] rounded-2xl p-5">
+                            <div className="text-[11px] font-bold text-[#86868B] uppercase tracking-[0.06em] mb-1">Domicilio</div>
+                            {typeof (cliente as any).domicilio === 'string' || !(cliente as any).domicilio ? (
+                                <CampoEditable label="Domicilio completo" value={(cliente as any).domicilio || ''} onSave={v => actualizarCampo('domicilio', v)} />
+                            ) : (
+                                <>
+                                    <CampoEditable label="Calle" value={(cliente as any).domicilio?.calle} onSave={v => actualizarDomicilio('calle', v)} />
+                                    <CampoEditable label="N° exterior" value={(cliente as any).domicilio?.numero || (cliente as any).domicilio?.noExt} onSave={v => actualizarDomicilio('numero', v)} />
+                                    <CampoEditable label="Colonia" value={(cliente as any).domicilio?.colonia} onSave={v => actualizarDomicilio('colonia', v)} />
+                                    <CampoEditable label="CP" value={(cliente as any).domicilio?.cp} onSave={v => actualizarDomicilio('cp', v)} />
+                                    <CampoEditable label="Ciudad / Municipio" value={(cliente as any).domicilio?.ciudad || (cliente as any).domicilio?.municipio} onSave={v => actualizarDomicilio('ciudad', v)} />
+                                    <CampoEditable label="Estado" value={(cliente as any).domicilio?.estado} onSave={v => actualizarDomicilio('estado', v)} />
+                                    <CampoEditable label="País" value={(cliente as any).domicilio?.pais} onSave={v => actualizarDomicilio('pais', v)} />
+                                </>
                             )}
                         </div>
 
                         {/* Capacidades */}
-                        {(cliente as any).capacidades && (
-                            <div className="bg-white border border-black/[0.07] rounded-2xl p-5">
-                                <div className="text-[11px] font-bold text-[#86868B] uppercase tracking-[0.06em] mb-3">Capacidades</div>
-                                <div className="grid grid-cols-3 gap-3">
-                                    {[
-                                        { label: 'Sabe leer', val: (cliente as any).capacidades?.sabeLeer },
-                                        { label: 'Sabe escribir', val: (cliente as any).capacidades?.sabeEscribir },
-                                        { label: 'Sabe firmar', val: (cliente as any).capacidades?.sabeFirmar },
-                                    ].map(c => (
-                                        <div key={c.label} className="text-center p-3 rounded-xl" style={{ background: 'var(--bg2)' }}>
-                                            <div className="text-[18px] mb-1">{c.val ? '✓' : '✗'}</div>
-                                            <div className="text-[11px] font-semibold text-[#86868B]">{c.label}</div>
-                                        </div>
-                                    ))}
-                                </div>
+                        <div className="bg-white border border-black/[0.07] rounded-2xl p-5">
+                            <div className="text-[11px] font-bold text-[#86868B] uppercase tracking-[0.06em] mb-3">Capacidades</div>
+                            <div className="grid grid-cols-3 gap-3">
+                                {([
+                                    { key: 'sabeLeer', label: 'Sabe leer' },
+                                    { key: 'sabeEscribir', label: 'Sabe escribir' },
+                                    { key: 'sabeFirmar', label: 'Sabe firmar' },
+                                ] as const).map(c => {
+                                    const val = (cliente as any).capacidades?.[c.key] ?? (cliente as any)[c.key];
+                                    return (
+                                        <button key={c.key}
+                                            onClick={() => actualizarCapacidad(c.key, !val)}
+                                            className="text-center p-3 rounded-xl transition-all border"
+                                            style={{
+                                                background: val ? 'var(--green-bg)' : 'var(--bg2)',
+                                                borderColor: val ? 'var(--green)' : 'transparent',
+                                            }}>
+                                            <div className="text-[18px] mb-1">{val ? '✓' : '✗'}</div>
+                                            <div className="text-[11px] font-semibold" style={{ color: val ? 'var(--green)' : 'var(--ink4)' }}>{c.label}</div>
+                                        </button>
+                                    );
+                                })}
                             </div>
-                        )}
+                        </div>
+
                     </div>
                 )}
 
