@@ -211,9 +211,6 @@ export default function ClientePage() {
                         numero_pasaporte: 'numero_pasaporte',
                         numero_fm: 'numero_fm', numero_fm2: 'numero_fm', numero_fm3: 'numero_fm',
                         nacionalidad: 'nacionalidad', nacionalidad_pais: 'nacionalidad',
-                        domicilio_calle: 'domicilio_calle', domicilio_numero: 'domicilio_numero',
-                        domicilio_colonia: 'domicilio_colonia', domicilio_cp: 'domicilio_cp',
-                        domicilio_ciudad: 'domicilio_ciudad', domicilio_estado: 'domicilio_estado',
                     };
                     const actualizaciones: Record<string, any> = {};
                     Object.entries(extraidos).forEach(([k, v]) => {
@@ -351,9 +348,8 @@ export default function ClientePage() {
                             <CampoEditable label="Estado civil" value={(cliente as any).estado_civil} onSave={v => actualizarCampo('estado_civil', v)} tipo="select" opciones={['Soltero/a', 'Casado/a', 'Divorciado/a', 'Viudo/a', 'Unión libre', 'Separado/a']} />
                             <CampoEditable label="Ocupación" value={(cliente as any).ocupacion} onSave={v => actualizarCampo('ocupacion', v)} />
                             <CampoEditable label="Régimen fiscal" value={(cliente as any).regimen_fiscal} onSave={v => actualizarCampo('regimen_fiscal', v)} />
+                            <CampoEditable label="Domicilio" value={domicilioLineaStr((cliente as any).domicilio)} onSave={v => actualizarCampo('domicilio', v)} />
                         </div>
-
-                        {/* Contacto */}
                         <div className="bg-white border border-black/[0.07] rounded-2xl p-5">
                             <div className="text-[11px] font-bold text-[#86868B] uppercase tracking-[0.06em] mb-1">Contacto</div>
                             <CampoEditable label="Correo electrónico" value={(cliente as any).email} onSave={v => actualizarCampo('email', v)} />
@@ -380,12 +376,6 @@ export default function ClientePage() {
                                 <CampoEditable label="Vigencia FM" value={(cliente as any).vigencia_fm} onSave={v => actualizarCampo('vigencia_fm', v)} tipo="date" />
                             </div>
                         )}
-
-                        {/* Domicilio */}
-                        <div className="bg-white border border-black/[0.07] rounded-2xl p-5">
-                            <div className="text-[11px] font-bold text-[#86868B] uppercase tracking-[0.06em] mb-1">Domicilio</div>
-                            <CampoEditable label="Domicilio" value={domicilioLineaStr((cliente as any).domicilio)} onSave={v => actualizarCampo('domicilio', v)} />
-                        </div>
 
                         {/* Capacidades */}
                         <div className="bg-white border border-black/[0.07] rounded-2xl p-5">

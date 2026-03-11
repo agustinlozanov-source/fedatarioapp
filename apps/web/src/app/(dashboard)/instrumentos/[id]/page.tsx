@@ -77,9 +77,17 @@ function formatFecha(f?: string) {
     catch { return f }
 }
 
-function domicilioStr(d?: ClientePerfil['domicilio']) {
+function domicilioStr(d?: ClientePerfil['domicilio'] | string) {
     if (!d) return undefined
-    const partes = [d.calle, d.numero, d.colonia, d.ciudad, d.estado].filter(Boolean)
+    if (typeof d === 'string') return d || undefined
+    const partes = [
+        d.calle,
+        d.numero ? `No. ${d.numero}` : undefined,
+        d.colonia ? `Col. ${d.colonia}` : undefined,
+        d.cp ? `C.P. ${d.cp}` : undefined,
+        d.ciudad,
+        d.estado,
+    ].filter(Boolean)
     return partes.length ? partes.join(', ') : undefined
 }
 
