@@ -1,9 +1,9 @@
 'use client';
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Plus, Search, Upload, User, Building2, Loader2 } from 'lucide-react';
+import { Plus, Search, Upload, User, Building2, Loader2, Trash2 } from 'lucide-react';
 import { Topbar } from '@/components/layout/Shell';
-import { getClientes } from '@/lib/db/clientes';
+import { getClientes, eliminarCliente } from '@/lib/db/clientes';
 import type { Cliente } from '@fedatario/shared';
 
 export default function ClientesPage() {
@@ -12,6 +12,8 @@ export default function ClientesPage() {
   const [cargando, setCargando] = useState(true);
   const [busqueda, setBusqueda] = useState('');
   const [filtroTipo, setFiltroTipo] = useState<'todos' | 'fisica' | 'moral'>('todos');
+  const [confirmandoId, setConfirmandoId] = useState<string | null>(null);
+  const [eliminandoId, setEliminandoId] = useState<string | null>(null);
 
   useEffect(() => {
     getClientes()
@@ -37,6 +39,17 @@ export default function ClientesPage() {
 
   const fisicas = clientes.filter(c => c.tipoPersona === 'fisica').length;
   const morales = clientes.filter(c => c.tipoPersona === 'moral').length;
+
+  const handleEliminar = async (id: string) => {
+    setEliminandoId(id);
+    try {
+      await eliminarCliente(id);
+      setClientes(prev => prev.filter(c => c.id !== id));
+    } finally {
+      setEliminandoId(null);
+      setConfirmandoId(null);
+    }
+  };
 
   return (
     <>
@@ -119,29 +132,56 @@ export default function ClientesPage() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filtrados.map(cliente => (
-              <Link key={cliente.id} href={`/clientes/${cliente.id}`}
-                className="bg-white dark:bg-gray-800 rounded-3xl p-6 shadow-sm hover:shadow-md transition-all hover:-translate-y-1 block group">
-                <div className="flex items-center gap-4 mb-4">
-                  <div className="w-12 h-12 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center text-blue-600 dark:text-blue-400 text-lg font-bold group-hover:bg-blue-200 dark:group-hover:bg-blue-800 transition-colors">
-                    {cliente.tipoPersona === 'moral'
-                      ? <Building2 size={24} />
-                      : cliente.nombre.charAt(0).toUpperCase()
-                    }
+              <div key={cliente.id} className="relative bg-white dark:bg-gray-800 rounded-3xl shadow-sm hover:shadow-md transition-all hover:-translate-y-1 group">
+                <Link href={`/clientes/${cliente.id}`} className="block p-6">
+                  <div className="flex items-center gap-4 mb-4">
+                    <div className="w-12 h-12 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center text-blue-600 dark:text-blue-400 text-lg font-bold group-hover:bg-blue-200 dark:group-hover:bg-blue-800 transition-colors">
+                      {cliente.tipoPersona === 'moral'
+                        ? <Building2 size={24} />
+                        : cliente.nombre.charAt(0).toUpperCase()
+                      }
+                    </div>
+                    <div className="flex-1 min-w-0 pr-6">
+                      <p className="font-bold text-gray-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors truncate">{cliente.nombre}</p>
+                      <span className="text-xs px-3 py-1 rounded-full bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400">
+                        {cliente.tipoPersona === 'fisica' ? 'Física' : 'Moral'}
+                      </span>
+                    </div>
                   </div>
-                  <div>
-                    <p className="font-bold text-gray-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">{cliente.nombre}</p>
-                    <span className="text-xs px-3 py-1 rounded-full bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400">
-                      {cliente.tipoPersona === 'fisica' ? 'Física' : 'Moral'}
-                    </span>
-                  </div>
+                  {cliente.rfc && (
+                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">RFC: <span className="font-mono text-gray-900 dark:text-white">{cliente.rfc}</span></p>
+                  )}
+                  {cliente.email && (
+                    <p className="text-sm text-gray-600 dark:text-gray-400">Email: <span className="font-medium text-gray-900 dark:text-white">{cliente.email}</span></p>
+                  )}
+                </Link>
+                {/* Botón eliminar */}
+                <div className="absolute top-4 right-4">
+                  {confirmandoId === cliente.id ? (
+                    <div className="flex items-center gap-1.5 bg-white dark:bg-gray-800 rounded-xl shadow px-2 py-1 border border-gray-200 dark:border-gray-600">
+                      <span className="text-[11px] text-gray-500">¿Eliminar?</span>
+                      <button
+                        onClick={() => handleEliminar(cliente.id!)}
+                        disabled={eliminandoId === cliente.id}
+                        className="text-[11px] font-bold px-1.5 py-0.5 rounded-lg bg-red-50 text-red-600 hover:bg-red-100">
+                        {eliminandoId === cliente.id ? '...' : 'Sí'}
+                      </button>
+                      <button
+                        onClick={() => setConfirmandoId(null)}
+                        className="text-[11px] font-bold px-1.5 py-0.5 rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-200">
+                        No
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => setConfirmandoId(cliente.id!)}
+                      className="p-1.5 rounded-xl bg-white dark:bg-gray-700 shadow-sm border border-gray-200 dark:border-gray-600 hover:bg-red-50 transition-colors opacity-0 group-hover:opacity-100"
+                      title="Eliminar cliente">
+                      <Trash2 size={13} className="text-gray-400 hover:text-red-500" />
+                    </button>
+                  )}
                 </div>
-                {cliente.rfc && (
-                  <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">RFC: <span className="font-mono text-gray-900 dark:text-white">{cliente.rfc}</span></p>
-                )}
-                {cliente.email && (
-                  <p className="text-sm text-gray-600 dark:text-gray-400">Email: <span className="font-medium text-gray-900 dark:text-white">{cliente.email}</span></p>
-                )}
-              </Link>
+              </div>
             ))}
           </div>
         )}

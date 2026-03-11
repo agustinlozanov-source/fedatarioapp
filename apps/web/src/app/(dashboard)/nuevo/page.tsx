@@ -186,7 +186,6 @@ export default function NuevoInstrumentoPage() {
 
   // Paso 1
   const [tipo, setTipo] = useState<TipoInstrumento | null>(null);
-  const [numeroInstrumento, setNumeroInstrumento] = useState('');
 
   // Paso 2 — Socios
   const [socios, setSocios] = useState<SocioForm[]>([]);
@@ -359,7 +358,6 @@ export default function NuevoInstrumentoPage() {
       const id = await crearInstrumento({
         tenantId,
         tipo: tipo!,
-        numeroInstrumento: numeroInstrumento ? parseInt(numeroInstrumento) : undefined,
         objetoSocial: objetosSociales.map(o => o.texto).join('\n\n'),
         capitalSocial: capitalSocial ? parseFloat(capitalSocial.replace(/,/g, '')) : undefined,
         estado: 'paso_03_datos_basicos',
@@ -457,15 +455,7 @@ export default function NuevoInstrumentoPage() {
               ))}
             </div>
 
-            <div>
-              <label className="text-xs font-bold text-gray-600 uppercase tracking-wider block mb-2">
-                Número de instrumento
-                <span className="ml-1 text-xs font-normal text-gray-500">(puedes modificarlo después)</span>
-              </label>
-              <input value={numeroInstrumento} onChange={e => setNumeroInstrumento(e.target.value)}
-                placeholder="Ej. 1234"
-                className="w-full px-3 py-2.5 rounded-xl text-sm font-mono outline-none border border-gray-200 bg-white" />
-            </div>
+
           </div>
         )}
 
@@ -554,6 +544,7 @@ export default function NuevoInstrumentoPage() {
                           cliente: c,
                           clienteId: c.id,
                           esNuevo: false,
+                          esExtranjero: c.es_extranjero || false,
                         })}
                         onCrear={() => actualizarSocio(socio.uid, { esNuevo: true })}
                         authListo={authListo}
@@ -767,9 +758,7 @@ export default function NuevoInstrumentoPage() {
                     <div className="text-[14px] font-bold text-[#1D1D1F]">
                       {tipo === 'sa_de_cv' ? 'Sociedad Anónima de Capital Variable' : 'Sociedad de Responsabilidad Limitada'}
                     </div>
-                    {numeroInstrumento && (
-                      <div className="text-[12px] font-mono text-[#86868B] mt-0.5">No. {numeroInstrumento}</div>
-                    )}
+
                   </div>
                   <span className="badge badge-blue">{tipo === 'sa_de_cv' ? 'SA de CV' : 'S de RL'}</span>
                 </div>

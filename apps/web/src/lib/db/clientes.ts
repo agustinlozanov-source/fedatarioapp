@@ -1,6 +1,6 @@
 import {
     collection, doc, getDocs, getDoc,
-    addDoc, updateDoc, query, where, orderBy,
+    addDoc, updateDoc, deleteDoc, query, where, orderBy,
     serverTimestamp, writeBatch
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
@@ -78,4 +78,9 @@ export async function cargaMasivaClientes(
     }
     await batch.commit();
     return count;
+}
+
+export async function eliminarCliente(id: string): Promise<void> {
+    await deleteDoc(doc(db, "clientes", id));
+}
 }

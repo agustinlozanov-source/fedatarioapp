@@ -1,6 +1,6 @@
 import {
     collection, doc, getDocs, getDoc,
-    addDoc, updateDoc, query, where, orderBy,
+    addDoc, updateDoc, deleteDoc, query, where, orderBy,
     serverTimestamp
 } from "firebase/firestore";
 import { db, auth } from "@/lib/firebase";
@@ -85,4 +85,8 @@ export async function cerrarInstrumento(id: string): Promise<void> {
         linkActivo: false,
         actualizadoEn: serverTimestamp(),
     });
+}
+
+export async function eliminarInstrumento(id: string): Promise<void> {
+    await deleteDoc(doc(db, "instrumentos", id));
 }

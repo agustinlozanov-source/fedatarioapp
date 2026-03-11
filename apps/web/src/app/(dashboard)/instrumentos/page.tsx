@@ -1,10 +1,10 @@
 'use client';
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Plus, ArrowRight, FileText, Loader2 } from 'lucide-react';
+import { Plus, ArrowRight, FileText, Loader2, Trash2 } from 'lucide-react';
 import { Topbar } from '@/components/layout/Shell';
 import { KpiCard } from '@/components/ui';
-import { getInstrumentos } from '@/lib/db/instrumentos';
+import { getInstrumentos, eliminarInstrumento } from '@/lib/db/instrumentos';
 import { formatDate, formatMXN } from '@/lib/utils/format';
 import type { Instrumento } from '@fedatario/shared';
 
@@ -30,12 +30,25 @@ const ESTADO_LABEL: Record<string, { label: string; color: string; bg: string }>
 export default function InstrumentosPage() {
   const [instrumentos, setInstrumentos] = useState<Instrumento[]>([]);
   const [cargando, setCargando] = useState(true);
+  const [confirmandoId, setConfirmandoId] = useState<string | null>(null);
+  const [eliminandoId, setEliminandoId] = useState<string | null>(null);
 
   useEffect(() => {
     getInstrumentos()
       .then(setInstrumentos)
       .finally(() => setCargando(false));
   }, []);
+
+  const handleEliminar = async (id: string) => {
+    setEliminandoId(id);
+    try {
+      await eliminarInstrumento(id);
+      setInstrumentos(prev => prev.filter(i => i.id !== id));
+    } finally {
+      setEliminandoId(null);
+      setConfirmandoId(null);
+    }
+  };
 
   const enProceso = instrumentos.filter(i => i.estado !== 'cerrado').length;
   const cerrados = instrumentos.filter(i => i.estado === 'cerrado').length;
@@ -117,11 +130,38 @@ export default function InstrumentosPage() {
 
                   <div className="flex items-center justify-between">
                     <span className="text-[11px] text-[#86868B]">{formatDate(inst.creadoEn)}</span>
-                    <Link href={`/instrumentos/${inst.id}`}
-                      className="flex items-center gap-1 text-[12px] font-semibold no-underline"
-                      style={{ color: 'var(--blue)' }}>
-                      Ver instrumento <ArrowRight size={13} />
-                    </Link>
+                    <div className="flex items-center gap-3">
+                      {confirmandoId === inst.id ? (
+                        <div className="flex items-center gap-2">
+                          <span className="text-[11px] text-[#86868B]">¿Eliminar?</span>
+                          <button
+                            onClick={() => handleEliminar(inst.id!)}
+                            disabled={eliminandoId === inst.id}
+                            className="text-[11px] font-bold px-2 py-0.5 rounded-lg"
+                            style={{ background: 'var(--red-bg)', color: 'var(--red)' }}>
+                            {eliminandoId === inst.id ? '...' : 'Sí'}
+                          </button>
+                          <button
+                            onClick={() => setConfirmandoId(null)}
+                            className="text-[11px] font-bold px-2 py-0.5 rounded-lg"
+                            style={{ background: 'var(--bg3)', color: 'var(--ink4)' }}>
+                            No
+                          </button>
+                        </div>
+                      ) : (
+                        <button
+                          onClick={() => setConfirmandoId(inst.id!)}
+                          className="p-1.5 rounded-lg hover:bg-red-50 transition-colors"
+                          title="Eliminar instrumento">
+                          <Trash2 size={13} style={{ color: 'var(--ink4)' }} />
+                        </button>
+                      )}
+                      <Link href={`/instrumentos/${inst.id}`}
+                        className="flex items-center gap-1 text-[12px] font-semibold no-underline"
+                        style={{ color: 'var(--blue)' }}>
+                        Ver instrumento <ArrowRight size={13} />
+                      </Link>
+                    </div>
                   </div>
                 </div>
               );
