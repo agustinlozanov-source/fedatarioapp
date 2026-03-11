@@ -99,6 +99,10 @@ export default function NuevoClientePage() {
                 'idmex': 'idmex',
                 'numero_pasaporte': 'numero_pasaporte',
                 'numero_fm': 'numero_fm',
+                'numero_fm2': 'numero_fm',
+                'numero_fm3': 'numero_fm',
+                'nacionalidad': 'nacionalidad',
+                'nacionalidad_pais': 'nacionalidad',
             };
 
             Object.entries(datosExtraidos).forEach(([campoExtraido, valor]) => {

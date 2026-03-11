@@ -8,7 +8,7 @@ import {
 } from 'lucide-react';
 import { Topbar } from '@/components/layout/Shell';
 import { getCliente, actualizarCliente } from '@/lib/db/clientes';
-import { getDocumentosCliente, subirDocumento } from '@/lib/db/documentos';
+import { getDocumentosCliente, subirDocumento, guardarDatosExtraidos } from '@/lib/db/documentos';
 import { getInstrumentos } from '@/lib/db/instrumentos';
 import { auth } from '@/lib/firebase';
 import type { Cliente, Documento, Instrumento, TipoDocumento } from '@fedatario/shared';
@@ -102,11 +102,11 @@ export default function ClientePage() {
         setSubiendoTipo(tipoSeleccionado);
         try {
             // 1. Subir a Storage y guardar en Firestore
-            const { url } = await subirDocumento(file, id, '', tipoSeleccionado, cliente.tenantId);
+            const { id: docId, url } = await subirDocumento(file, id, '', tipoSeleccionado, cliente.tenantId);
             const docs = await getDocumentosCliente(id);
             setDocumentos(docs);
 
-            // 2. Llamar al extractor y actualizar perfil del cliente
+            // 2. Llamar al extractor, aprobar documento y actualizar perfil del cliente
             try {
                 const res = await fetch('https://fedatario-production.up.railway.app/extractor/url', {
                     method: 'POST',
@@ -116,7 +116,11 @@ export default function ClientePage() {
                 if (res.ok) {
                     const datos = await res.json();
                     const extraidos = datos.datos_extraidos || {};
-                    // Mapear campos extraídos → campos del cliente (sobreescribe siempre)
+
+                    // Aprobar el documento y guardar datos extraídos
+                    await guardarDatosExtraidos(docId, extraidos);
+
+                    // Mapear campos extraídos → campos del cliente
                     const mapeo: Record<string, string> = {
                         nombre_completo: 'nombre_completo', rfc: 'rfc', curp: 'curp',
                         fecha_nacimiento: 'fecha_nacimiento', lugar_nacimiento: 'lugar_nacimiento',
@@ -133,7 +137,6 @@ export default function ClientePage() {
                     Object.entries(extraidos).forEach(([k, v]) => {
                         if (mapeo[k] && v) actualizaciones[mapeo[k]] = v;
                     });
-                    // Si viene domicilio como objeto, armarlo como string
                     if (extraidos.domicilio_calle) {
                         actualizaciones.domicilio = [
                             extraidos.domicilio_calle, extraidos.domicilio_numero,
@@ -146,9 +149,11 @@ export default function ClientePage() {
                         const clienteActualizado = await getCliente(id);
                         setCliente(clienteActualizado);
                     }
+                    // Refrescar docs para mostrar estado aprobado
+                    const docsActualizados = await getDocumentosCliente(id);
+                    setDocumentos(docsActualizados);
                 }
             } catch (extErr) {
-                // La extracción nunca bloquea — el documento ya quedó guardado
                 console.warn('Extracción automática falló:', extErr);
             }
         } finally {
