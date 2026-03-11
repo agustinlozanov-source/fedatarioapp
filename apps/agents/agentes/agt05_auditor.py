@@ -91,8 +91,13 @@ def verificar_deletreo_curp(texto: str, datos: InstrumentoRedactorInput) -> List
 
 
 def verificar_deletreo_clave_elector(texto: str, datos: InstrumentoRedactorInput) -> List[Hallazgo]:
+    """Verifica deletreo de clave elector, pero solo para socios mexicanos."""
     hallazgos = []
     for i, socio in enumerate(datos.socios, 1):
+        # Saltar verificación para socios extranjeros
+        if socio.nacionalidad_pais and socio.nacionalidad_pais.lower() != "méxico":
+            continue
+        
         esperado = deletrear_alfanumerico(socio.clave_elector)
         patron = re.escape(socio.clave_elector) + r'\s*\(([^)]+)\)'
         matches = re.findall(patron, texto)
@@ -242,7 +247,9 @@ def verificar_nombres_completos(texto: str, datos: InstrumentoRedactorInput) -> 
     """Verifica que el nombre completo de cada socio aparezca en el texto."""
     hallazgos = []
     for i, socio in enumerate(datos.socios, 1):
-        if socio.nombre_completo not in texto:
+        # Búsqueda case-insensitive y permitir variaciones de espacios
+        nombre_patron = r'\b' + re.escape(socio.nombre_completo.strip()) + r'\b'
+        if not re.search(nombre_patron, texto, re.IGNORECASE):
             hallazgos.append(Hallazgo(
                 tipo="error",
                 campo=f"nombre_socio_{i}",
@@ -255,7 +262,9 @@ def verificar_nombres_completos(texto: str, datos: InstrumentoRedactorInput) -> 
 
 def verificar_denominacion(texto: str, datos: InstrumentoRedactorInput) -> List[Hallazgo]:
     hallazgos = []
-    if datos.denominacion_social not in texto:
+    # Búsqueda case-insensitive para denominación social
+    denom_patron = r'\b' + re.escape(datos.denominacion_social.strip()) + r'\b'
+    if not re.search(denom_patron, texto, re.IGNORECASE):
         hallazgos.append(Hallazgo(
             tipo="error",
             campo="denominacion_social",

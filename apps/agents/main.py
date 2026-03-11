@@ -32,6 +32,9 @@ from agentes.agt04_redactor import InstrumentoRedactorInput, generar_acta
 from agentes.agt05_auditor import auditar_acta
 from agentes.agt06_docx import generar_docx
 from agentes.firestore_mapper import firestore_to_redactor_input
+from agentes.extractor_cud import ExtractorCUD
+from agentes.validador_roles import ValidadorRoles
+from config.roles_config import get_roles_por_tipo, get_todos_los_tipos
 
 load_dotenv()
 
@@ -171,6 +174,66 @@ async def extraer_url(request: ExtraccionURLRequest):
         logger.error(traceback.format_exc())
         raise HTTPException(status_code=500, detail=str(e))
 
+
+# ── PROCESADOR DE CUD (MUA) ──────────────────────────────────────────────────
+
+@app.post("/procesar-cud-pdf")
+async def procesar_cud_pdf(
+    archivo: UploadFile = File(...),
+    instrumento_id: str = Form(...),
+):
+    """
+    Procesa el PDF del CUD (Constancia de Autorización de Uso de Denominación)
+    y guarda los datos extraídos en Firestore bajo instrumento/{id}/mua_datos.
+    
+    Retorna:
+    {
+        "ok": True,
+        "cud": "A202602090932258301",
+        "texto_resolucion": "SECRETARÍA DE ECONOMÍA...",
+        "confianza": 0.95,
+        "errores": []
+    }
+    """
+    try:
+        contenido = await archivo.read()
+        
+        # Procesar con ExtractorCUD
+        extractor = ExtractorCUD()
+        resultado_cud = extractor.procesar_bytes(contenido)
+        
+        # Preparar datos para guardar
+        datos_mua = {
+            "cud": resultado_cud.cud,
+            "denominacion": resultado_cud.denominacion,
+            "nombre_solicitante": resultado_cud.nombre_solicitante,
+            "rfc_solicitante": resultado_cud.rfc_solicitante,
+            "texto_resolucion": resultado_cud.texto_resolucion,
+            "confianza": resultado_cud.confianza,
+            "errores": resultado_cud.errores,
+            "fecha_extraccion": firestore.SERVER_TIMESTAMP,
+        }
+        
+        # Guardar en Firestore
+        if db:
+            db.collection("instrumentos").document(instrumento_id).update({
+                "mua_datos": datos_mua
+            })
+        
+        return {
+            "ok": True,
+            "cud": resultado_cud.cud,
+            "denominacion": resultado_cud.denominacion,
+            "nombre_solicitante": resultado_cud.nombre_solicitante,
+            "rfc_solicitante": resultado_cud.rfc_solicitante,
+            "texto_resolucion": resultado_cud.texto_resolucion,
+            "confianza": round(resultado_cud.confianza * 100),
+            "errores": resultado_cud.errores,
+        }
+    except Exception as e:
+        logger.error(traceback.format_exc())
+        raise HTTPException(status_code=500, detail=str(e))
+
 # ── AGT-04 REDACTOR ───────────────────────────────────────────────────────────
 
 @app.post("/redactor/generar")
@@ -210,6 +273,7 @@ async def auditor_verificar(body: AuditorInput):
         resultado = auditar_acta(body.texto_acta, body.datos)
         return {"ok": True, "data": resultado}
     except Exception as e:
+        logger.error(f"Error en auditor/verificar: {str(e)}")
         logger.error(traceback.format_exc())
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -253,6 +317,104 @@ async def docx_generar(body: DocxInput):
         )
     except HTTPException:
         raise
+    except Exception as e:
+        logger.error(traceback.format_exc())
+        raise HTTPException(status_code=500, detail=str(e))
+
+# ── ROLES Y VALIDACIÓN ────────────────────────────────────────────────────────
+
+class RolesSeleccionadosRequest(BaseModel):
+    roles: list[str]
+    tipo_sociedad: str
+
+
+@app.get("/roles/tipos")
+def obtener_tipos_sociedad():
+    """Retorna los tipos de sociedad disponibles."""
+    return {
+        "ok": True,
+        "tipos": get_todos_los_tipos()
+    }
+
+
+@app.get("/roles/{tipo_sociedad}")
+def obtener_roles(tipo_sociedad: str):
+    """Retorna los roles permitidos para un tipo de sociedad específico."""
+    config = get_roles_por_tipo(tipo_sociedad)
+    if not config:
+        raise HTTPException(status_code=404, detail=f"Tipo de sociedad no encontrado: {tipo_sociedad}")
+    
+    return {
+        "ok": True,
+        "tipo": config["tipo"],
+        "nombre_largo": config["nombre_largo"],
+        "roles": config["roles_permitidos"],
+        "reglas": config["reglas_validacion"]
+    }
+
+
+@app.post("/roles/validar")
+def validar_roles(body: RolesSeleccionadosRequest):
+    """Valida un conjunto de roles seleccionados."""
+    try:
+        validador = ValidadorRoles(body.tipo_sociedad)
+        resultado = validador.validar(body.roles)
+        return {
+            "ok": resultado["valido"],
+            "valido": resultado["valido"],
+            "errores": resultado["errores"],
+            "advertencias": resultado["advertencias"]
+        }
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        logger.error(traceback.format_exc())
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+class ValidarAgregarRolRequest(BaseModel):
+    rol_id: str
+    roles_actuales: list[str]
+    tipo_sociedad: str
+
+
+@app.post("/roles/validar-agregar")
+def validar_agregar_rol(body: ValidarAgregarRolRequest):
+    """Valida si se puede agregar un rol a los actuales (para validación en tiempo real)."""
+    try:
+        validador = ValidadorRoles(body.tipo_sociedad)
+        resultado = validador.validar_seleccionar_rol(body.rol_id, body.roles_actuales)
+        return {
+            "ok": resultado["puede_agregar"],
+            "puede_agregar": resultado["puede_agregar"],
+            "motivo": resultado["motivo"]
+        }
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        logger.error(traceback.format_exc())
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+class ValidarRemoverRolRequest(BaseModel):
+    rol_id: str
+    roles_actuales: list[str]
+    tipo_sociedad: str
+
+
+@app.post("/roles/validar-remover")
+def validar_remover_rol(body: ValidarRemoverRolRequest):
+    """Valida si se puede remover un rol de los actuales (para validación en tiempo real)."""
+    try:
+        validador = ValidadorRoles(body.tipo_sociedad)
+        resultado = validador.validar_remover_rol(body.rol_id, body.roles_actuales)
+        return {
+            "ok": resultado["puede_remover"],
+            "puede_remover": resultado["puede_remover"],
+            "motivo": resultado["motivo"]
+        }
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
         logger.error(traceback.format_exc())
         raise HTTPException(status_code=500, detail=str(e))

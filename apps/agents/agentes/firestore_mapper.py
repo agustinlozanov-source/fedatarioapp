@@ -113,9 +113,11 @@ def firestore_to_redactor_input(data: Dict[str, Any]) -> InstrumentoRedactorInpu
         ciudad_fedatario    = data.get("ciudad_fedatario", "").upper().strip(),
         fecha_instrumento   = _parse_date(data.get("fecha_instrumento", date.today())),
         tipo_sociedad       = data.get("tipo_sociedad", "SA_de_CV"),
-        denominacion_social = data.get("denominacion_social", "").upper().strip(),
+        # Denominación: prioriza CUD > manual (jerarquía del origen)
+        denominacion_social = data.get("mua_datos", {}).get("denominacion") or data.get("denominacion_social", ""),
         cud                 = data.get("cud", "").strip(),
         solicitante_mua     = data.get("solicitante_mua", "").upper().strip(),
+        texto_resolucion    = data.get("mua_datos", {}).get("texto_resolucion", ""),
         domicilio_social    = data.get("domicilio_social", "").strip(),
         capital_fijo        = int(data.get("capital_fijo", 100000)),
         socios              = socios,

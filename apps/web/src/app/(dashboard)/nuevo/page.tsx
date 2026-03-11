@@ -8,6 +8,7 @@ import {
   Users, FileText, DollarSign, Eye, Copy, Check
 } from 'lucide-react';
 import { Topbar } from '@/components/layout/Shell';
+import { SelectorRoles } from '@/components/ui/SelectorRoles';
 import { crearInstrumento } from '@/lib/db/instrumentos';
 import { getClientes, crearCliente } from '@/lib/db/clientes';
 import { getObjetosSociales, crearObjetoSocial, incrementarUso } from '@/lib/db/objetosSociales';
@@ -21,7 +22,7 @@ interface SocioForm {
   uid: string;
   clienteId?: string;
   cliente?: Cliente;
-  rol: RolSocio;
+  rol: RolSocio | '';
   porcentaje: number;
   esNuevo: boolean;
   esExtranjero: boolean;
@@ -35,6 +36,37 @@ interface ObjetoSocialSeleccionado {
   texto: string;
   predefinidoId?: string;
 }
+
+// Mapeo entre TipoInstrumento y tipos de sociedad para el validador de roles
+const MAPEO_TIPOS_SOCIEDAD: Record<TipoInstrumento, string> = {
+  'sa_de_cv': 'S.A.',
+  's_de_rl': 'S. de R.L.',
+} as const;
+
+// Mapeo entre IDs del backend y IDs del frontend (RolSocio)
+const MAPEO_ROLES_BACKEND_A_FRONTEND: Record<string, RolSocio | ''> = {
+  // S.A. roles
+  'sa_accionista': 'socio',
+  'sa_adm_unico': 'administrador_unico',
+  'sa_pres_consejo': 'representante_legal',  // Presidente es representante legal
+  'sa_sec_consejo': 'secretario_consejo',
+  'sa_tes_consejo': 'representante_legal',   // Tesorero también representante
+  'sa_comisario': 'comisario',
+  
+  // S.R.L. roles
+  'srl_socio': 'socio',
+  'srl_gerente_unico': 'administrador_unico',
+  'srl_cogerente': 'representante_legal',
+  'srl_pres_vigilancia': 'comisario',
+};
+
+// Mapeo inverso para cuando necesitamos mostrar el rol al backend
+const MAPEO_ROLES_FRONTEND_A_BACKEND: Record<RolSocio | '', string> = {};
+Object.entries(MAPEO_ROLES_BACKEND_A_FRONTEND).forEach(([backend, frontend]) => {
+  if (frontend) {
+    MAPEO_ROLES_FRONTEND_A_BACKEND[frontend] = backend;
+  }
+});
 
 const ROLES_FIJOS: { id: RolSocio; label: string }[] = [
   { id: 'socio', label: 'Socio' },
@@ -97,36 +129,35 @@ function BuscadorCliente({ onSelect, onCrear, authListo }: {
 
   return (
     <div ref={ref} className="relative">
-      <div className="flex items-center gap-2 px-3 py-2.5 rounded-xl"
-        style={{ border: '1px solid var(--border)', background: 'white' }}>
-        <Search size={14} style={{ color: 'var(--ink4)' }} />
+      <div className="flex items-center gap-2 px-3 py-2.5 rounded-xl bg-white dark:bg-gray-800"
+        style={{ border: '1px solid var(--border)' }}>
+        <Search size={14} className="text-gray-600 dark:text-gray-400" />
         <input value={q} onChange={e => { setQ(e.target.value); setAbierto(true); }}
           onFocus={() => setAbierto(true)}
           placeholder="Buscar por nombre, RFC, CURP..."
-          className="flex-1 text-[13px] outline-none" />
+          className="flex-1 text-[13px] outline-none bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400" />
         {q && <button onClick={() => setQ('')}><X size={13} style={{ color: 'var(--ink4)' }} /></button>}
       </div>
       {abierto && q.length > 0 && (
-        <div className="absolute top-full left-0 right-0 mt-1 bg-white rounded-xl shadow-lg z-50 overflow-hidden"
+        <div className="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-gray-800 rounded-xl shadow-lg z-50 overflow-hidden"
           style={{ border: '1px solid var(--border)' }}>
           {resultados.length === 0
-            ? <div className="px-4 py-3 text-[13px] text-[#86868B]">No se encontraron clientes</div>
+            ? <div className="px-4 py-3 text-[13px] text-gray-500 dark:text-gray-400">No se encontraron clientes</div>
             : resultados.map(c => (
               <button key={c.id} onClick={() => { onSelect(c); setQ(''); setAbierto(false); }}
-                className="w-full flex items-center gap-3 px-4 py-3 hover:bg-[#F5F5F7] transition-colors text-left">
-                <div className="w-8 h-8 rounded-full bg-[#F5F5F7] flex items-center justify-center text-[12px] font-bold shrink-0">
+                className="w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-left">
+                <div className="w-8 h-8 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-[12px] font-bold shrink-0 text-gray-900 dark:text-white">
                   {c.nombre.charAt(0).toUpperCase()}
                 </div>
                 <div>
-                  <div className="text-[13px] font-semibold text-[#1D1D1F]">{c.nombre}</div>
-                  <div className="text-[11px] text-[#86868B]">{c.rfc || c.curp || 'Sin RFC/CURP'}</div>
+                  <div className="text-[13px] font-semibold text-gray-900 dark:text-white">{c.nombre}</div>
+                  <div className="text-[11px] text-gray-500 dark:text-gray-400">{c.rfc || c.curp || 'Sin RFC/CURP'}</div>
                 </div>
               </button>
             ))
           }
           <button onClick={() => { onCrear(); setAbierto(false); setQ(''); }}
-            className="w-full flex items-center gap-2 px-4 py-3 border-t border-black/[0.06] hover:bg-[#F5F5F7] transition-colors"
-            style={{ color: 'var(--blue)' }}>
+            className="w-full flex items-center gap-2 px-4 py-3 border-t border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-blue-600 dark:text-blue-400">
             <Plus size={14} />
             <span className="text-[13px] font-semibold">Crear nuevo cliente</span>
           </button>
@@ -158,10 +189,8 @@ export default function NuevoInstrumentoPage() {
   const [numeroInstrumento, setNumeroInstrumento] = useState('');
 
   // Paso 2 — Socios
-  const [socios, setSocios] = useState<SocioForm[]>([
-    { uid: uid(), rol: 'socio', porcentaje: 50, esNuevo: false, esExtranjero: false },
-    { uid: uid(), rol: 'administrador_unico', porcentaje: 50, esNuevo: false, esExtranjero: false },
-  ]);
+  const [socios, setSocios] = useState<SocioForm[]>([]);
+  const [socioSeleccionadoParaRoles, setSocioSeleccionadoParaRoles] = useState<string | null>(null);
 
   // Paso 3 — Objeto(s) social(es)
   const [objetosSociales, setObjetosSociales] = useState<ObjetoSocialSeleccionado[]>([]);
@@ -215,7 +244,7 @@ export default function NuevoInstrumentoPage() {
   const totalPorcentaje = socios.reduce((s, x) => s + (x.porcentaje || 0), 0);
 
   const agregarSocio = () =>
-    setSocios(prev => [...prev, { uid: uid(), rol: 'socio', porcentaje: 0, esNuevo: false, esExtranjero: false }]);
+    setSocios(prev => [...prev, { uid: uid(), rol: '', porcentaje: 0, esNuevo: false, esExtranjero: false }]);
 
   const eliminarSocio = (uid: string) =>
     setSocios(prev => prev.filter(s => s.uid !== uid));
@@ -274,20 +303,43 @@ export default function NuevoInstrumentoPage() {
             tenantId,
             tipoPersona: 'fisica',
             nombre: socio.nuevoNombre,
-            ...(socio.nuevoRfc ? { rfc: socio.nuevoRfc } : {}),
+            nombre_completo: socio.nuevoNombre,
+            es_extranjero: socio.esExtranjero || false,
+            rfc: socio.nuevoRfc || '',
+            fecha_nacimiento: '',
+            lugar_nacimiento: '',
+            ocupacion: '',
+            estado_civil: '',
+            genero: '',
+            domicilio: '',
             ...(socio.nuevoEmail ? { email: socio.nuevoEmail } : {}),
             portalActivo: true,
           } as any);
         }
         if (!clienteId) continue;
+        
         sociosFinales.push({
           clienteId,
-          nombre_completo: socio.cliente?.nombre || socio.nuevoNombre || '',
           rol: socio.rol,
           porcentaje: socio.porcentaje,
-          es_extranjero: socio.esExtranjero,
           datosCompletos: false,
           documentosCompletos: false,
+          // Copiar TODOS los datos del Cliente (compendio)
+          nombre_completo: socio.nombre_completo || socio.nuevoNombre || '',
+          rfc: socio.rfc || socio.nuevoRfc || '',
+          curp: socio.curp || '',
+          fecha_nacimiento: socio.fecha_nacimiento || '',
+          lugar_nacimiento: socio.lugar_nacimiento || '',
+          ocupacion: socio.ocupacion || '',
+          estado_civil: socio.estado_civil || '',
+          genero: socio.genero || '',
+          domicilio: socio.domicilio || '',
+          es_extranjero: socio.es_extranjero || false,
+          clave_elector: socio.clave_elector || '',
+          seccion_ine: socio.seccion_ine || '',
+          idmex: socio.idmex || '',
+          numero_pasaporte: socio.numero_pasaporte || '',
+          numero_fm: socio.numero_fm || '',
         });
       }
 
@@ -333,9 +385,11 @@ export default function NuevoInstrumentoPage() {
     <>
       <Topbar breadcrumb="Instrumentos /" title="Nuevo instrumento" />
 
-      <div className="p-6 max-w-2xl mx-auto">
-        <h1 className="text-[24px] font-extrabold text-[#1D1D1F] tracking-tight mb-1">Nuevo instrumento</h1>
-        <p className="text-[14px] text-[#6E6E73] mb-6">Captura de primera sesión</p>
+      <main className="flex-1 overflow-y-auto p-8 max-w-2xl mx-auto">
+        <div className="mb-8">
+          <h1 className="text-4xl font-bold text-gray-900 mb-2">Nuevo instrumento</h1>
+          <p className="text-gray-600">Captura de primera sesión</p>
+        </div>
 
         {/* Stepper — solo mientras no esté en paso de éxito */}
         {paso < 5 && (
@@ -371,8 +425,8 @@ export default function NuevoInstrumentoPage() {
         {/* ── PASO 1 — TIPO ── */}
         {paso === 0 && (
           <div>
-            <h2 className="text-[18px] font-bold text-[#1D1D1F] mb-1">Tipo de instrumento</h2>
-            <p className="text-[13px] text-[#86868B] mb-6">El tipo define el formato y las reglas del acta</p>
+            <h2 className="text-lg font-bold text-gray-900 mb-2">Tipo de instrumento</h2>
+            <p className="text-sm text-gray-600 mb-6">El tipo define el formato y las reglas del acta</p>
 
             <div className="grid grid-cols-2 gap-4 mb-6">
               {[
@@ -380,16 +434,16 @@ export default function NuevoInstrumentoPage() {
                 { id: 's_de_rl' as TipoInstrumento, label: 'Sociedad de Responsabilidad Limitada', sub: 'S. de R.L.', desc: 'Partes sociales, máximo 50 socios' },
               ].map(t => (
                 <button key={t.id} onClick={() => setTipo(t.id)}
-                  className="p-5 rounded-2xl text-left transition-all"
-                  style={{
-                    border: tipo === t.id ? '2px solid var(--blue)' : '2px solid var(--border)',
-                    background: tipo === t.id ? 'var(--blue-bg)' : 'white',
-                  }}>
-                  <div className="text-[15px] font-bold text-[#1D1D1F] mb-0.5">{t.label}</div>
-                  <div className="text-[12px] font-mono mb-3" style={{ color: 'var(--blue)' }}>{t.sub}</div>
-                  <div className="text-[12px] text-[#86868B]">{t.desc}</div>
+                  className={`p-5 rounded-2xl text-left transition-all ${
+                    tipo === t.id 
+                      ? 'border-2 border-blue-600 bg-blue-50' 
+                      : 'border-2 border-gray-200 bg-white'
+                  }`}>
+                  <div className="text-base font-bold text-gray-900 mb-1">{t.label}</div>
+                  <div className="text-xs font-mono mb-3 text-blue-600">{t.sub}</div>
+                  <div className="text-xs text-gray-600">{t.desc}</div>
                   {tipo === t.id && (
-                    <div className="mt-3 flex items-center gap-1 text-[11px] font-bold" style={{ color: 'var(--blue)' }}>
+                    <div className="mt-3 flex items-center gap-1 text-xs font-bold text-blue-600">
                       <CheckCircle size={11} /> Seleccionado
                     </div>
                   )}
@@ -398,14 +452,13 @@ export default function NuevoInstrumentoPage() {
             </div>
 
             <div>
-              <label className="text-[11px] font-bold text-[#86868B] uppercase tracking-[0.06em] block mb-1.5">
+              <label className="text-xs font-bold text-gray-600 uppercase tracking-wider block mb-2">
                 Número de instrumento
-                <span className="ml-1 text-[10px] font-normal text-[#86868B]">(puedes modificarlo después)</span>
+                <span className="ml-1 text-xs font-normal text-gray-500">(puedes modificarlo después)</span>
               </label>
               <input value={numeroInstrumento} onChange={e => setNumeroInstrumento(e.target.value)}
                 placeholder="Ej. 1234"
-                className="w-full px-3 py-2.5 rounded-xl text-[13px] font-mono outline-none"
-                style={{ border: '1px solid var(--border)', background: 'white' }} />
+                className="w-full px-3 py-2.5 rounded-xl text-sm font-mono outline-none border border-gray-200 bg-white" />
             </div>
           </div>
         )}
@@ -413,21 +466,20 @@ export default function NuevoInstrumentoPage() {
         {/* ── PASO 2 — SOCIOS ── */}
         {paso === 1 && (
           <div>
-            <h2 className="text-[18px] font-bold text-[#1D1D1F] mb-1">Socios</h2>
-            <p className="text-[13px] text-[#86868B] mb-3">Mínimo 2 · Los porcentajes deben sumar 100%</p>
+            <h2 className="text-lg font-bold text-gray-900 mb-2">Socios</h2>
+            <p className="text-sm text-gray-600 mb-4">Mínimo 2 · Los porcentajes deben sumar 100%</p>
 
             {/* Indicador porcentaje */}
-            <div className="flex items-center justify-between px-4 py-2.5 rounded-xl mb-4"
-              style={{
-                background: totalPorcentaje === 100 ? 'var(--green-bg)' : totalPorcentaje > 100 ? 'var(--red-bg)' : 'var(--orange-bg)',
-              }}>
-              <span className="text-[13px] font-semibold"
-                style={{ color: totalPorcentaje === 100 ? 'var(--green)' : totalPorcentaje > 100 ? 'var(--red)' : 'var(--orange)' }}>
+            <div className={`flex items-center justify-between px-4 py-2.5 rounded-xl mb-4 ${
+              totalPorcentaje === 100 ? 'bg-green-50' : totalPorcentaje > 100 ? 'bg-red-50' : 'bg-amber-50'
+            }`}>
+              <span className={`text-sm font-semibold ${
+                totalPorcentaje === 100 ? 'text-green-700' : totalPorcentaje > 100 ? 'text-red-700' : 'text-amber-700'
+              }`}>
                 {totalPorcentaje === 100 ? '✓ Porcentajes correctos' : `Total: ${totalPorcentaje}% — debe ser 100%`}
               </span>
               <button onClick={distribuir}
-                className="text-[11px] font-semibold px-3 py-1 rounded-lg"
-                style={{ background: 'white', color: 'var(--ink3)' }}>
+                className="text-xs font-semibold px-3 py-1 rounded-lg bg-white text-gray-700 hover:bg-gray-100">
                 Distribuir equitativamente
               </button>
             </div>
@@ -492,7 +544,27 @@ export default function NuevoInstrumentoPage() {
                   ) : (
                     <div className="mb-3">
                       <BuscadorCliente
-                        onSelect={c => actualizarSocio(socio.uid, { cliente: c, clienteId: c.id, esNuevo: false })}
+                        onSelect={c => actualizarSocio(socio.uid, {
+                          cliente: c,
+                          clienteId: c.id,
+                          esNuevo: false,
+                          // Copiar TODOS los datos del Cliente al compendio del socio
+                          nombre_completo: c.nombre_completo,
+                          rfc: c.rfc,
+                          curp: c.curp,
+                          fecha_nacimiento: c.fecha_nacimiento,
+                          lugar_nacimiento: c.lugar_nacimiento,
+                          ocupacion: c.ocupacion,
+                          estado_civil: c.estado_civil,
+                          genero: c.genero,
+                          domicilio: c.domicilio,
+                          es_extranjero: c.es_extranjero,
+                          clave_elector: c.clave_elector,
+                          seccion_ine: c.seccion_ine,
+                          idmex: c.idmex,
+                          numero_pasaporte: c.numero_pasaporte,
+                          numero_fm: c.numero_fm,
+                        })}
                         onCrear={() => actualizarSocio(socio.uid, { esNuevo: true })}
                         authListo={authListo}
                       />
@@ -522,28 +594,28 @@ export default function NuevoInstrumentoPage() {
                   {/* Rol y porcentaje */}
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className="text-[10px] font-bold text-[#86868B] uppercase tracking-[0.06em] block mb-1">Rol</label>
-                      <select value={socio.rol}
-                        onChange={e => actualizarSocio(socio.uid, { rol: e.target.value as RolSocio })}
-                        className="w-full px-3 py-2 rounded-lg text-[13px] outline-none"
-                        style={{ border: '1px solid var(--border)', background: 'white' }}>
-                        <optgroup label="Roles fijos">
-                          {ROLES_FIJOS.map(r => <option key={r.id} value={r.id}>{r.label}</option>)}
-                        </optgroup>
-                        <optgroup label="Roles opcionales">
-                          {ROLES_OPCIONALES.map(r => <option key={r.id} value={r.id}>{r.label}</option>)}
-                        </optgroup>
-                      </select>
+                      <label className="text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-[0.06em] block mb-1">Rol</label>
+                      <button
+                        onClick={() => setSocioSeleccionadoParaRoles(socio.uid)}
+                        className={`w-full px-3 py-2 rounded-lg text-[13px] text-left outline-none transition-all border ${
+                          socio.rol ? 'bg-white dark:bg-gray-800 text-gray-900 dark:text-white border-gray-300 dark:border-gray-600 hover:border-blue-500 dark:hover:border-blue-400' 
+                          : 'bg-amber-50 dark:bg-amber-900 text-amber-900 dark:text-amber-100 border-amber-300 dark:border-amber-700 hover:border-amber-400 dark:hover:border-amber-600 font-semibold'
+                        }`}>
+                        {socio.rol 
+                          ? ([...ROLES_FIJOS, ...ROLES_OPCIONALES].find(r => r.id === socio.rol)?.label || 'Rol desconocido')
+                          : '⚠ Seleccionar rol'
+                        }
+                      </button>
                     </div>
                     <div>
-                      <label className="text-[10px] font-bold text-[#86868B] uppercase tracking-[0.06em] block mb-1">Participación %</label>
-                      <div className="flex items-center gap-2 px-3 py-2 rounded-lg"
-                        style={{ border: '1px solid var(--border)', background: 'white' }}>
+                      <label className="text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-[0.06em] block mb-1">Participación %</label>
+                      <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-white dark:bg-gray-800"
+                        style={{ border: '1px solid var(--border)' }}>
                         <input type="number" min="0" max="100"
                           value={socio.porcentaje}
                           onChange={e => actualizarSocio(socio.uid, { porcentaje: parseFloat(e.target.value) || 0 })}
-                          className="flex-1 text-[13px] outline-none font-mono" />
-                        <span className="text-[13px] text-[#86868B]">%</span>
+                          className="flex-1 text-[13px] outline-none font-mono bg-white dark:bg-gray-800 text-gray-900 dark:text-white" />
+                        <span className="text-[13px] text-gray-500 dark:text-gray-400">%</span>
                       </div>
                     </div>
                   </div>
@@ -562,8 +634,8 @@ export default function NuevoInstrumentoPage() {
         {/* ── PASO 3 — OBJETO SOCIAL ── */}
         {paso === 2 && (
           <div>
-            <h2 className="text-[18px] font-bold text-[#1D1D1F] mb-1">Objeto social</h2>
-            <p className="text-[13px] text-[#86868B] mb-6">Puedes agregar uno o varios objetos sociales</p>
+            <h2 className="text-lg font-bold text-gray-900 mb-2">Objeto social</h2>
+            <p className="text-sm text-gray-600 mb-6">Puedes agregar uno o varios objetos sociales</p>
 
             {/* Objetos seleccionados */}
             {objetosSociales.length > 0 && (
@@ -665,8 +737,8 @@ export default function NuevoInstrumentoPage() {
         {/* ── PASO 4 — CAPITAL ── */}
         {paso === 3 && (
           <div>
-            <h2 className="text-[18px] font-bold text-[#1D1D1F] mb-1">Capital social</h2>
-            <p className="text-[13px] text-[#86868B] mb-6">El valor inicial de la sociedad</p>
+            <h2 className="text-lg font-bold text-gray-900 mb-2">Capital social</h2>
+            <p className="text-sm text-gray-600 mb-6">El valor inicial de la sociedad</p>
 
             <div className="bg-white border border-black/[0.07] rounded-2xl p-6">
               <label className="text-[11px] font-bold text-[#86868B] uppercase tracking-[0.06em] block mb-2">
@@ -693,8 +765,8 @@ export default function NuevoInstrumentoPage() {
         {/* ── PASO 5 — CONFIRMACIÓN ── */}
         {paso === 4 && (
           <div>
-            <h2 className="text-[18px] font-bold text-[#1D1D1F] mb-1">Confirmar</h2>
-            <p className="text-[13px] text-[#86868B] mb-6">Resumen de la primera sesión</p>
+            <h2 className="text-lg font-bold text-gray-900 mb-2">Confirmar</h2>
+            <p className="text-sm text-gray-600 mb-6">Resumen de la primera sesión</p>
 
             <div className="space-y-3">
               {/* Tipo e instrumento */}
@@ -777,12 +849,11 @@ export default function NuevoInstrumentoPage() {
         {/* ── PASO 6 — ÉXITO ── */}
         {paso === 5 && (
           <div className="text-center">
-            <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4"
-              style={{ background: 'var(--green-bg)' }}>
-              <CheckCircle size={32} style={{ color: 'var(--green)' }} />
+            <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 bg-green-100">
+              <CheckCircle size={32} className="text-green-600" />
             </div>
-            <h2 className="text-[22px] font-extrabold text-[#1D1D1F] mb-1">Instrumento creado</h2>
-            <p className="text-[14px] text-[#86868B] mb-8">El expediente está abierto y listo para continuar</p>
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">Instrumento creado</h2>
+            <p className="text-base text-gray-600 mb-8">El expediente está abierto y listo para continuar</p>
 
             {/* Link del portal */}
             <div className="bg-white border border-black/[0.07] rounded-2xl p-5 mb-4 text-left">
@@ -805,13 +876,11 @@ export default function NuevoInstrumentoPage() {
 
             <div className="flex gap-3">
               <button onClick={() => router.push(`/instrumentos/${instrumentoId}`)}
-                className="flex-1 py-3 rounded-xl text-[14px] font-bold"
-                style={{ background: 'var(--blue)', color: 'white' }}>
+                className="flex-1 py-3 rounded-xl text-base font-bold bg-blue-600 text-white hover:bg-blue-700 transition-colors">
                 Ir al expediente
               </button>
               <button onClick={() => router.push('/instrumentos')}
-                className="flex-1 py-3 rounded-xl text-[14px] font-bold"
-                style={{ background: 'var(--bg2)', color: 'var(--ink3)' }}>
+                className="flex-1 py-3 rounded-xl text-base font-bold bg-gray-200 text-gray-700 hover:bg-gray-300 transition-colors">
                 Ver todos
               </button>
             </div>
@@ -820,32 +889,77 @@ export default function NuevoInstrumentoPage() {
 
         {/* ── NAVEGACIÓN ── */}
         {paso < 5 && (
-          <div className="flex items-center justify-between mt-8 pt-6 border-t border-black/[0.07]">
+          <div className="flex items-center justify-between mt-8 pt-6 border-t border-gray-200">
             <button onClick={() => paso === 0 ? router.push('/instrumentos') : setPaso(p => p - 1)}
-              className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-[13px] font-semibold transition-all"
-              style={{ background: 'var(--bg2)', color: 'var(--ink3)' }}>
+              className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all bg-gray-200 text-gray-700 hover:bg-gray-300">
               <ChevronLeft size={16} /> {paso === 0 ? 'Cancelar' : 'Anterior'}
             </button>
 
             {paso < 4 ? (
               <button onClick={() => setPaso(p => p + 1)}
-                className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-[13px] font-bold transition-all"
-                style={{ background: 'var(--blue)', color: 'white' }}>
+                className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-all bg-blue-600 text-white hover:bg-blue-700">
                 Siguiente <ChevronRight size={16} />
               </button>
             ) : (
               <button onClick={confirmarCrear} disabled={creando}
-                className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-[13px] font-bold disabled:opacity-50"
-                style={{ background: 'var(--green)', color: 'white' }}>
+                className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold disabled:opacity-50 bg-green-600 text-white hover:bg-green-700 transition-colors">
                 {creando
-                  ? <><Loader2 size={15} style={{ animation: 'spin 1s linear infinite' }} /> Creando...</>
+                  ? <><Loader2 size={15} className="animate-spin" /> Creando...</>
                   : <><CheckCircle size={15} /> Crear instrumento</>}
               </button>
             )}
           </div>
         )}
-      </div>
-      <style jsx global>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+
+        {/* Modal de Selector de Roles */}
+        {socioSeleccionadoParaRoles && tipo && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white dark:bg-gray-800 rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+              <div className="sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 p-6 flex justify-between items-center">
+                <div>
+                  <h3 className="text-xl font-bold text-gray-900 dark:text-white">Seleccionar Rol</h3>
+                  <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                    Tipo de sociedad: {MAPEO_TIPOS_SOCIEDAD[tipo]}
+                  </p>
+                </div>
+                <div className="flex gap-2">
+                  {socios.find(s => s.uid === socioSeleccionadoParaRoles)?.rol && (
+                    <button
+                      onClick={() => {
+                        actualizarSocio(socioSeleccionadoParaRoles, { rol: '' });
+                        setSocioSeleccionadoParaRoles(null);
+                      }}
+                      className="px-4 py-2 rounded-lg text-sm font-semibold bg-red-50 dark:bg-red-900 text-red-700 dark:text-red-200 hover:bg-red-100 dark:hover:bg-red-800 transition-colors">
+                      Limpiar
+                    </button>
+                  )}
+                  <button
+                    onClick={() => setSocioSeleccionadoParaRoles(null)}
+                    className="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300">
+                    <X size={24} />
+                  </button>
+                </div>
+              </div>
+              
+              <div className="p-6">
+                <SelectorRoles
+                  tipoSociedad={MAPEO_TIPOS_SOCIEDAD[tipo]}
+                  rolesSeleccionados={socios.find(s => s.uid === socioSeleccionadoParaRoles)?.rol ? [MAPEO_ROLES_FRONTEND_A_BACKEND[socios.find(s => s.uid === socioSeleccionadoParaRoles)?.rol!] || ''] : []}
+                  onChange={(rolesNuevos) => {
+                    if (rolesNuevos.length > 0) {
+                      // Mapear el rol del backend al frontend
+                      const rolBackend = rolesNuevos[0];
+                      const rolFrontend = MAPEO_ROLES_BACKEND_A_FRONTEND[rolBackend] || (rolBackend as RolSocio);
+                      actualizarSocio(socioSeleccionadoParaRoles, { rol: rolFrontend });
+                      setSocioSeleccionadoParaRoles(null);
+                    }
+                  }}
+                />
+              </div>
+            </div>
+          </div>
+        )}
+      </main>
     </>
   );
 }

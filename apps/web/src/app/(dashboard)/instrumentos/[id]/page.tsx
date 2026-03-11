@@ -3,11 +3,13 @@
 import { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { doc, getDoc, updateDoc, collection, query, where, getDocs, onSnapshot } from 'firebase/firestore'
+import { storage } from '@/lib/firebase'
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage'
 import { db } from '@/lib/firebase'
 import {
     FileText, Users, Building2, CheckCircle, AlertCircle,
     Loader2, Download, ChevronLeft, Shield, Hash, Briefcase,
-    Pencil, Check, X, Circle, Copy
+    Pencil, Check, X, Circle, Copy, Link2, Upload as FileUp
 } from 'lucide-react'
 
 // ── TIPOS ─────────────────────────────────────────────────────────────────────
@@ -39,11 +41,11 @@ interface Instrumento {
     denominacion_social?: string; sociedadNombre?: string
     numero_poliza?: number; numeroInstrumento?: number; libro_registro?: number
     ciudad_fedatario?: string; fecha_instrumento?: string
-    cud?: string; cudMUA?: string; solicitante_mua?: string
+    cud?: string; cudMUA?: string; solicitante_mua?: string; cudPdfUrl?: string
     domicilio_social?: string; domicilioSocial?: string
     capital_fijo?: number; capital_social?: number; capitalSocial?: number
     objeto_social_texto?: string; objetoSocial?: string
-    socios?: Socio[]; estado: string; tenantId?: string
+    socios?: Socio[]; estado: string; tenantId?: string; linkPortalToken?: string
 }
 
 interface DocInfo { clienteId: string; tipo: string; estado: string; datosExtraidos?: Record<string, any> }
@@ -63,7 +65,7 @@ const rolLabel: Record<string, string> = {
     secretario_consejo: 'Secretario del Consejo', apoderado: 'Apoderado',
 }
 const DOCS_REQUERIDOS_MX = ['ine', 'curp', 'rfc']
-const DOCS_REQUERIDOS_EX = ['pasaporte', 'fm2', 'rfc']
+const DOCS_REQUERIDOS_EX = ['pasaporte', 'fm2', 'rfc', 'curp']
 const DOC_LABEL: Record<string, string> = {
     ine: 'INE', curp: 'CURP', rfc: 'RFC',
     pasaporte: 'Pasaporte', fm2: 'FM2/FM3',
@@ -131,15 +133,15 @@ function CampoEditable({ label, value, onSave, tipo = 'text', fuente }: {
                     <span className="text-sm text-gray-800 font-medium flex-1 truncate">
                         {value ?? <span className="text-gray-300 italic text-xs">Sin datos</span>}
                     </span>
-                    <div className="opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1 flex-shrink-0">
+                    <div className="flex items-center gap-1 flex-shrink-0">
                         {value && (
-                            <button onClick={copiar} className="p-1 rounded-md hover:bg-gray-100 text-gray-400" title="Copiar">
-                                {copied ? <Check size={11} className="text-green-500" /> : <Copy size={11} />}
+                            <button onClick={copiar} className="p-1 rounded-md hover:bg-gray-100 text-gray-500 hover:text-gray-700 transition-colors" title="Copiar">
+                                {copied ? <Check size={11} className="text-green-600" /> : <Copy size={11} />}
                             </button>
                         )}
                         {onSave && (
                             <button onClick={() => { setDraft(String(value ?? '')); setEditing(true) }}
-                                className="p-1 rounded-md hover:bg-gray-100 text-gray-400">
+                                className="p-1 rounded-md hover:bg-gray-100 text-gray-500 hover:text-gray-700 transition-colors">
                                 <Pencil size={11} />
                             </button>
                         )}
@@ -162,7 +164,9 @@ export default function InstrumentoDetallePage() {
     const [generando, setGenerando] = useState(false)
     const [borrador, setBorrador] = useState<BorradorResult | null>(null)
     const [error, setError] = useState<string | null>(null)
-    const [tabActiva, setTabActiva] = useState<'expediente' | 'compendio' | 'borrador'>('compendio')
+    const [cudOk, setCudOk] = useState<string | null>(null)
+    const [tabActiva, setTabActiva] = useState<'expediente' | 'compendio' | 'portal' | 'borrador'>('compendio')
+    const [subiendoCud, setSubiendoCud] = useState(false)
 
     // ── Cargar instrumento + perfiles de clientes ─────────────────────────────
     useEffect(() => {
@@ -262,30 +266,47 @@ export default function InstrumentoDetallePage() {
     }
 
     const calcularCompletitud = () => {
-        if (!instrumento) return { porcentaje: 0, faltantes: [] as string[] }
+        if (!instrumento) return { porcentaje: 0, faltantes: [] as string[], puedeGenerar: false }
+        
         const faltantes: string[] = []
-        if (!getDenominacion(instrumento)) faltantes.push('Denominación social')
-        if (!getCapital(instrumento)) faltantes.push('Capital social')
-        if (!getObjeto(instrumento)) faltantes.push('Objeto social')
-        if (!getCUD(instrumento)) faltantes.push('CUD del MUA')
-        if (!getDomicilio(instrumento)) faltantes.push('Domicilio social')
+        
+        // ─ CAMPOS DEL INSTRUMENTO (6 REQUERIDOS - SIN HARDCODEADOS NI AUTO-LLENADOS) ─
+        if (!getNumPoliza(instrumento)) faltantes.push('Instrumento: Número de póliza')
+        if (!instrumento.fecha_instrumento) faltantes.push('Instrumento: Fecha del instrumento')
+        if (!instrumento.tipo) faltantes.push('Instrumento: Tipo de sociedad')
+        if (!getDenominacion(instrumento)) faltantes.push('Instrumento: Denominación social')
+        if (!getCapital(instrumento)) faltantes.push('Instrumento: Capital fijo')
+        if (!getObjeto(instrumento)) faltantes.push('Instrumento: Objeto social')
 
         const socios = instrumento.socios ?? []
-        if (socios.length === 0) faltantes.push('Al menos un socio')
+        if (socios.length === 0) faltantes.push('Requerido: Al menos un socio')
 
+        // ─ CAMPOS POR SOCIO (10 REQUERIDOS) ─
         socios.forEach((socio, i) => {
             const perfil = getSocioPerfil(socio)
             const nombre = perfil.nombre_completo || `Socio ${i + 1}`
+            
+            if (!perfil.nombre_completo) faltantes.push(`${nombre}: Nombre completo`)
             if (!perfil.rfc) faltantes.push(`${nombre}: RFC`)
-            if (!perfil.curp && !socio.es_extranjero) faltantes.push(`${nombre}: CURP`)
+            if (!perfil.curp) faltantes.push(`${nombre}: CURP`)
             if (!perfil.fecha_nacimiento) faltantes.push(`${nombre}: Fecha de nacimiento`)
-            if (!perfil.estado_civil) faltantes.push(`${nombre}: Estado civil`)
+            if (!perfil.lugar_nacimiento) faltantes.push(`${nombre}: Lugar de nacimiento`)
+            if (!perfil.genero) faltantes.push(`${nombre}: Género`)
             if (!perfil.ocupacion) faltantes.push(`${nombre}: Ocupación`)
+            if (!perfil.estado_civil) faltantes.push(`${nombre}: Estado civil`)
+            if (!perfil.domicilio) faltantes.push(`${nombre}: Domicilio`)
+            if (!socio.rol) faltantes.push(`${nombre}: Rol`)
         })
 
-        const totalCampos = 5 + Math.max(socios.length, 1) * 5
+        // ─ CÁLCULO DE PORCENTAJE ─
+        const totalCampos = 6 + Math.max(socios.length, 1) * 10
         const completados = totalCampos - faltantes.length
-        return { porcentaje: Math.max(0, Math.round((completados / totalCampos) * 100)), faltantes }
+        const porcentaje = Math.max(0, Math.round((completados / totalCampos) * 100))
+        
+        // ─ PUEDE GENERAR SOLO SI NO HAY FALTANTES ─
+        const puedeGenerar = faltantes.length === 0
+
+        return { porcentaje, faltantes, puedeGenerar }
     }
 
     const generarBorrador = async () => {
@@ -330,12 +351,74 @@ export default function InstrumentoDetallePage() {
         } catch (e: any) { setError(e.message) }
     }
 
+    const subirPdfCud = async (file: File) => {
+        if (!id || !instrumento) return
+        setSubiendoCud(true)
+        setCudOk(null)
+        setError(null)
+        try {
+            // 1. Subir PDF a Storage
+            const storageRef = ref(storage, `instrumentos/${id}/cud.pdf`)
+            await uploadBytes(storageRef, file)
+            const url = await getDownloadURL(storageRef)
+            
+            // 2. Procesar CUD en backend
+            const formData = new FormData()
+            formData.append('archivo', file)
+            formData.append('instrumento_id', id)
+            
+            console.log('Enviando PDF a procesar-cud-pdf...')
+            const respuesta = await fetch('http://localhost:5001/procesar-cud-pdf', {
+                method: 'POST',
+                body: formData
+            })
+            
+            console.log('Respuesta del backend:', respuesta.status)
+            
+            if (!respuesta.ok) {
+                try {
+                    const error = await respuesta.json()
+                    throw new Error(error.detail || `Error HTTP ${respuesta.status}`)
+                } catch (e) {
+                    throw new Error(`Error al procesar CUD: ${respuesta.status}`)
+                }
+            }
+            
+            const datosprocesados = await respuesta.json()
+            console.log('Datos procesados:', datosprocesados)
+            
+            // 3. Guardar URL del PDF y marcar como procesado
+            await updateDoc(doc(db, 'instrumentos', id), { 
+                cudPdfUrl: url,
+                denominacion_social: datosprocesados.denominacion,
+                cud: datosprocesados.cud,
+                solicitante_mua: datosprocesados.nombre_solicitante,
+                texto_resolucion: datosprocesados.texto_resolucion,
+                mua_datos: {
+                    cud: datosprocesados.cud,
+                    denominacion: datosprocesados.denominacion,
+                    nombre_solicitante: datosprocesados.nombre_solicitante,
+                    texto_resolucion: datosprocesados.texto_resolucion,
+                    confianza: datosprocesados.confianza,
+                    errores: datosprocesados.errores,
+                }
+            })
+            setInstrumento(prev => prev ? { ...prev, cudPdfUrl: url } : prev)
+            setCudOk(`CUD procesado correctamente (${datosprocesados.confianza}% confianza)`)
+            setTimeout(() => setCudOk(null), 4000)
+        } catch (e: any) {
+            setError('Error al subir PDF: ' + e.message)
+        } finally {
+            setSubiendoCud(false)
+        }
+    }
+
     if (loading) return <div className="flex items-center justify-center h-64"><Loader2 className="animate-spin text-gray-400" size={32} /></div>
     if (error && !instrumento) return <div className="p-8 text-red-600">{error}</div>
     if (!instrumento) return null
 
-    const { porcentaje, faltantes } = calcularCompletitud()
-    const compendioListo = porcentaje >= 80   // ← no requiere 100% para generar
+    const { porcentaje, faltantes, puedeGenerar } = calcularCompletitud()
+    const compendioListo = puedeGenerar   // ← ahora requiere TODOS los campos críticos
     const capital = getCapital(instrumento)
     const denominacion = getDenominacion(instrumento)
     const objeto = getObjeto(instrumento)
@@ -345,6 +428,7 @@ export default function InstrumentoDetallePage() {
     const TABS = [
         { key: 'compendio', label: `Compendio · ${porcentaje}%` },
         { key: 'expediente', label: 'Expediente' },
+        ...(instrumento.linkPortalToken ? [{ key: 'portal', label: 'Portal del Cliente' }] : []),
         { key: 'borrador', label: borrador ? `Borrador · ${borrador.auditoria.score}/100` : 'Borrador' },
     ] as const
 
@@ -368,7 +452,7 @@ export default function InstrumentoDetallePage() {
                             </button>
                         )}
                         <button onClick={generarBorrador} disabled={generando || !compendioListo}
-                            title={!compendioListo ? `Compendio al ${porcentaje}% — necesitas al menos 80%` : ''}
+                            title={!compendioListo ? `Campos faltantes: ${faltantes.join(' • ')}` : ''}
                             className="flex items-center gap-2 px-5 py-2 bg-black text-white rounded-xl text-sm font-medium hover:bg-gray-800 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
                             {generando ? <><Loader2 size={15} className="animate-spin" /> Generando...</> : <><FileText size={15} /> Generar Borrador</>}
                         </button>
@@ -384,15 +468,8 @@ export default function InstrumentoDetallePage() {
                     <div className="w-full bg-gray-100 rounded-full h-1.5 mb-3">
                         <div className="h-1.5 rounded-full transition-all" style={{ width: `${porcentaje}%`, background: porcentaje >= 80 ? '#1A9640' : '#0071E3' }} />
                     </div>
-                    {faltantes.length > 0 && (
-                        <div className="flex flex-wrap gap-1.5">
-                            {faltantes.slice(0, 6).map(f => (
-                                <span key={f} className="text-xs px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-100">{f}</span>
-                            ))}
-                            {faltantes.length > 6 && <span className="text-xs px-2 py-0.5 rounded-full bg-gray-50 text-gray-500">+{faltantes.length - 6} más</span>}
-                        </div>
-                    )}
                 </div>
+
             </div>
 
             {/* TABS */}
@@ -413,9 +490,7 @@ export default function InstrumentoDetallePage() {
                         <h2 className="flex items-center gap-2 text-xs font-semibold text-gray-400 uppercase tracking-widest mb-3"><Hash size={13} /> Datos del Instrumento</h2>
                         <div className="bg-white border border-gray-100 rounded-2xl divide-y divide-gray-50">
                             <CampoEditable label="Número de póliza" value={numPoliza} onSave={null} />
-                            <CampoEditable label="Libro de registro" value={instrumento.libro_registro} onSave={null} />
-                            <CampoEditable label="Fecha del instrumento" value={formatFecha(instrumento.fecha_instrumento)} onSave={null} />
-                            <CampoEditable label="Ciudad fedatario" value={instrumento.ciudad_fedatario} onSave={v => guardarCampo('ciudad_fedatario', v)} />
+                            <CampoEditable label="Fecha del instrumento" value={formatFecha(instrumento.fecha_instrumento)} onSave={v => guardarCampo('fecha_instrumento', v)} tipo="date" />
                         </div>
                     </section>
 
@@ -434,8 +509,45 @@ export default function InstrumentoDetallePage() {
                     <section>
                         <h2 className="flex items-center gap-2 text-xs font-semibold text-gray-400 uppercase tracking-widest mb-3"><Shield size={13} /> MUA</h2>
                         <div className="bg-white border border-gray-100 rounded-2xl divide-y divide-gray-50">
-                            <CampoEditable label="CUD" value={cud} onSave={v => guardarCampo('cud', v)} />
-                            <CampoEditable label="Solicitante MUA" value={instrumento.solicitante_mua} onSave={v => guardarCampo('solicitante_mua', v)} />
+                            {/* Carga de PDF del CUD */}
+                            <div className="px-5 py-4">
+                                <div className="flex items-center gap-2 mb-3">
+                                    <FileUp size={13} className="text-gray-400" />
+                                    <span className="text-xs text-gray-500 font-semibold">PDF del CUD</span>
+                                </div>
+                                {instrumento.cudPdfUrl ? (
+                                    <div className="flex items-center gap-2">
+                                        <a href={instrumento.cudPdfUrl} target="_blank" rel="noopener noreferrer" 
+                                            className="text-sm text-blue-600 hover:underline font-medium">Ver PDF</a>
+                                        <button onClick={() => {
+                                            const input = document.createElement('input')
+                                            input.type = 'file'
+                                            input.accept = '.pdf'
+                                            input.onchange = (e: any) => subirPdfCud(e.target.files[0])
+                                            input.click()
+                                        }} disabled={subiendoCud}
+                                            className="text-sm text-gray-500 hover:text-gray-700 disabled:opacity-40">
+                                            {subiendoCud ? 'Subiendo...' : 'Cambiar'}
+                                        </button>
+                                    </div>
+                                ) : (
+                                    <button onClick={() => {
+                                        const input = document.createElement('input')
+                                        input.type = 'file'
+                                        input.accept = '.pdf'
+                                        input.onchange = (e: any) => subirPdfCud(e.target.files[0])
+                                        input.click()
+                                    }} disabled={subiendoCud}
+                                        className="px-4 py-2 bg-blue-50 text-blue-600 rounded-lg text-sm font-medium hover:bg-blue-100 disabled:opacity-40 transition-colors">
+                                        {subiendoCud ? <><Loader2 size={14} className="inline animate-spin mr-2" />Subiendo...</> : <><FileUp size={14} className="inline mr-2" />Subir PDF</> }
+                                    </button>
+                                )}
+                                {cudOk && (
+                                    <div className="flex items-center gap-2 text-sm px-3 py-2 mt-3 rounded-lg bg-green-50 text-green-700">
+                                        <CheckCircle size={14} /> {cudOk}
+                                    </div>
+                                )}
+                            </div>
                         </div>
                     </section>
 
@@ -474,12 +586,13 @@ export default function InstrumentoDetallePage() {
                                         <div className="divide-y divide-gray-50">
                                             {/* Datos personales — desde clientes/{id} */}
                                             <CampoEditable label="RFC" value={perfil.rfc} fuente="RFC / Constancia SAT" onSave={salvarCliente('rfc')} />
-                                            {!esExtranjero && <CampoEditable label="CURP" value={perfil.curp} fuente="CURP / INE" onSave={salvarCliente('curp')} />}
-                                            <CampoEditable label="Fecha de nacimiento" value={formatFecha(perfil.fecha_nacimiento)} fuente="INE / CURP" onSave={null} />
-                                            <CampoEditable label="Lugar de nacimiento" value={perfil.lugar_nacimiento} fuente="CURP" onSave={null} />
+                                            <CampoEditable label="CURP" value={perfil.curp} fuente="CURP / INE" onSave={salvarCliente('curp')} />
+                                            <CampoEditable label="Fecha de nacimiento" value={formatFecha(perfil.fecha_nacimiento)} fuente="INE / CURP" onSave={salvarCliente('fecha_nacimiento')} tipo="date" />
+                                            <CampoEditable label="Lugar de nacimiento" value={perfil.lugar_nacimiento} fuente="CURP" onSave={salvarCliente('lugar_nacimiento')} />
+                                            <CampoEditable label="Género" value={perfil.genero} onSave={salvarCliente('genero')} />
                                             <CampoEditable label="Estado civil" value={perfil.estado_civil} onSave={salvarCliente('estado_civil')} />
                                             <CampoEditable label="Ocupación" value={perfil.ocupacion} onSave={salvarCliente('ocupacion')} />
-                                            <CampoEditable label="Domicilio" value={domicilioStr(perfil.domicilio)} fuente="INE / Comprobante" onSave={null} />
+                                            <CampoEditable label="Domicilio" value={domicilioStr(perfil.domicilio)} fuente="INE / Comprobante" onSave={salvarCliente('domicilio')} />
 
                                             {/* Campos INE — solo mexicanos */}
                                             {!esExtranjero && <>
@@ -593,6 +706,42 @@ export default function InstrumentoDetallePage() {
                 </div>
             )}
 
+            {/* ── TAB PORTAL ── */}
+            {tabActiva === 'portal' && (
+                <div className="space-y-6">
+                    {instrumento.linkPortalToken ? (
+                        <section>
+                            <h2 className="flex items-center gap-2 text-xs font-semibold text-gray-400 uppercase tracking-widest mb-3"><Link2 size={13} /> Enlace del Portal</h2>
+                            <div className="bg-white border border-gray-100 rounded-2xl px-5 py-4">
+                                <p className="text-xs text-gray-500 mb-3">Comparte este enlace con los socios para que suban sus documentos:</p>
+                                <div className="flex items-center gap-2">
+                                    <input
+                                        type="text"
+                                        readOnly
+                                        value={`${typeof window !== 'undefined' ? window.location.origin : ''}/portal/${instrumento.linkPortalToken}`}
+                                        className="flex-1 text-sm text-gray-700 font-mono border border-gray-200 rounded-lg px-3 py-2 bg-gray-50"
+                                    />
+                                    <button
+                                        onClick={() => {
+                                            navigator.clipboard.writeText(`${typeof window !== 'undefined' ? window.location.origin : ''}/portal/${instrumento.linkPortalToken}`)
+                                            alert('Enlace copiado al portapapeles')
+                                        }}
+                                        className="px-4 py-2 bg-blue-50 text-blue-600 rounded-lg text-sm font-medium hover:bg-blue-100 transition-colors"
+                                    >
+                                        Copiar enlace
+                                    </button>
+                                </div>
+                            </div>
+                        </section>
+                    ) : (
+                        <div className="flex flex-col items-center justify-center py-24 text-gray-400">
+                            <FileText size={40} className="mb-4 opacity-30" />
+                            <p className="text-sm">No hay enlace del portal generado aún</p>
+                        </div>
+                    )}
+                </div>
+            )}
+
             {/* ── TAB BORRADOR ── */}
             {tabActiva === 'borrador' && (
                 <div className="space-y-6">
@@ -601,7 +750,7 @@ export default function InstrumentoDetallePage() {
                             <FileText size={40} className="mb-4 opacity-30" />
                             <p className="text-sm">El borrador se generará aquí</p>
                             <p className="text-xs mt-1 opacity-60">
-                                {compendioListo ? 'Haz clic en "Generar Borrador"' : `Compendio al ${porcentaje}% — necesitas al menos 80%`}
+                                {compendioListo ? 'Haz clic en "Generar Borrador"' : `Faltan ${faltantes.length} campo${faltantes.length !== 1 ? 's' : ''} requerido${faltantes.length !== 1 ? 's' : ''}`}
                             </p>
                         </div>
                     ) : (

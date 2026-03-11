@@ -1,9 +1,8 @@
 'use client';
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Plus, Search, Upload, ArrowRight, User, Building2, Loader2, FileText } from 'lucide-react';
+import { Plus, Search, Upload, User, Building2, Loader2 } from 'lucide-react';
 import { Topbar } from '@/components/layout/Shell';
-import { KpiCard } from '@/components/ui';
 import { getClientes } from '@/lib/db/clientes';
 import type { Cliente } from '@fedatario/shared';
 
@@ -41,139 +40,112 @@ export default function ClientesPage() {
 
   return (
     <>
-      <Topbar
-        breadcrumb="Fedatario /"
-        title="Clientes"
-        actions={
-          <div className="flex items-center gap-2">
-            <Link href="/clientes/carga-masiva"
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[13px] font-semibold no-underline"
-              style={{ background: 'var(--bg2)', color: 'var(--ink3)', border: '1px solid var(--border)' }}>
-              <Upload size={14} /> Carga masiva
-            </Link>
-            <Link href="/clientes/nuevo"
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[13px] font-bold no-underline"
-              style={{ background: 'var(--blue)', color: 'white' }}>
-              <Plus size={14} /> Nuevo cliente
-            </Link>
-          </div>
-        }
-      />
+      <Topbar breadcrumb="Fedatario /" title="Clientes" />
 
-      <div className="p-6">
-        <h1 className="text-[24px] font-extrabold text-[#1D1D1F] tracking-tight mb-1">Clientes</h1>
-        <p className="text-[14px] text-[#6E6E73] mb-6">Socios y personas registradas en el sistema</p>
+      <main className="flex-1 p-8 overflow-y-auto bg-gray-50 dark:bg-gray-900">
+        <div className="mb-8">
+          <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-2">Clientes</h1>
+          <p className="text-gray-600 dark:text-gray-400">Socios y personas registradas en el sistema</p>
+        </div>
 
         {/* KPIs */}
-        <div className="grid grid-cols-3 gap-3 mb-6">
-          <KpiCard num={String(clientes.length)} label="Total clientes" delta="Registrados" deltaColor="var(--blue)" />
-          <KpiCard num={String(fisicas)} label="Personas físicas" delta="Individuos" deltaColor="var(--ink3)" />
-          <KpiCard num={String(morales)} label="Personas morales" delta="Empresas" deltaColor="var(--ink3)" />
+        <div className="grid grid-cols-3 gap-6 mb-8">
+          <div className="bg-white dark:bg-gray-800 rounded-3xl p-6 shadow-sm">
+            <p className="text-gray-600 dark:text-gray-400 text-sm mb-3">Total clientes</p>
+            <p className="text-4xl font-bold text-gray-900 dark:text-white">{clientes.length}</p>
+            <p className="text-xs text-gray-500 dark:text-gray-500 mt-2">Registrados</p>
+          </div>
+          <div className="bg-white dark:bg-gray-800 rounded-3xl p-6 shadow-sm">
+            <p className="text-gray-600 dark:text-gray-400 text-sm mb-3">Personas físicas</p>
+            <p className="text-4xl font-bold text-blue-600 dark:text-blue-400">{fisicas}</p>
+            <p className="text-xs text-gray-500 dark:text-gray-500 mt-2">Individuos</p>
+          </div>
+          <div className="bg-white dark:bg-gray-800 rounded-3xl p-6 shadow-sm">
+            <p className="text-gray-600 dark:text-gray-400 text-sm mb-3">Personas morales</p>
+            <p className="text-4xl font-bold text-purple-600 dark:text-purple-400">{morales}</p>
+            <p className="text-xs text-gray-500 dark:text-gray-500 mt-2">Empresas</p>
+          </div>
         </div>
 
-        {/* Buscador y filtros */}
-        <div className="flex items-center gap-3 mb-4">
-          <div className="flex-1 flex items-center gap-2 px-3 py-2.5 rounded-xl bg-white"
-            style={{ border: '1px solid var(--border)' }}>
-            <Search size={14} style={{ color: 'var(--ink4)' }} />
+        {/* Buscador y acciones */}
+        <div className="flex items-center gap-3 mb-8">
+          <div className="flex-1 flex items-center gap-2 px-4 py-3 rounded-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
+            <Search size={18} className="text-gray-400" />
             <input value={busqueda} onChange={e => setBusqueda(e.target.value)}
               placeholder="Buscar por nombre, RFC, CURP..."
-              className="flex-1 text-[13px] outline-none" />
+              className="flex-1 text-sm outline-none bg-transparent text-gray-900 dark:text-white" />
           </div>
-          <div className="flex items-center gap-1 p-1 rounded-xl" style={{ background: 'var(--bg2)' }}>
-            {(['todos', 'fisica', 'moral'] as const).map(t => (
-              <button key={t} onClick={() => setFiltroTipo(t)}
-                className="px-3 py-1.5 rounded-lg text-[12px] font-semibold transition-all"
-                style={{
-                  background: filtroTipo === t ? 'white' : 'transparent',
-                  color: filtroTipo === t ? 'var(--ink)' : 'var(--ink4)',
-                  boxShadow: filtroTipo === t ? '0 1px 3px rgba(0,0,0,0.1)' : 'none',
-                }}>
-                {t === 'todos' ? 'Todos' : t === 'fisica' ? 'Física' : 'Moral'}
-              </button>
-            ))}
-          </div>
+          <select value={filtroTipo} onChange={e => setFiltroTipo(e.target.value as any)}
+            className="px-4 py-3 rounded-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white text-sm font-semibold outline-none">
+            <option value="todos">Todos</option>
+            <option value="fisica">Personas físicas</option>
+            <option value="moral">Personas morales</option>
+          </select>
+          <Link href="/clientes/nuevo"
+            className="flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-full hover:bg-blue-700 transition-colors font-semibold text-sm whitespace-nowrap">
+            <Plus size={18} /> Nuevo cliente
+          </Link>
+          <Link href="/clientes/carga-masiva"
+            className="flex items-center gap-2 px-6 py-3 bg-gray-200 text-gray-700 rounded-full hover:bg-gray-300 transition-colors font-semibold text-sm whitespace-nowrap">
+            <Upload size={18} /> Carga masiva
+          </Link>
         </div>
 
-        {/* Lista */}
+        {/* Contenido */}
         {cargando ? (
           <div className="flex items-center justify-center py-20">
-            <Loader2 size={24} style={{ color: 'var(--ink4)', animation: 'spin 1s linear infinite' }} />
+            <div className="w-5 h-5 rounded-full border-2 border-gray-300 border-t-blue-600 animate-spin" />
           </div>
         ) : filtrados.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-20 text-center">
-            <div className="w-12 h-12 rounded-2xl bg-[#F5F5F7] flex items-center justify-center mb-3">
-              <User size={20} style={{ color: 'var(--ink4)' }} />
+          <div className="bg-white dark:bg-gray-800 rounded-3xl p-12 shadow-sm text-center">
+            <div className="w-16 h-16 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-4">
+              <User size={32} className="text-gray-400" />
             </div>
-            <div className="text-[15px] font-bold text-[#1D1D1F] mb-1">
-              {busqueda ? 'Sin resultados' : 'Sin clientes aún'}
-            </div>
-            <div className="text-[13px] text-[#86868B] mb-4">
-              {busqueda ? 'Intenta con otro término' : 'Crea el primer cliente o usa carga masiva'}
-            </div>
+            <p className="text-gray-900 dark:text-white font-semibold mb-2">{busqueda ? 'Sin resultados' : 'Sin clientes aún'}</p>
+            <p className="text-gray-600 dark:text-gray-400 text-sm mb-6">{busqueda ? 'Intenta con otro término' : 'Crea el primer cliente o usa carga masiva'}</p>
             {!busqueda && (
-              <div className="flex gap-2">
+              <div className="flex gap-3 justify-center">
                 <Link href="/clientes/nuevo"
-                  className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-[13px] font-bold no-underline"
-                  style={{ background: 'var(--blue)', color: 'white' }}>
-                  <Plus size={14} /> Nuevo cliente
+                  className="px-6 py-3 bg-blue-600 text-white rounded-full hover:bg-blue-700 transition-colors font-semibold text-sm">
+                  Nuevo cliente
                 </Link>
                 <Link href="/clientes/carga-masiva"
-                  className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-[13px] font-bold no-underline"
-                  style={{ background: 'var(--bg2)', color: 'var(--ink3)', border: '1px solid var(--border)' }}>
-                  <Upload size={14} /> Carga masiva
+                  className="px-6 py-3 bg-gray-200 text-gray-700 rounded-full hover:bg-gray-300 transition-colors font-semibold text-sm">
+                  Carga masiva
                 </Link>
               </div>
             )}
           </div>
         ) : (
-          <div className="space-y-2">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filtrados.map(cliente => (
-              <div key={cliente.id}
-                className="bg-white border border-black/[0.07] rounded-xl p-4 hover:shadow-[0_4px_20px_rgba(0,0,0,0.08)] hover:-translate-y-px transition-all">
-                <div className="flex items-center gap-3">
-                  {/* Avatar */}
-                  <div className="w-10 h-10 rounded-full flex items-center justify-center shrink-0 text-[14px] font-bold"
-                    style={{ background: 'var(--blue-bg)', color: 'var(--blue)' }}>
+              <Link key={cliente.id} href={`/clientes/${cliente.id}`}
+                className="bg-white dark:bg-gray-800 rounded-3xl p-6 shadow-sm hover:shadow-md transition-all hover:-translate-y-1 block group">
+                <div className="flex items-center gap-4 mb-4">
+                  <div className="w-12 h-12 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center text-blue-600 dark:text-blue-400 text-lg font-bold group-hover:bg-blue-200 dark:group-hover:bg-blue-800 transition-colors">
                     {cliente.tipoPersona === 'moral'
-                      ? <Building2 size={18} style={{ color: 'var(--blue)' }} />
+                      ? <Building2 size={24} />
                       : cliente.nombre.charAt(0).toUpperCase()
                     }
                   </div>
-
-                  {/* Info */}
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-0.5">
-                      <span className="text-[14px] font-bold text-[#1D1D1F] truncate">{cliente.nombre}</span>
-                      <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full shrink-0"
-                        style={{ background: 'var(--bg3)', color: 'var(--ink4)' }}>
-                        {cliente.tipoPersona === 'fisica' ? 'Física' : 'Moral'}
-                      </span>
-                      {cliente.nacionalidad && cliente.nacionalidad !== 'Mexicana' && (
-                        <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full shrink-0"
-                          style={{ background: 'var(--orange-bg)', color: 'var(--orange)' }}>
-                          {cliente.nacionalidad}
-                        </span>
-                      )}
-                    </div>
-                    <div className="text-[12px] text-[#86868B]">
-                      {[cliente.rfc, cliente.curp].filter(Boolean).join(' · ') || 'Sin RFC/CURP'}
-                    </div>
+                  <div>
+                    <p className="font-bold text-gray-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">{cliente.nombre}</p>
+                    <span className="text-xs px-3 py-1 rounded-full bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400">
+                      {cliente.tipoPersona === 'fisica' ? 'Física' : 'Moral'}
+                    </span>
                   </div>
-
-                  {/* Acciones */}
-                  <Link href={`/clientes/${cliente.id}`}
-                    className="flex items-center gap-1 text-[12px] font-semibold no-underline shrink-0"
-                    style={{ color: 'var(--blue)' }}>
-                    Ver <ArrowRight size={13} />
-                  </Link>
                 </div>
-              </div>
+                {cliente.rfc && (
+                  <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">RFC: <span className="font-mono text-gray-900 dark:text-white">{cliente.rfc}</span></p>
+                )}
+                {cliente.email && (
+                  <p className="text-sm text-gray-600 dark:text-gray-400">Email: <span className="font-medium text-gray-900 dark:text-white">{cliente.email}</span></p>
+                )}
+              </Link>
             ))}
           </div>
         )}
-      </div>
-      <style jsx global>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+      </main>
     </>
   );
 }

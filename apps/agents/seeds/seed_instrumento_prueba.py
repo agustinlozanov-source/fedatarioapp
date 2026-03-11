@@ -26,6 +26,13 @@ instrumento = {
     "fecha_instrumento": "2026-02-16",
     "cud": "A202602090932258301",
     "solicitante_mua": "ESMERALDA LETICIA ESQUIVEL",
+    "mua_datos": {
+        "cud": "A202602090932258301",
+        "denominacion": "COMERCIALIZADORA AZTEMEX",
+        "texto_resolucion": "SECRETARÍA DE ECONOMÍA- DIRECCIÓN GENERAL DE NORMATIVIDAD MERCANTIL.- - - - - - -\nCONSTANCIA DE AUTORIZACIÓN DE USO DE DENOMINACIÓN O RAZÓN SOCIAL.- - - - - - - - -\nClave Única del Documento (CUD).- - - - - - - - - - - - - - - - - - - - - - - - - -\nA202602090932258301.- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -\nResolución - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -\nEn atención a la solicitud realizada por ESMERALDA LETICIA ESQUIVEL, a través del Sistema establecido por la Secretaría de Economía para autorizar el uso de Denominaciones o Razones Sociales, y con fundamento en lo dispuesto por los artículos 15, 16 y 16 A de la Ley de Inversión Extranjera; 34 fracción XII bis de la Ley Orgánica de la Administración Pública Federal; 69 C Bis de la Ley Federal de Procedimiento Administrativo; 38 fracciones XXII y XXIV del Reglamento Interior de la Secretaría de Economía y; 2 fracción I, 3, 4, 8, 16, 17, 18, 19, 21 y 22 del Reglamento para la Autorización de Uso de Denominaciones y Razones Sociales, SE RESUELVE AUTORIZAR EL USO DE LA SIGUIENTE DENOMINACIÓN O RAZÓN SOCIAL: - - - - - - - - - - - - - - - -\nCOMERCIALIZADORA AZTEMEX - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -\nLa presente autorización es válida por ciento ochenta (180) días naturales contados a partir de la fecha de su emisión, de conformidad con lo establecido en el Reglamento para la Autorización de Uso de Denominaciones y Razones Sociales.",
+        "confianza": 0.95,
+        "errores": []
+    },
     "domicilio_social": "Matamoros, Tamaulipas",
     "capital_fijo": 100000,
     "objeto_social_texto": "A).- Compra, venta, distribución, exportación e importación de todo tipo de mercancía nacional y extranjera.\nB).- La prestación de servicios de asesoría, consultoría y asistencia técnica.\nC).- La realización de actividades complementarias o accesorias.",

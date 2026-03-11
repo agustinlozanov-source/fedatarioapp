@@ -25,48 +25,54 @@ from pydantic import BaseModel
 # ─────────────────────────────────────────────
 
 class DomicilioInput(BaseModel):
-    calle: str
-    numero: str
-    colonia: str
-    cp: str
-    ciudad: str
-    estado: str
+    calle: str = ""
+    numero: str = ""
+    colonia: str = ""
+    cp: str = ""
+    ciudad: str = ""
+    estado: str = ""
+    
+    class Config:
+        extra = "allow"  # Permitir campos extra sin error
 
 class SocioInput(BaseModel):
     nombre_completo: str                        # mayúsculas
-    genero: str                                 # "masculino" | "femenino"
-    nacionalidad_pais: str                      # "México"
-    lugar_nacimiento: str                       # "Tampico, Tamaulipas, México"
-    fecha_nacimiento: date                      # date object
-    estado_civil: str                           # "Soltero" | "Casada" etc.
-    ocupacion: str
+    genero: str = "masculino"                   # "masculino" | "femenino"
+    nacionalidad_pais: str = "México"           # "México"
+    lugar_nacimiento: str = ""                  # "Tampico, Tamaulipas, México"
+    fecha_nacimiento: Optional[date] = None     # date object, can be None
+    estado_civil: str = ""                      # "Soltero" | "Casada" etc.
+    ocupacion: str = ""
     domicilio: DomicilioInput
-    rfc: str                                    # "ROZE870813NXA"
-    curp: str                                   # "ROZE870813HTSMLD04"
-    clave_elector: str                          # "RMZLED87081328H500"
-    seccion_ine: str                            # "0606"
-    idmex: str                                  # "2604718651"
+    rfc: str = ""                               # "ROZE870813NXA"
+    curp: str = ""                              # "ROZE870813HTSMLD04"
+    clave_elector: Optional[str] = None         # "RMZLED87081328H500"
+    seccion_ine: Optional[str] = None           # "0606"
+    idmex: Optional[str] = None                 # "2604718651"
+    rol: str = ""                               # Agregado para referencia
+    porcentaje: float = 0.0                     # Agregado para referencia
 
 class InstrumentoRedactorInput(BaseModel):
     # Instrumento
     numero_poliza: int                          # 3272
     libro_registro: int                         # 5
     ciudad_fedatario: str                       # "MATAMOROS"
-    fecha_instrumento: date
+    fecha_instrumento: Optional[date] = None    # can be None, will default to today
 
     # Sociedad
     tipo_sociedad: str                          # "SA_de_CV" | "S_de_RL_de_CV"
     denominacion_social: str                    # "COMERCIALIZADORA AZTEMEX"
     cud: str                                    # "A202602090932258301"
-    solicitante_mua: str                        # "ESMERALDA LETICIA ESQUIVEL"
-    domicilio_social: str                       # "Matamoros, Tamaulipas"
-    capital_fijo: int                           # 100000
+    solicitante_mua: str = ""                   # "ESMERALDA LETICIA ESQUIVEL"
+    texto_resolucion: str = ""                  # Leyenda completa del CUD desde PDF
+    domicilio_social: str = ""                  # "Matamoros, Tamaulipas"
+    capital_fijo: int = 0                       # 100000
 
     # Socios (ordenados: primero = Administrador/Gerente, segundo = Comisario)
     socios: List[SocioInput]
 
     # Objeto social (textos completos de Firestore, ya concatenados por el orquestador)
-    objeto_social_texto: str
+    objeto_social_texto: str = ""
 
 
 # ─────────────────────────────────────────────
@@ -147,7 +153,11 @@ def deletrear_alfanumerico(texto: str) -> str:
     """
     'ROZE870813NXA' → 'R, O, Z, E, ocho, siete, cero, ocho, uno, tres, N, X, A'
     Letras en mayúscula, números en palabra.
+    Maneja None o strings vacíos retornando "No disponible"
     """
+    if not texto:
+        return "No disponible"
+    
     digitos = {
         '0': 'cero', '1': 'uno', '2': 'dos', '3': 'tres', '4': 'cuatro',
         '5': 'cinco', '6': 'seis', '7': 'siete', '8': 'ocho', '9': 'nueve'
@@ -287,9 +297,12 @@ def bloque_encabezado(d: InstrumentoRedactorInput) -> str:
 
 
 def bloque_datos_socio(socio: SocioInput, letras: dict, ref_date: date) -> str:
-    edad = edad_actual(socio.fecha_nacimiento, ref_date)
+    # Manejar fecha_nacimiento None
+    fecha_nac = socio.fecha_nacimiento or date(1980, 1, 1)
+    
+    edad = edad_actual(fecha_nac, ref_date)
     edad_l = numero_letra(edad)
-    fec_l  = fecha_letra(socio.fecha_nacimiento)
+    fec_l  = fecha_letra(fecha_nac)
     dom    = socio.domicilio
     num_l  = numero_letra(int(re.sub(r'\D', '', dom.numero or '0')))
     cp_l   = deletrear_cp(dom.cp)
@@ -306,9 +319,9 @@ def bloque_datos_socio(socio: SocioInput, letras: dict, ref_date: date) -> str:
         f"========================= D A T O S  G E N E R A L E S ======================\n"
         f"Nombre completo: {socio.nombre_completo}.- - - - - - - - - - - - - - - - - - - - - - - - - -\n"
         f"Nacionalidad: {nac_gent}. {orig_prep}: {socio.lugar_nacimiento}.- - - - - - - - - - - - - - -\n"
-        f"Fecha de nacimiento: {socio.fecha_nacimiento.day} ({fec_l.split()[0]}) de "
-        f"{MESES_ES[socio.fecha_nacimiento.month]} del año {socio.fecha_nacimiento.year} "
-        f"({_num_a_letra(socio.fecha_nacimiento.year).capitalize()}). "
+        f"Fecha de nacimiento: {fecha_nac.day} ({fec_l.split()[0]}) de "
+        f"{MESES_ES[fecha_nac.month]} del año {fecha_nac.year} "
+        f"({_num_a_letra(fecha_nac.year).capitalize()}). "
         f"Edad actual: {edad} ({edad_l.capitalize()}) años. "
         f"Estado civil: {socio.estado_civil}. Ocupación: {socio.ocupacion}.- - - - - - - - - - - - -\n"
         f"Dice que su Domicilio está en: Calle {dom.calle}. Número: {dom.numero} ({num_l.capitalize()}). "
@@ -385,7 +398,7 @@ def bloque_antecedentes_mua(d: InstrumentoRedactorInput) -> str:
         f'la Autorización de Uso de Denominaciones y Razones Sociales, SE RESUELVE AUTORIZAR '
         f'EL USO DE LA SIGUIENTE DENOMINACIÓN O RAZÓN SOCIAL: - - - - - - - - - - - - - - - -\n'
         f'{d.denominacion_social} - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -\n'
-        f'[...texto estándar de autorización SE omitido por brevedad — se inserta desde plantilla...]\n'
+        f'{d.texto_resolucion}\n'
         f'=== Fin de la transcripción === - - - - - - - - - - - - - - - - - - - - - - - - - -\n'
     )
 
@@ -535,10 +548,12 @@ def bloque_transitorias_sa(d: InstrumentoRedactorInput) -> str:
         com_edad_l = numero_letra(com_edad)
         com_ec = com.estado_civil
         com_ocu = com.ocupacion
+        com_ciudadano = genero_str(com, "al Ciudadano", "a la Ciudadana")
+        com_mex       = genero_str(com, "mexicano", "mexicana")
         tabla += (
-            f"TERCERA.- Se Designa como COMISARIO DE LA SOCIEDAD, a la Ciudadana "
+            f"TERCERA.- Se Designa como COMISARIO DE LA SOCIEDAD, {com_ciudadano} "
             f"{com.nombre_completo}, de generales; {com_edad} ({com_edad_l.capitalize()}) "
-            f"años de edad, mexicana, {com_ec}, ocupación {com_ocu}, con domicilio en "
+            f"años de edad, {com_mex}, {com_ec}, ocupación {com_ocu}, con domicilio en "
             f"Ciudad {com.domicilio.ciudad}, {com.domicilio.estado}, indicando su Registro "
             f"Federal de Causantes (RFC) {com.rfc} ({com_rfc_l}).- - - - - - - - - - - - - -\n"
         )
@@ -660,6 +675,15 @@ def generar_acta(d: InstrumentoRedactorInput) -> dict:
     Ensambla el acta completa a partir del InstrumentoRedactorInput.
     Retorna dict con texto_acta y metadatos.
     """
+    # Asegurar que fecha_instrumento tenga un valor
+    if d.fecha_instrumento is None:
+        d.fecha_instrumento = date.today()
+    
+    # Asegurar que todos los socios tengan fecha_nacimiento
+    for socio in d.socios:
+        if socio.fecha_nacimiento is None:
+            socio.fecha_nacimiento = date(1980, 1, 1)
+    
     secciones = []
 
     # 1. Encabezado

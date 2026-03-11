@@ -102,7 +102,7 @@ export default function InstrumentosPage() {
                         </span>
                       </div>
                       <div className="text-[16px] font-bold text-[#1D1D1F] tracking-tight">
-                        {inst.sociedadNombre || 'Sin nombre aún'}
+                        {inst.denominacion_social || inst.sociedadNombre || 'Sin nombre aún'}
                       </div>
                       <div className="text-[13px] text-[#6E6E73] mt-0.5">
                         {inst.socios.length} socio{inst.socios.length !== 1 ? 's' : ''}

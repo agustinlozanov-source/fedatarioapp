@@ -2,10 +2,9 @@
 import { useEffect, useState } from 'react';
 import {
   Plus, GripVertical, Trash2, CheckCircle,
-  Loader2, ChevronDown, ChevronRight, Settings2
+  Loader2, ChevronDown, ChevronRight, Settings2, Sun, Bell, Shield, Lock
 } from 'lucide-react';
 import { Topbar } from '@/components/layout/Shell';
-import { Card } from '@/components/ui';
 import { getPlantilla, guardarPlantilla } from '@/lib/db/plantilla';
 import type { CampoActa, TipoCampo } from '@fedatario/shared';
 import type { SeccionConfig } from '@/lib/db/plantilla';
@@ -34,30 +33,30 @@ const SECCIONES_DEFAULT: SeccionConfig[] = [
   {
     id: 'sec-1', nombre: 'Sociedad', orden: 1,
     campos: [
-      { id: 'f1', seccion: 'Sociedad', nombre: 'nombreSociedad', etiqueta: 'Nombre de la sociedad', tipo: 'texto', requerido: true, fuentePrincipal: 'formulario', orden: 1, enCompendio: true },
-      { id: 'f2', seccion: 'Sociedad', nombre: 'tipoSociedad', etiqueta: 'Tipo de sociedad', tipo: 'seleccion', requerido: true, fuentePrincipal: 'formulario', orden: 2, enCompendio: true },
-      { id: 'f3', seccion: 'Sociedad', nombre: 'objetoSocial', etiqueta: 'Objeto social', tipo: 'texto_largo', requerido: true, fuentePrincipal: 'reunion', orden: 3, enCompendio: true },
-      { id: 'f4', seccion: 'Sociedad', nombre: 'capitalSocial', etiqueta: 'Capital social', tipo: 'moneda', requerido: true, fuentePrincipal: 'reunion', orden: 4, enCompendio: true },
-      { id: 'f5', seccion: 'Sociedad', nombre: 'domicilioSocial', etiqueta: 'Domicilio social', tipo: 'texto', requerido: true, fuentePrincipal: 'formulario', orden: 5, enCompendio: true },
+      { id: 'f1', seccion: 'Sociedad', nombre: 'nombreSociedad', etiqueta: 'Nombre de la sociedad', tipo: 'texto', requerido: true, fuenteDocumento: 'formulario', orden: 1, enCompendio: true },
+      { id: 'f2', seccion: 'Sociedad', nombre: 'tipoSociedad', etiqueta: 'Tipo de sociedad', tipo: 'seleccion', requerido: true, fuenteDocumento: 'formulario', orden: 2, enCompendio: true },
+      { id: 'f3', seccion: 'Sociedad', nombre: 'objetoSocial', etiqueta: 'Objeto social', tipo: 'texto_largo', requerido: true, fuenteDocumento: 'formulario', orden: 3, enCompendio: true },
+      { id: 'f4', seccion: 'Sociedad', nombre: 'capitalSocial', etiqueta: 'Capital social', tipo: 'moneda', requerido: true, fuenteDocumento: 'formulario', orden: 4, enCompendio: true },
+      { id: 'f5', seccion: 'Sociedad', nombre: 'domicilioSocial', etiqueta: 'Domicilio social', tipo: 'texto', requerido: true, fuenteDocumento: 'formulario', orden: 5, enCompendio: true },
     ]
   },
   {
     id: 'sec-2', nombre: 'Socios', orden: 2,
     campos: [
-      { id: 'f6', seccion: 'Socios', nombre: 'socios', etiqueta: 'Socios y participaciones', tipo: 'lista_socios', requerido: true, fuentePrincipal: 'reunion', orden: 1, enCompendio: true },
-      { id: 'f7', seccion: 'Socios', nombre: 'administrador', etiqueta: 'Administrador único', tipo: 'texto', requerido: true, fuentePrincipal: 'reunion', orden: 2, enCompendio: true },
+      { id: 'f6', seccion: 'Socios', nombre: 'socios', etiqueta: 'Socios y participaciones', tipo: 'lista_socios', requerido: true, fuenteDocumento: 'formulario', orden: 1, enCompendio: true },
+      { id: 'f7', seccion: 'Socios', nombre: 'administrador', etiqueta: 'Administrador único', tipo: 'texto', requerido: true, fuenteDocumento: 'formulario', orden: 2, enCompendio: true },
     ]
   },
   {
     id: 'sec-3', nombre: 'Duración', orden: 3,
     campos: [
-      { id: 'f8', seccion: 'Duración', nombre: 'duracion', etiqueta: 'Duración de la sociedad', tipo: 'texto', requerido: true, fuentePrincipal: 'formulario', orden: 1, enCompendio: false, valorDefault: 'Indefinida' },
+      { id: 'f8', seccion: 'Duración', nombre: 'duracion', etiqueta: 'Duración de la sociedad', tipo: 'texto', requerido: true, fuenteDocumento: 'formulario', orden: 1, enCompendio: false, valorDefault: 'Indefinida' },
     ]
   },
   {
     id: 'sec-4', nombre: 'Cláusulas', orden: 4,
     campos: [
-      { id: 'f9', seccion: 'Cláusulas', nombre: 'clausulaCalvo', etiqueta: 'Cláusula Calvo', tipo: 'texto', requerido: false, fuentePrincipal: 'sistema', orden: 1, enCompendio: false },
+      { id: 'f9', seccion: 'Cláusulas', nombre: 'clausulaCalvo', etiqueta: 'Cláusula Calvo', tipo: 'texto', requerido: false, fuenteDocumento: 'sistema', orden: 1, enCompendio: false },
     ]
   },
 ];
@@ -77,7 +76,7 @@ function CampoRow({ campo, onUpdate, onDelete }: {
         <div className="flex-1 flex items-center gap-2 min-w-0">
           <span className="text-[13px] font-semibold text-[#1D1D1F] truncate">{campo.etiqueta || 'Campo sin nombre'}</span>
           <span className="badge badge-gray text-[10px] shrink-0">{TIPOS_CAMPO.find(t => t.id === campo.tipo)?.label}</span>
-          <span className="badge badge-blue text-[10px] shrink-0">{FUENTES.find(f => f.id === campo.fuentePrincipal)?.label}</span>
+          <span className="badge badge-blue text-[10px] shrink-0">{FUENTES.find(f => f.id === campo.fuenteDocumento)?.label}</span>
           {campo.requerido && <span className="badge badge-red text-[10px] shrink-0">Requerido</span>}
           {campo.enCompendio && <span className="badge badge-purple text-[10px] shrink-0">Compendio</span>}
         </div>
@@ -102,7 +101,7 @@ function CampoRow({ campo, onUpdate, onDelete }: {
             </div>
             <div>
               <label className="text-[10px] font-bold text-[#86868B] uppercase tracking-[0.06em] block mb-1">Fuente principal</label>
-              <select value={campo.fuentePrincipal} onChange={e => onUpdate({ ...campo, fuentePrincipal: e.target.value as any })} className="w-full px-3 py-2 rounded-lg text-[13px] outline-none" style={{ border: '1px solid var(--border)', background: 'white' }}>
+              <select value={campo.fuenteDocumento} onChange={e => onUpdate({ ...campo, fuenteDocumento: e.target.value as any })} className="w-full px-3 py-2 rounded-lg text-[13px] outline-none" style={{ border: '1px solid var(--border)', background: 'white' }}>
                 {FUENTES.map(f => <option key={f.id} value={f.id}>{f.label}</option>)}
               </select>
             </div>
@@ -174,7 +173,7 @@ export default function ConfigPage() {
   const agregarCampo = (secId: string) => {
     const sec = secciones.find(s => s.id === secId);
     if (!sec) return;
-    const nuevo: CampoActa = { id: `f-${uid()}`, seccion: sec.nombre, nombre: '', etiqueta: 'Nuevo campo', tipo: 'texto', requerido: false, fuentePrincipal: 'formulario', orden: sec.campos.length + 1, enCompendio: false };
+    const nuevo: CampoActa = { id: `f-${uid()}`, seccion: sec.nombre, nombre: '', etiqueta: 'Nuevo campo', tipo: 'texto', requerido: false, fuenteDocumento: 'formulario', orden: sec.campos.length + 1, enCompendio: false };
     setSecciones(prev => prev.map(s => s.id === secId ? { ...s, campos: [...s.campos, nuevo] } : s));
   };
 
@@ -196,87 +195,138 @@ export default function ConfigPage() {
 
   return (
     <>
-      <Topbar
-        breadcrumb="Fedatario /"
-        title="Configuración"
-        actions={
-          <button onClick={guardar} disabled={estado === 'guardando'} className="btn btn-primary text-[13px] py-1.5 px-3 flex items-center gap-1.5 disabled:opacity-60"
-            style={{ background: estado === 'guardado' ? 'var(--green)' : estado === 'error' ? 'var(--red)' : 'var(--blue)', color: 'white' }}>
-            {estado === 'guardando' && <Loader2 size={14} style={{ animation: 'spin 1s linear infinite' }} />}
-            {estado === 'guardado' && <CheckCircle size={14} />}
-            {estado === 'guardando' ? 'Guardando...' : estado === 'guardado' ? 'Guardado' : estado === 'error' ? 'Error' : 'Guardar cambios'}
-          </button>
-        }
-      />
+      <Topbar breadcrumb="Fedatario /" title="Configuración" />
 
-      <div className="p-6 max-w-4xl">
-        <h1 className="text-[24px] font-extrabold text-[#1D1D1F] tracking-tight mb-1">Configuración del acta</h1>
-        <p className="text-[14px] text-[#6E6E73] mb-2">Estructura del acta constitutiva · Editable sin código</p>
-
-        <div className="flex items-center gap-3 mb-6">
-          <span className="badge badge-gray">{secciones.length} secciones</span>
-          <span className="badge badge-blue">{totalCampos} campos</span>
-          <span className="badge badge-purple">{enCompendio} en compendio</span>
+      <main className="flex-1 p-8 overflow-y-auto bg-gray-50 dark:bg-gray-900">
+        <div className="mb-8">
+          <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-2">Configuración</h1>
+          <p className="text-gray-600 dark:text-gray-400">Personaliza tu experiencia y preferencias</p>
         </div>
 
-        <div className="space-y-3">
-          {secciones.map(sec => (
-            <Card key={sec.id}>
-              <div className="flex items-center gap-3 px-4 py-3.5 cursor-pointer hover:bg-[#F5F5F7] transition-colors"
-                onClick={() => setSeccionesAbiertas(prev => ({ ...prev, [sec.id]: !prev[sec.id] }))}>
-                <GripVertical size={15} style={{ color: 'var(--ink5)', flexShrink: 0 }} />
-                <Settings2 size={15} style={{ color: 'var(--ink4)', flexShrink: 0 }} />
-                <span className="text-[14px] font-bold text-[#1D1D1F] flex-1">{sec.nombre}</span>
-                <span className="text-[12px] text-[#86868B] mr-2">{sec.campos.length} campos</span>
-                {seccionesAbiertas[sec.id] ? <ChevronDown size={15} style={{ color: 'var(--ink4)' }} /> : <ChevronRight size={15} style={{ color: 'var(--ink4)' }} />}
+        {/* Settings Grid */}
+        <div className="space-y-6">
+          {/* Tema */}
+          <div className="bg-white dark:bg-gray-800 rounded-3xl p-6 shadow-sm">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900 rounded-2xl flex items-center justify-center text-blue-600 dark:text-blue-400">
+                  <Sun size={24} />
+                </div>
+                <div>
+                  <h3 className="font-bold text-gray-900 dark:text-white">Tema</h3>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">Elige entre modo claro y oscuro</p>
+                </div>
               </div>
+              <select className="px-4 py-2 rounded-full border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-700 text-gray-900 dark:text-white font-semibold text-sm outline-none">
+                <option>Claro</option>
+                <option>Oscuro</option>
+                <option>Automático</option>
+              </select>
+            </div>
+          </div>
 
-              {seccionesAbiertas[sec.id] && (
-                <div className="px-4 pb-4 pt-4 border-t border-black/[0.06]">
-                  {sec.campos.length === 0 && (
-                    <div className="text-center py-4 text-[13px] text-[#86868B]">No hay campos en esta sección</div>
-                  )}
-                  {sec.campos.map(campo => (
-                    <CampoRow key={campo.id} campo={campo}
-                      onUpdate={nuevo => actualizarCampo(sec.id, campo.id, nuevo)}
-                      onDelete={() => eliminarCampo(sec.id, campo.id)}
-                    />
-                  ))}
-                  <div className="flex items-center justify-between mt-2">
-                    <button onClick={() => agregarCampo(sec.id)} className="flex items-center gap-1.5 text-[12px] font-semibold px-3 py-1.5 rounded-lg" style={{ color: 'var(--blue)', background: 'var(--blue-bg)' }}>
-                      <Plus size={13} /> Agregar campo
-                    </button>
-                    <button onClick={() => eliminarSeccion(sec.id)} className="flex items-center gap-1.5 text-[12px] font-semibold px-3 py-1.5 rounded-lg" style={{ color: 'var(--red)', background: 'var(--red-bg)' }}>
-                      <Trash2 size={12} /> Eliminar sección
+          {/* Notificaciones */}
+          <div className="bg-white rounded-3xl p-6 shadow-sm">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 bg-purple-100 rounded-2xl flex items-center justify-center text-purple-600">
+                  <Bell size={24} />
+                </div>
+                <div>
+                  <h3 className="font-bold text-gray-900">Notificaciones</h3>
+                  <p className="text-sm text-gray-600">Recibe alertas de documentos pendientes</p>
+                </div>
+              </div>
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input type="checkbox" defaultChecked className="w-5 h-5 rounded" />
+              </label>
+            </div>
+          </div>
+
+          {/* Privacidad */}
+          <div className="bg-white rounded-3xl p-6 shadow-sm">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 bg-green-100 rounded-2xl flex items-center justify-center text-green-600">
+                  <Shield size={24} />
+                </div>
+                <div>
+                  <h3 className="font-bold text-gray-900">Privacidad</h3>
+                  <p className="text-sm text-gray-600">Controla quién puede ver tus documentos</p>
+                </div>
+              </div>
+              <button className="px-4 py-2 bg-gray-200 text-gray-700 rounded-full hover:bg-gray-300 transition-colors font-semibold text-sm">
+                Editar
+              </button>
+            </div>
+          </div>
+
+          {/* Cambiar contraseña */}
+          <div className="bg-white rounded-3xl p-6 shadow-sm">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 bg-red-100 rounded-2xl flex items-center justify-center text-red-600">
+                  <Lock size={24} />
+                </div>
+                <div>
+                  <h3 className="font-bold text-gray-900">Seguridad</h3>
+                  <p className="text-sm text-gray-600">Cambia tu contraseña regularmente</p>
+                </div>
+              </div>
+              <button className="px-4 py-2 bg-blue-600 text-white rounded-full hover:bg-blue-700 transition-colors font-semibold text-sm">
+                Cambiar
+              </button>
+            </div>
+          </div>
+
+          {/* Configuración del acta (Collapsible) */}
+          <div className="bg-white rounded-3xl shadow-sm">
+            <div 
+              className="flex items-center justify-between px-6 py-6 cursor-pointer hover:bg-gray-50 transition-colors"
+              onClick={() => setMostrarNuevaSeccion(!mostrarNuevaSeccion)}>
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 bg-gray-100 rounded-2xl flex items-center justify-center text-gray-600">
+                  <Settings2 size={24} />
+                </div>
+                <div>
+                  <h3 className="font-bold text-gray-900">Estructura del acta</h3>
+                  <p className="text-sm text-gray-600">{secciones.length} secciones · {totalCampos} campos</p>
+                </div>
+              </div>
+              <ChevronDown size={20} className={`text-gray-400 transition-transform ${mostrarNuevaSeccion ? 'rotate-180' : ''}`} />
+            </div>
+
+            {mostrarNuevaSeccion && (
+              <div className="px-6 pb-6 border-t border-gray-200 space-y-3">
+                {secciones.map(sec => (
+                  <div key={sec.id} className="p-4 bg-gray-50 rounded-2xl">
+                    <div className="flex items-center justify-between mb-3">
+                      <h4 className="font-semibold text-gray-900">{sec.nombre}</h4>
+                      <span className="text-xs px-2 py-1 bg-blue-100 text-blue-700 rounded-full">{sec.campos.length} campos</span>
+                    </div>
+                    <button onClick={() => eliminarSeccion(sec.id)} className="text-xs px-3 py-1.5 bg-red-100 text-red-600 rounded-full hover:bg-red-200 transition-colors font-semibold">
+                      Eliminar sección
                     </button>
                   </div>
-                </div>
-              )}
-            </Card>
-          ))}
+                ))}
+                <button onClick={() => {}} className="w-full py-3 px-4 border-2 border-dashed border-gray-300 rounded-2xl text-gray-600 hover:text-blue-600 hover:border-blue-600 transition-colors font-semibold text-sm flex items-center justify-center gap-2">
+                  <Plus size={16} /> Agregar sección
+                </button>
+              </div>
+            )}
+          </div>
         </div>
 
-        <div className="mt-4">
-          {!mostrarNuevaSeccion ? (
-            <button onClick={() => setMostrarNuevaSeccion(true)} className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-[13px] font-semibold border-2 border-dashed transition-colors hover:border-[var(--blue)] hover:text-[var(--blue)]" style={{ borderColor: 'var(--border)', color: 'var(--ink4)' }}>
-              <Plus size={15} /> Agregar sección
-            </button>
-          ) : (
-            <div className="flex gap-2">
-              <input autoFocus value={nuevaSeccion} onChange={e => setNuevaSeccion(e.target.value)}
-                onKeyDown={e => { if (e.key === 'Enter') agregarSeccion(); if (e.key === 'Escape') setMostrarNuevaSeccion(false); }}
-                placeholder="Nombre de la sección..." className="flex-1 px-3 py-2.5 rounded-xl text-[13px] outline-none"
-                style={{ border: '1px solid var(--blue)', background: 'white' }} />
-              <button onClick={agregarSeccion} className="btn btn-primary px-4" style={{ background: 'var(--blue)', color: 'white' }}>Agregar</button>
-              <button onClick={() => setMostrarNuevaSeccion(false)} className="btn btn-secondary px-4">Cancelar</button>
-            </div>
-          )}
+        {/* Guardar cambios */}
+        <div className="mt-8 flex justify-end">
+          <button onClick={guardar} disabled={estado === 'guardando'} className="flex items-center gap-2 px-6 py-3 rounded-full font-semibold text-white transition-all disabled:opacity-60"
+            style={{ background: estado === 'guardado' ? '#10b981' : estado === 'error' ? '#ef4444' : '#0066ff' }}>
+            {estado === 'guardando' && <Loader2 size={16} className="animate-spin" />}
+            {estado === 'guardado' && <CheckCircle size={16} />}
+            {estado === 'guardando' ? 'Guardando...' : estado === 'guardado' ? 'Guardado' : estado === 'error' ? 'Error' : 'Guardar cambios'}
+          </button>
         </div>
-
-        <div className="mt-4 p-4 rounded-xl text-[12px] leading-relaxed" style={{ background: 'var(--blue-bg)', color: 'var(--ink3)', border: '1px solid var(--blue-border)' }}>
-          <strong style={{ color: 'var(--blue)' }}>Compendio para secretarias:</strong> Los campos marcados con <strong>Compendio</strong> aparecen en el documento resumen para facilitar la captura en sistemas de gobierno.
-        </div>
-      </div>
+      </main>
       <style jsx global>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
     </>
   );

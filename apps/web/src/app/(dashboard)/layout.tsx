@@ -4,8 +4,10 @@ import { useRouter } from 'next/navigation';
 import { onAuthStateChanged } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 import { Sidebar } from '@/components/layout/Shell';
+import { SidebarProvider, useSidebar } from '@/context/SidebarContext';
 
-export default function DashboardLayout({ children }: { children: React.ReactNode }) {
+function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
+  const { collapsed } = useSidebar();
   const [listo, setListo] = useState(false);
   const router = useRouter();
 
@@ -24,11 +26,19 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   );
 
   return (
-    <div className="flex min-h-screen">
+    <div className="flex min-h-screen bg-gray-50 dark:bg-gray-900">
       <Sidebar />
-      <main style={{ marginLeft: 'var(--sidebar)' }} className="flex-1 flex flex-col min-h-screen">
+      <main className="flex-1 flex flex-col min-h-screen transition-all duration-300" style={{ marginLeft: collapsed ? '80px' : '256px' }}>
         {children}
       </main>
     </div>
+  );
+}
+
+export default function DashboardLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <SidebarProvider>
+      <DashboardLayoutContent>{children}</DashboardLayoutContent>
+    </SidebarProvider>
   );
 }
