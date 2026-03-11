@@ -165,7 +165,7 @@ export default function InstrumentoDetallePage() {
     const [borrador, setBorrador] = useState<BorradorResult | null>(null)
     const [error, setError] = useState<string | null>(null)
     const [cudOk, setCudOk] = useState<string | null>(null)
-    const [tabActiva, setTabActiva] = useState<'expediente' | 'compendio' | 'portal' | 'borrador'>('compendio')
+    const [tabActiva, setTabActiva] = useState<string>('compendio')
     const [subiendoCud, setSubiendoCud] = useState(false)
 
     // ── Cargar instrumento + perfiles de clientes ─────────────────────────────
