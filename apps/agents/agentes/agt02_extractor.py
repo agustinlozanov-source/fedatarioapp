@@ -325,10 +325,21 @@ def guardar_en_firestore(
 # ── DOCUMENT AI ───────────────────────────────────────────────────────────────
 
 def get_documentai_client():
-    creds = service_account.Credentials.from_service_account_file(
-        GOOGLE_CREDENTIALS_PATH,
-        scopes=["https://www.googleapis.com/auth/cloud-platform"],
-    )
+    cred_json = os.getenv("GOOGLE_APPLICATION_CREDENTIALS_JSON")
+    if cred_json:
+        import json as _json
+        info = _json.loads(cred_json)
+        creds = service_account.Credentials.from_service_account_info(
+            info,
+            scopes=["https://www.googleapis.com/auth/cloud-platform"],
+        )
+    elif GOOGLE_CREDENTIALS_PATH:
+        creds = service_account.Credentials.from_service_account_file(
+            GOOGLE_CREDENTIALS_PATH,
+            scopes=["https://www.googleapis.com/auth/cloud-platform"],
+        )
+    else:
+        raise RuntimeError("No Google credentials found (GOOGLE_APPLICATION_CREDENTIALS_JSON or GOOGLE_APPLICATION_CREDENTIALS)")
     client_options = {"api_endpoint": f"{DOCUMENT_AI_LOCATION}-documentai.googleapis.com"}
     return documentai.DocumentProcessorServiceClient(
         credentials=creds,
