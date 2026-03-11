@@ -85,7 +85,7 @@ export default function LibroPage() {
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-900 font-mono">
                       {lib.folioInicio} – {lib.folioFin}
-                      <span className="text-gray-500 font-normal"> ({lib.folioFin - lib.folioInicio + 1}pp.)</span>
+                      <span className="text-gray-500 font-normal"> ({(lib.folioFin ?? 0) - (lib.folioInicio ?? 0) + 1}pp.)</span>
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-600">
                       {formatDate(lib.fechaFirma)}
