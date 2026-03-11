@@ -6,7 +6,7 @@ import { Upload, Send, CheckCircle, FileText, Loader2, AlertCircle, ChevronDown,
 import { collection, query, where, getDocs, getDoc, doc, deleteDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { subirDocumentoConExtraccion, getMensajes, guardarMensaje, ETAPAS_DEFAULT } from '@/lib/db/portal';
-import type { MensajeChat, DocumentoPortal } from '@fedatario/shared';
+import type { MensajeChat, DocumentoPortal, TipoDocumento } from '@fedatario/shared';
 
 interface SocioPortal {
     clienteId: string;
@@ -49,7 +49,7 @@ const TIPOS_DOC = [
     { id: 'fm2', label: 'FM2 / FM3' },
 ];
 
-const DOCS_REQUERIDOS = ['ine', 'curp', 'rfc'];
+const DOCS_REQUERIDOS: TipoDocumento[] = ['ine', 'curp', 'rfc'];
 
 const ROL_LABEL: Record<string, string> = {
     administrador_unico: 'Administrador Único',
@@ -83,7 +83,7 @@ function SeccionSocio({ socio, documentos, onSubir, onEliminar }: {
     const [uploadOk, setUploadOk] = useState('');
     const fileRef = useRef<HTMLInputElement>(null);
 
-    const docsAprobados = documentos.filter(d => d.estado === 'aprobado').map(d => d.tipo);
+    const docsAprobados = documentos.filter(d => d.estado === 'aprobado').map(d => d.tipo as TipoDocumento);
     const completado = DOCS_REQUERIDOS.every(t => docsAprobados.includes(t));
 
     const handleFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -202,7 +202,7 @@ export default function PortalClientePage() {
     const [error, setError] = useState('');
     const [instrumento, setInstrumento] = useState<InstrumentoPortal | null>(null);
     const [documentosPorSocio, setDocumentosPorSocio] = useState<Record<string, DocumentoPortal[]>>({});
-    const [tab, setTab] = useState<'documentos' | 'datos_generales' | 'estado' | 'chat'>('documentos');
+    const [tab, setTab] = useState<string>('documentos');
     const [mensajes, setMensajes] = useState<MensajeChat[]>([]);
     const [input, setInput] = useState('');
     const [enviando, setEnviando] = useState(false);

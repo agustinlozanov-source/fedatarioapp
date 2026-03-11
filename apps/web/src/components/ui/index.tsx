@@ -1,4 +1,4 @@
-import type { InstrumentoEstado, AgentePasoEstado, PipelineEstado } from '@fedatario/shared';
+import type { EstadoInstrumento, AgentePasoEstado, PipelineEstado } from '@fedatario/shared';
 import { estadoLabels, estadoBadge, agenteLabels, agentePasoColor } from '@/lib/utils/format';
 import { CheckCircle, Loader2, Clock, AlertCircle, PauseCircle } from 'lucide-react';
 
@@ -34,7 +34,7 @@ export function KpiCard({ num, label, delta, deltaColor }: { num: string; label:
 
 // ── ESTADO BADGE ──────────────────────────────
 
-export function EstadoBadge({ estado }: { estado: InstrumentoEstado }) {
+export function EstadoBadge({ estado }: { estado: EstadoInstrumento }) {
   return <span className={`badge ${estadoBadge[estado]}`}>{estadoLabels[estado]}</span>;
 }
 

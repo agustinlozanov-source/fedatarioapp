@@ -315,6 +315,27 @@ export type EstadoJob =
   | 'error'
   | 'pausado';
 
+// ── PIPELINE STATES ───────────────────────────
+
+export type AgentePasoEstado =
+  | 'pendiente'
+  | 'proceso'
+  | 'completado'
+  | 'error'
+  | 'esperando_input';
+
+// PipelineEstado: estructura para rastrear el estado de cada agente
+export interface PipelineEstado {
+  [agente: string]: {
+    estado: AgentePasoEstado;
+    confianza?: number;  // 0-1 confidence score
+    resultado?: Record<string, any>;
+    error?: string;
+    completadoEn?: string;
+    duracionMs?: number;
+  };
+}
+
 export interface PipelineJob {
   id: string;
   tenantId: string;
@@ -327,6 +348,16 @@ export interface PipelineJob {
 }
 
 // ── PORTAL ────────────────────────────────────
+
+export interface EtapaPipeline {
+  id: string;
+  orden: number;
+  nombreInterno: EstadoInstrumento;
+  nombreCliente: string;
+  descripcionCliente: string;
+  icono: string;
+  color: string;
+}
 
 export interface EtapaPipelineCliente {
   id: string;

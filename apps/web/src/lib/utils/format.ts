@@ -1,4 +1,4 @@
-import type { InstrumentoEstado, AgentePasoEstado } from '@fedatario/shared';
+import type { EstadoInstrumento, AgentePasoEstado } from '@fedatario/shared';
 
 export function formatDate(iso: string): string {
   return new Date(iso).toLocaleDateString('es-MX', { day: 'numeric', month: 'short', year: 'numeric' });
@@ -12,7 +12,7 @@ export function formatMXN(n: number): string {
   return new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN', minimumFractionDigits: 0 }).format(n);
 }
 
-export const estadoLabels: Record<InstrumentoEstado, string> = {
+export const estadoLabels: Record<EstadoInstrumento, string> = {
   paso_01_identificacion:  'Identificación',
   paso_02_tipo:            'Tipo de Sociedad',
   paso_03_datos_basicos:   'Datos Básicos',
@@ -27,7 +27,7 @@ export const estadoLabels: Record<InstrumentoEstado, string> = {
   cerrado:                 'Cerrado',
 };
 
-export const estadoBadge: Record<InstrumentoEstado, string> = {
+export const estadoBadge: Record<EstadoInstrumento, string> = {
   paso_01_identificacion:  'badge-gray',
   paso_02_tipo:            'badge-gray',
   paso_03_datos_basicos:   'badge-blue',
@@ -58,8 +58,8 @@ export const agentePasoColor: Record<AgentePasoEstado, string> = {
   esperando_input:  'var(--orange)',
 };
 
-export function pipelineStep(estado: InstrumentoEstado): number {
-  const order: InstrumentoEstado[] = [
+export function pipelineStep(estado: EstadoInstrumento): number {
+  const order: EstadoInstrumento[] = [
     'borrador', 'extraccion', 'validacion_juridica',
     'redaccion', 'auditoria', 'revision_corredor', 'firmado',
   ];

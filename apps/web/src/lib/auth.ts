@@ -1,6 +1,10 @@
 import { auth } from '@/lib/firebase';
 import { onAuthStateChanged, User, signInWithEmailAndPassword } from 'firebase/auth';
 
+export function onAuthChange(callback: (user: User | null) => void): () => void {
+    return onAuthStateChanged(auth, callback);
+}
+
 export function getTenantId(): Promise<string> {
     return new Promise((resolve, reject) => {
         // Si ya hay usuario, resuelve inmediatamente

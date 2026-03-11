@@ -320,7 +320,8 @@ export default function NuevoInstrumentoPage() {
         
         // Validar que el rol sea válido (no vacío)
         if (!socio.rol) {
-          throw new Error(`El socio ${socio.nombre_completo || 'sin nombre'} no tiene un rol válido`);
+          const nombreSocio = socio.cliente?.nombre_completo || socio.nuevoNombre || 'sin nombre';
+          throw new Error(`El socio ${nombreSocio} no tiene un rol válido`);
         }
         
         sociosFinales.push({
@@ -330,21 +331,21 @@ export default function NuevoInstrumentoPage() {
           datosCompletos: false,
           documentosCompletos: false,
           // Copiar TODOS los datos del Cliente (compendio)
-          nombre_completo: socio.nombre_completo || socio.nuevoNombre || '',
-          rfc: socio.rfc || socio.nuevoRfc || '',
-          curp: socio.curp || '',
-          fecha_nacimiento: socio.fecha_nacimiento || '',
-          lugar_nacimiento: socio.lugar_nacimiento || '',
-          ocupacion: socio.ocupacion || '',
-          estado_civil: socio.estado_civil || '',
-          genero: socio.genero || '',
-          domicilio: socio.domicilio || '',
-          es_extranjero: socio.es_extranjero || false,
-          clave_elector: socio.clave_elector || '',
-          seccion_ine: socio.seccion_ine || '',
-          idmex: socio.idmex || '',
-          numero_pasaporte: socio.numero_pasaporte || '',
-          numero_fm: socio.numero_fm || '',
+          nombre_completo: socio.cliente?.nombre_completo || socio.nuevoNombre || '',
+          rfc: socio.cliente?.rfc || socio.nuevoRfc || '',
+          curp: socio.cliente?.curp || '',
+          fecha_nacimiento: socio.cliente?.fecha_nacimiento || '',
+          lugar_nacimiento: socio.cliente?.lugar_nacimiento || '',
+          ocupacion: socio.cliente?.ocupacion || '',
+          estado_civil: socio.cliente?.estado_civil || '',
+          genero: socio.cliente?.genero || '',
+          domicilio: socio.cliente?.domicilio || '',
+          es_extranjero: socio.cliente?.es_extranjero || false,
+          clave_elector: socio.cliente?.clave_elector || '',
+          seccion_ine: socio.cliente?.seccion_ine || '',
+          idmex: socio.cliente?.idmex || '',
+          numero_pasaporte: socio.cliente?.numero_pasaporte || '',
+          numero_fm: socio.cliente?.numero_fm || '',
         });
       }
 
@@ -553,22 +554,6 @@ export default function NuevoInstrumentoPage() {
                           cliente: c,
                           clienteId: c.id,
                           esNuevo: false,
-                          // Copiar TODOS los datos del Cliente al compendio del socio
-                          nombre_completo: c.nombre_completo,
-                          rfc: c.rfc,
-                          curp: c.curp,
-                          fecha_nacimiento: c.fecha_nacimiento,
-                          lugar_nacimiento: c.lugar_nacimiento,
-                          ocupacion: c.ocupacion,
-                          estado_civil: c.estado_civil,
-                          genero: c.genero,
-                          domicilio: c.domicilio,
-                          es_extranjero: c.es_extranjero,
-                          clave_elector: c.clave_elector,
-                          seccion_ine: c.seccion_ine,
-                          idmex: c.idmex,
-                          numero_pasaporte: c.numero_pasaporte,
-                          numero_fm: c.numero_fm,
                         })}
                         onCrear={() => actualizarSocio(socio.uid, { esNuevo: true })}
                         authListo={authListo}

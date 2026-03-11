@@ -1,4 +1,6 @@
-import type { Instrumento, Cliente, LibroInstrumento } from '@fedatario/shared';
+import type { Instrumento, Cliente } from '@fedatario/shared';
+
+type LibroInstrumento = Instrumento;
 
 export const mockClientes: Cliente[] = [
   {
