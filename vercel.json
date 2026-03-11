@@ -1,7 +1,7 @@
 {
-  "buildCommand": "cd apps/web && npm install && npm run build",
+  "buildCommand": "cd apps/web && rm -f package-lock.json && npm install --legacy-peer-deps && npm run build",
   "outputDirectory": "apps/web/.next",
-  "installCommand": "npm install --legacy-peer-deps",
+  "installCommand": "cd apps/web && rm -f package-lock.json && npm install --legacy-peer-deps",
   "env": {
     "NEXT_PUBLIC_AGENTS_URL": "https://fedatario-production.up.railway.app"
   }
