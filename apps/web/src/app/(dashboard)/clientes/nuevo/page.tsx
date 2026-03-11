@@ -74,7 +74,7 @@ export default function NuevoClientePage() {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    archivo_url: url,
+                    storage_url: url,
                     tipo_documento: tipoDocSeleccionado,
                 })
             });
