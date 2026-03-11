@@ -318,6 +318,11 @@ export default function NuevoInstrumentoPage() {
         }
         if (!clienteId) continue;
         
+        // Validar que el rol sea válido (no vacío)
+        if (!socio.rol) {
+          throw new Error(`El socio ${socio.nombre_completo || 'sin nombre'} no tiene un rol válido`);
+        }
+        
         sociosFinales.push({
           clienteId,
           rol: socio.rol,
