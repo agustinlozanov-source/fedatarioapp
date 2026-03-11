@@ -114,6 +114,7 @@ export type EstadoInstrumento =
   | 'paso_08_redaccion'
   | 'paso_09_borrador_enviado'
   | 'paso_10_firma'
+  | 'firmado'
   | 'cerrado';
 
 export type RolSocio =
