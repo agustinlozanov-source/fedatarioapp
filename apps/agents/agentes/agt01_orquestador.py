@@ -26,7 +26,6 @@ from datetime import date, datetime
 from typing import Optional
 
 import firebase_admin
-import httpx
 from dotenv import load_dotenv
 from firebase_admin import credentials, firestore
 from pydantic import BaseModel
@@ -34,8 +33,6 @@ from pydantic import BaseModel
 load_dotenv()
 
 # ── CONFIGURACIÓN ─────────────────────────────────────────────────────────────
-
-AGENTS_URL = os.getenv("AGENTS_URL", "http://localhost:5001")
 
 
 # ── SCHEMAS ───────────────────────────────────────────────────────────────────
@@ -388,33 +385,34 @@ def construir_payload(instrumento: dict) -> tuple[dict, list[str]]:
 # ── LLAMADAS A AGENTES ────────────────────────────────────────────────────────
 
 async def llamar_redactor(payload: dict) -> dict:
-    import json
     import logging
     logger = logging.getLogger("orquestador")
     try:
         logger.info(f"🔍 Payload enviado al redactor:\n{json.dumps(payload, indent=2, default=str)}")
-        async with httpx.AsyncClient(timeout=60.0) as client:
-            res = await client.post(f"{AGENTS_URL}/redactor/generar", json=payload)
-            if res.status_code != 200:
-                logger.error(f"❌ Redactor respondió {res.status_code}:\n{res.text}")
-            res.raise_for_status()
-            return res.json()
+        from agentes.agt04_redactor import InstrumentoRedactorInput, generar_acta
+        entrada = InstrumentoRedactorInput(**payload)
+        resultado = generar_acta(entrada)
+        return {"ok": True, "data": resultado}
     except Exception as e:
-        logger.error(f"❌ Error llamando redactor: {e}")
+        logger.error(f"❌ Error en redactor: {e}")
         raise
 
 
 async def llamar_auditor(texto_acta: str, datos: dict) -> dict:
-    async with httpx.AsyncClient(timeout=30.0) as client:
-        res = await client.post(f"{AGENTS_URL}/auditor/verificar", json={
-            "texto_acta": texto_acta,
-            "datos": datos,
-        })
-        res.raise_for_status()
-        return res.json()
+    try:
+        from agentes.agt04_redactor import InstrumentoRedactorInput
+        from agentes.agt05_auditor import auditar_acta
+        entrada = InstrumentoRedactorInput(**datos)
+        resultado = auditar_acta(texto_acta, entrada)
+        return {"ok": True, "data": resultado.dict()}
+    except Exception as e:
+        return {"ok": False, "error": str(e)}
 
 
 async def llamar_docx(texto_acta: str, datos: dict, instrumento_id: str) -> bytes:
+    import httpx
+    import os
+    AGENTS_URL = os.getenv("AGENTS_URL", "http://localhost:5001")
     nombre = datos.get("denominacion_social", "acta").lower().replace(" ", "_")
     nombres_socios = [s["nombre_completo"] for s in datos.get("socios", [])]
     async with httpx.AsyncClient(timeout=60.0) as client:
