@@ -252,14 +252,25 @@ export default function NuevoClientePage() {
                                         style={{ border: '1px solid var(--border)', background: 'white' }} />
                                 </div>
                             ) : (
-                                <div>
-                                    <label className="text-[11px] font-bold text-[#86868B] uppercase tracking-[0.06em] block mb-1.5">
-                                        Número de pasaporte <span style={{ color: 'var(--red)' }}>*</span>
-                                    </label>
-                                    <input value={form.numero_pasaporte} onChange={e => set('numero_pasaporte', e.target.value.toUpperCase())}
-                                        placeholder="Ej: ABC123456"
-                                        className="w-full px-3 py-2.5 rounded-xl text-[13px] font-mono outline-none"
-                                        style={{ border: '1px solid var(--border)', background: 'white' }} />
+                                <div className="flex flex-col gap-3">
+                                    <div>
+                                        <label className="text-[11px] font-bold text-[#86868B] uppercase tracking-[0.06em] block mb-1.5">
+                                            Número de pasaporte <span style={{ color: 'var(--red)' }}>*</span>
+                                        </label>
+                                        <input value={form.numero_pasaporte} onChange={e => set('numero_pasaporte', e.target.value.toUpperCase())}
+                                            placeholder="Ej: ABC123456"
+                                            className="w-full px-3 py-2.5 rounded-xl text-[13px] font-mono outline-none"
+                                            style={{ border: '1px solid var(--border)', background: 'white' }} />
+                                    </div>
+                                    <div>
+                                        <label className="text-[11px] font-bold text-[#86868B] uppercase tracking-[0.06em] block mb-1.5">
+                                            CURP <span className="text-[10px] font-normal normal-case" style={{ color: 'var(--ink4)' }}>(si cuenta con uno)</span>
+                                        </label>
+                                        <input value={form.curp} onChange={e => set('curp', e.target.value.toUpperCase())}
+                                            placeholder="XAXX010101HXXXXXX00"
+                                            className="w-full px-3 py-2.5 rounded-xl text-[13px] font-mono outline-none"
+                                            style={{ border: '1px solid var(--border)', background: 'white' }} />
+                                    </div>
                                 </div>
                             )}
                         </div>
