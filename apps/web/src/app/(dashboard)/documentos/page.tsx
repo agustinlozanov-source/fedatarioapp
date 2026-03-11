@@ -92,7 +92,7 @@ export default function DocumentosPage() {
                                 <div className="flex justify-between items-start mb-4">
                                     <div className="flex-1">
                                         <p className="text-sm text-gray-500 mb-1">Instrumento</p>
-                                        <p className="text-lg font-bold text-gray-900">{doc.descripcion || 'Sin descripción'}</p>
+                                        <p className="text-lg font-bold text-gray-900">{doc.nombre || 'Sin descripción'}</p>
                                     </div>
                                     <span className={`px-4 py-2 rounded-full text-xs font-semibold ${
                                         doc.estado === 'pendiente' ? 'bg-yellow-100 text-yellow-700' :
