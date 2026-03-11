@@ -181,6 +181,12 @@ export interface Instrumento {
   socios: SocioInstrumento[];
   seccionesActivas: string[];
   pipeline: PipelineJob[];
+  // Libro de registro
+  folioInicio?: number;
+  folioFin?: number;
+  fechaFirma?: string;
+  actaUrl?: string;
+  partes?: string[];
   creadoEn: string;
   actualizadoEn: string;
 }
