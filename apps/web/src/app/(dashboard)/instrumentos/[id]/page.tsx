@@ -230,12 +230,12 @@ export default function InstrumentoDetallePage() {
         setClientes(prev => ({ ...prev, [clienteId]: { ...prev[clienteId], [campo]: valor } }))
     }
 
-    const getDenominacion = (i: Instrumento) => i.denominacion_social || i.sociedadNombre || ''
-    const getCapital = (i: Instrumento) => i.capitalSocial ?? i.capital_social ?? i.capital_fijo
-    const getObjeto = (i: Instrumento) => i.objeto_social_texto || i.objetoSocial || ''
+    const getDenominacion = (i: Instrumento) => i.denominacion_social || ''
+    const getCapital = (i: Instrumento) => i.capital_social ?? i.capital_fijo
+    const getObjeto = (i: Instrumento) => i.objeto_social_texto || ''
     const getCUD = (i: Instrumento) => i.cud || i.cudMUA || ''
     const getNumPoliza = (i: Instrumento) => i.numero_poliza ?? i.numeroInstrumento
-    const getDomicilio = (i: Instrumento) => i.domicilio_social || i.domicilioSocial || ''
+    const getDomicilio = (i: Instrumento) => i.domicilio_social || ''
 
     // Devuelve el perfil del cliente fusionado con los datos del array de socios
     // Prioridad: clientes/{id} (AGT-02) > instrumento.socios[] (captura manual)
@@ -500,8 +500,8 @@ export default function InstrumentoDetallePage() {
                         <div className="bg-white border border-gray-100 rounded-2xl divide-y divide-gray-50">
                             <CampoEditable label="Denominación social" value={denominacion} onSave={v => guardarCampo('denominacion_social', v)} />
                             <CampoEditable label="Tipo de sociedad" value={tipoLabel[instrumento.tipo] ?? instrumento.tipo} onSave={null} />
-                            <CampoEditable label="Domicilio social" value={getDomicilio(instrumento)} onSave={v => guardarCampo('domicilioSocial', v)} />
-                            <CampoEditable label="Capital social" value={capital} tipo="number" onSave={v => guardarCampo('capitalSocial', Number(v))} />
+                            <CampoEditable label="Domicilio social" value={getDomicilio(instrumento)} onSave={v => guardarCampo('domicilio_social', v)} />
+                            <CampoEditable label="Capital social" value={capital} tipo="number" onSave={v => guardarCampo('capital_social', Number(v))} />
                         </div>
                     </section>
 

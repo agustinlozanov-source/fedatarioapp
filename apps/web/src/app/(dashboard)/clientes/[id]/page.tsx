@@ -371,7 +371,7 @@ export default function ClientePage() {
                                         <div className="flex items-center justify-between">
                                             <div>
                                                 <div className="text-[14px] font-bold text-[#1D1D1F]">
-                                                    {inst.sociedadNombre || 'Sin nombre'}
+                                                    {inst.denominacion_social || 'Sin nombre'}
                                                 </div>
                                                 <div className="text-[12px] text-[#86868B] mt-0.5">
                                                     {inst.tipo === 'sa_de_cv' ? 'SA de CV' : 'S de RL'}

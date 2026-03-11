@@ -163,15 +163,11 @@ export interface Instrumento {
   estado: EstadoInstrumento;
   numeroInstrumento?: number;
   numero_poliza?: number;
-  denominacion_social?: string;
-  sociedadNombre?: string;
-  objetoSocial?: string;
-  objeto_social_texto?: string;
-  capitalSocial?: number;
-  capital_social?: number;
+  denominacion_social?: string;  // Usar ESTE (match con backend)
+  objeto_social_texto?: string;  // Usar ESTE (match con backend)
+  capital_social?: number;       // Usar ESTE (match con backend)
   capital_fijo?: number;
-  domicilioSocial?: string;
-  domicilio_social?: string;
+  domicilio_social?: string;     // Usar ESTE (match con backend)
   duracion?: string;
   cud?: string;
   cudMUA?: string;

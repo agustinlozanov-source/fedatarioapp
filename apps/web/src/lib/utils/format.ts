@@ -13,25 +13,33 @@ export function formatMXN(n: number): string {
 }
 
 export const estadoLabels: Record<InstrumentoEstado, string> = {
-  borrador:             'Borrador',
-  extraccion:           'Extrayendo datos',
-  validacion_juridica:  'Validación jurídica',
-  redaccion:            'Redactando acta',
-  auditoria:            'Auditoría',
-  revision_corredor:    'Revisión del Corredor',
-  firmado:              'Firmado',
-  archivado:            'Archivado',
+  paso_01_identificacion:  'Identificación',
+  paso_02_tipo:            'Tipo de Sociedad',
+  paso_03_datos_basicos:   'Datos Básicos',
+  paso_04_clientes_creados: 'Clientes',
+  paso_05_portal_en_progreso: 'Portal',
+  paso_06_mua:             'MUA',
+  paso_07_acopio_completo: 'Acopio',
+  paso_08_redaccion:       'Redactando acta',
+  paso_09_borrador_enviado: 'Borrador',
+  paso_10_firma:           'Firma',
+  firmado:                 'Firmado',
+  cerrado:                 'Cerrado',
 };
 
 export const estadoBadge: Record<InstrumentoEstado, string> = {
-  borrador:             'badge-gray',
-  extraccion:           'badge-blue',
-  validacion_juridica:  'badge-amber',
-  redaccion:            'badge-teal',
-  auditoria:            'badge-purple',
-  revision_corredor:    'badge-orange',
-  firmado:              'badge-green',
-  archivado:            'badge-gray',
+  paso_01_identificacion:  'badge-gray',
+  paso_02_tipo:            'badge-gray',
+  paso_03_datos_basicos:   'badge-blue',
+  paso_04_clientes_creados: 'badge-blue',
+  paso_05_portal_en_progreso: 'badge-amber',
+  paso_06_mua:             'badge-amber',
+  paso_07_acopio_completo: 'badge-teal',
+  paso_08_redaccion:       'badge-purple',
+  paso_09_borrador_enviado: 'badge-orange',
+  paso_10_firma:           'badge-orange',
+  firmado:                 'badge-green',
+  cerrado:                 'badge-gray',
 };
 
 export const agenteLabels: Record<string, string> = {

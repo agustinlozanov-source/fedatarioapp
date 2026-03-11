@@ -35,7 +35,7 @@ interface InstrumentoPortal {
     tenantId: string;
     tipo: string;
     estado: string;
-    sociedadNombre: string;
+    denominacion_social: string;
     socios: SocioPortal[];
 }
 
@@ -253,7 +253,7 @@ export default function PortalClientePage() {
 
                 const inst: InstrumentoPortal = {
                     id: docSnap.id, tenantId: data.tenantId, tipo: data.tipo, estado: data.estado,
-                    sociedadNombre: data.sociedadNombre || data.denominacion_social || 'Tu sociedad', socios,
+                    denominacion_social: data.denominacion_social || 'Tu sociedad', socios,
                 };
                 setInstrumento(inst);
 
@@ -274,7 +274,7 @@ export default function PortalClientePage() {
                 const msgs = await getMensajes(docSnap.id);
                 setMensajes(msgs.length === 0 ? [{
                     id: '0', instrumentoId: docSnap.id, rol: 'agente',
-                    texto: `Hola, soy el asistente de Fedatario. Estoy aquí para ayudarte con tu acta constitutiva de ${inst.sociedadNombre}. ¿En qué te puedo ayudar?`,
+                    texto: `Hola, soy el asistente de Fedatario. Estoy aquí para ayudarte con tu acta constitutiva de ${inst.denominacion_social}. ¿En qué te puedo ayudar?`,
                     creadoEn: new Date().toISOString(),
                 }] : msgs);
             } catch (e: any) {
@@ -365,7 +365,7 @@ export default function PortalClientePage() {
             <header className="bg-white border-b border-black/[0.07] px-4 py-3 flex items-center gap-3 sticky top-0 z-50">
                 <div className="w-8 h-8 rounded-lg bg-[#1D1D1F] flex items-center justify-center text-white text-xs font-extrabold shrink-0">FD</div>
                 <div className="flex-1 min-w-0">
-                    <div className="text-[13px] font-bold text-[#1D1D1F] truncate">{instrumento.sociedadNombre}</div>
+                    <div className="text-[13px] font-bold text-[#1D1D1F] truncate">{instrumento.denominacion_social}</div>
                     <div className="text-[11px] text-[#86868B]">Portal de documentación</div>
                 </div>
                 {sociosCompletos === totalSocios && totalSocios > 0 && (
@@ -375,7 +375,7 @@ export default function PortalClientePage() {
 
             <div className="bg-white border-b border-black/[0.07] px-4 flex gap-1 sticky top-[57px] z-40">
                 {[{ key: 'documentos', label: `Documentos (${sociosCompletos}/${totalSocios})` }, { key: 'datos_generales', label: 'Datos Generales' }, { key: 'estado', label: 'Estado' }, { key: 'chat', label: 'Asistente' }].map(t => (
-                    <button key={t.key} onClick={() => setTab(t.key as any)}
+                    <button key={t.key} onClick={() => setTab(t.key as string)}
                         className={`px-4 py-3 text-[13px] font-semibold border-b-2 -mb-px transition-colors ${tab === t.key ? 'border-[#1D1D1F] text-[#1D1D1F]' : 'border-transparent text-[#86868B]'}`}>
                         {t.label}
                     </button>
@@ -494,7 +494,7 @@ export default function PortalClientePage() {
                     <div className="space-y-4">
                         <div className="bg-white rounded-2xl p-5 shadow-[0_1px_4px_rgba(0,0,0,0.06)]">
                             <div className="text-[11px] font-bold text-[#86868B] uppercase tracking-[0.06em] mb-2">Tu acta constitutiva</div>
-                            <div className="text-[18px] font-extrabold text-[#1D1D1F] mb-1">{instrumento.sociedadNombre}</div>
+                            <div className="text-[18px] font-extrabold text-[#1D1D1F] mb-1">{instrumento.denominacion_social}</div>
                             <div className="flex gap-2 mt-4">
                                 <div className="flex-1 bg-[#F5F5F7] rounded-xl p-3 text-center">
                                     <div className="text-[18px] font-extrabold text-[#1A9640]">{sociosCompletos}</div>

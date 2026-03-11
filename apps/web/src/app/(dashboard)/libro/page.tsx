@@ -77,7 +77,7 @@ export default function LibroPage() {
                       <span className="font-mono font-bold text-gray-900">{lib.numeroInstrumento}</span>
                     </td>
                     <td className="px-6 py-4">
-                      <div className="font-semibold text-gray-900">{lib.sociedadNombre}</div>
+                      <div className="font-semibold text-gray-900">{lib.denominacion_social}</div>
                       <div className="text-xs text-gray-500">Acta constitutiva</div>
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-600">

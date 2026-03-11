@@ -102,11 +102,11 @@ export default function InstrumentosPage() {
                         </span>
                       </div>
                       <div className="text-[16px] font-bold text-[#1D1D1F] tracking-tight">
-                        {inst.denominacion_social || inst.sociedadNombre || 'Sin nombre aún'}
+                        {inst.denominacion_social || 'Sin nombre aún'}
                       </div>
                       <div className="text-[13px] text-[#6E6E73] mt-0.5">
                         {inst.socios.length} socio{inst.socios.length !== 1 ? 's' : ''}
-                        {inst.capitalSocial ? ` · ${formatMXN(inst.capitalSocial)}` : ''}
+                        {inst.capital_social ? ` · ${formatMXN(inst.capital_social)}` : ''}
                       </div>
                     </div>
                     <span className="text-[11px] font-semibold px-2.5 py-1 rounded-full"
