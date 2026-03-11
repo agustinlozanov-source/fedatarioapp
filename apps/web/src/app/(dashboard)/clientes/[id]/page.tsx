@@ -169,7 +169,7 @@ export default function ClientePage() {
                 });
                 if (res.ok) {
                     const datos = await res.json();
-                    const extraidos = datos.datos_extraidos || {};
+                    const extraidos = datos.data?.datos_extraidos || datos.datos_extraidos || {};
 
                     // Aprobar el documento y guardar datos extraídos
                     await guardarDatosExtraidos(docId, extraidos);
