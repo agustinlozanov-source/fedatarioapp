@@ -70,7 +70,7 @@ export default function NuevoClientePage() {
             await uploadBytes(storageRef, file);
             const url = await getDownloadURL(storageRef);
 
-            const response = await fetch('http://localhost:5001/extractor/url', {
+            const response = await fetch('https://fedatario-production.up.railway.app/extractor/url', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({

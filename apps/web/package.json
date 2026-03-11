@@ -17,7 +17,8 @@
     "lucide-react": "^0.378.0",
     "next": "^14.2.35",
     "react": "^18.3.0",
-    "react-dom": "^18.3.0"
+    "react-dom": "^18.3.0",
+    "rippleui": "^1.12.1"
   },
   "devDependencies": {
     "@next/swc-darwin-x64": "^14.2.0",

@@ -6,7 +6,7 @@ import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { db, storage } from "@/lib/firebase";
 import type { DocumentoPortal, MensajeChat, EtapaPipeline } from "@fedatario/shared";
 
-const AGENTS_URL = process.env.NEXT_PUBLIC_AGENTS_URL || 'http://localhost:5001';
+const AGENTS_URL = process.env.NEXT_PUBLIC_AGENTS_URL || 'https://fedatario-production.up.railway.app';
 
 // ── DOCUMENTOS PORTAL ─────────────────────────────────────────────────────────
 

@@ -53,7 +53,7 @@ interface Hallazgo { tipo: string; campo: string; descripcion: string; encontrad
 interface AuditoriaResult { ok: boolean; score: number; errores: Hallazgo[]; advertencias: Hallazgo[]; resumen: string }
 interface BorradorResult { textoActa: string; auditoria: AuditoriaResult; campos_faltantes?: string[] }
 
-const AGENTS_URL = process.env.NEXT_PUBLIC_AGENTS_URL || 'http://localhost:5001'
+const AGENTS_URL = process.env.NEXT_PUBLIC_AGENTS_URL || 'https://fedatario-production.up.railway.app'
 
 const tipoLabel: Record<string, string> = {
     SA_de_CV: 'Sociedad Anónima de Capital Variable', sa_de_cv: 'Sociedad Anónima de Capital Variable',
@@ -368,7 +368,7 @@ export default function InstrumentoDetallePage() {
             formData.append('instrumento_id', id)
             
             console.log('Enviando PDF a procesar-cud-pdf...')
-            const respuesta = await fetch('http://localhost:5001/procesar-cud-pdf', {
+            const respuesta = await fetch('https://fedatario-production.up.railway.app/procesar-cud-pdf', {
                 method: 'POST',
                 body: formData
             })

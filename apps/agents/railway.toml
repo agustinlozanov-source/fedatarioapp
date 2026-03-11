@@ -4,3 +4,14 @@ buildCommand = "pip install -r requirements.txt"
 
 [start]
 cmd = "uvicorn main:app --host 0.0.0.0 --port $PORT"
+
+[variables]
+GOOGLE_APPLICATION_CREDENTIALS_JSON = ""
+ANTHROPIC_API_KEY = ""
+LANGCHAIN_API_KEY = ""
+LANGCHAIN_PROJECT = "fedatario"
+LANGCHAIN_TRACING_V2 = "true"
+GOOGLE_CLOUD_PROJECT = "fedatarioapp"
+DOCUMENT_AI_OCR_PROCESSOR_ID = "b041f47ef25c3106"
+DOCUMENT_AI_FORM_PROCESSOR_ID = "58b33cda12a53763"
+DOCUMENT_AI_LOCATION = "us"
