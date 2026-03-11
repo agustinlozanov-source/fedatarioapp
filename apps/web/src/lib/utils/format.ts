@@ -60,8 +60,10 @@ export const agentePasoColor: Record<AgentePasoEstado, string> = {
 
 export function pipelineStep(estado: EstadoInstrumento): number {
   const order: EstadoInstrumento[] = [
-    'borrador', 'extraccion', 'validacion_juridica',
-    'redaccion', 'auditoria', 'revision_corredor', 'firmado',
+    'paso_01_identificacion', 'paso_02_tipo', 'paso_03_datos_basicos',
+    'paso_04_clientes_creados', 'paso_05_portal_en_progreso', 'paso_06_mua',
+    'paso_07_acopio_completo', 'paso_08_redaccion', 'paso_09_borrador_enviado',
+    'paso_10_firma', 'firmado', 'cerrado',
   ];
   return order.indexOf(estado);
 }
