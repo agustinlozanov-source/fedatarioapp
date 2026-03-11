@@ -216,7 +216,7 @@ def parsear_fecha(fecha_str: str) -> date:
     raise ValueError(f"No se pudo parsear fecha: {fecha_str}")
 
 
-def construir_payload(instrumento: dict) -> tuple[dict, list[str]]:
+def construir_payload(instrumento: dict, skip_firestore: bool = False) -> tuple[dict, list[str]]:
     """
     Construye el payload completo para AGT-04 leyendo el Compendio.
 
@@ -277,7 +277,7 @@ def construir_payload(instrumento: dict) -> tuple[dict, list[str]]:
         # Intentar datos aplanados legacy primero (para pruebas)
         if socios_aplanados and i < len(socios_aplanados):
             datos = socios_aplanados[i]
-        elif cliente_id:
+        elif cliente_id and not skip_firestore:
             # Intentar leer documentos_portal para enriquecer con datos OCR
             # Si el JWT está roto, usar directamente los datos del instrumento
             try:
@@ -435,13 +435,15 @@ async def orquestar(input_data: OrquestadorInput) -> OrquestadorResult:
     instrumento_id = input_data.instrumento_id
 
     # 1. Leer Compendio — si el frontend ya envió los datos, usarlos directamente
-    if input_data.datos_instrumento:
+    datos_desde_frontend = bool(input_data.datos_instrumento)
+    if datos_desde_frontend:
         instrumento = {"id": instrumento_id, **input_data.datos_instrumento}
     else:
         instrumento = leer_instrumento(instrumento_id)
 
     # 2. Construir payload consolidado
-    payload, campos_faltantes = construir_payload(instrumento)
+    # Si los datos vienen del frontend, saltar lecturas Firestore de socios
+    payload, campos_faltantes = construir_payload(instrumento, skip_firestore=datos_desde_frontend)
 
     if campos_faltantes:
         # Log pero no bloquear — AGT-04 puede manejar campos vacíos
