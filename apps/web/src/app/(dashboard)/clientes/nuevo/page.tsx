@@ -128,26 +128,9 @@ export default function NuevoClientePage() {
     };
 
     const guardar = async () => {
-        // Validaciones obligatorias
-        const faltantes: string[] = [];
-        if (!form.nombre_completo.trim()) faltantes.push('Nombre completo');
-        if (!form.rfc.trim()) faltantes.push('RFC');
-        if (!form.fecha_nacimiento) faltantes.push('Fecha de nacimiento');
-        if (!form.lugar_nacimiento.trim()) faltantes.push('Lugar de nacimiento');
-        if (!form.ocupacion.trim()) faltantes.push('Ocupación');
-        if (!form.estado_civil.trim()) faltantes.push('Estado civil');
-        if (!form.genero.trim()) faltantes.push('Género');
-        if (!form.domicilio.trim()) faltantes.push('Domicilio');
-        
-        if (es_extranjero) {
-            if (!form.numero_pasaporte.trim()) faltantes.push('Número de pasaporte');
-            if (!form.numero_fm.trim()) faltantes.push('Número FM');
-        } else {
-            if (!form.curp.trim()) faltantes.push('CURP');
-        }
-
-        if (faltantes.length > 0) {
-            setError(`Campos obligatorios faltantes: ${faltantes.join(', ')}`);
+        // Solo el nombre es obligatorio
+        if (!form.nombre_completo.trim()) {
+            setError('El nombre del cliente es obligatorio');
             return;
         }
 
@@ -200,7 +183,7 @@ export default function NuevoClientePage() {
                 </button>
 
                 <h1 className="text-[24px] font-extrabold text-[#1D1D1F] tracking-tight mb-1">Nuevo cliente</h1>
-                <p className="text-[14px] text-[#6E6E73] mb-6">Registro con todos los datos requeridos</p>
+                <p className="text-[14px] text-[#6E6E73] mb-6">Solo el nombre es obligatorio, el resto puedes completarlo después</p>
 
                 <div className="space-y-6">
                     {/* ─ TOGGLE: ¿ES EXTRANJERO? ─ */}
@@ -234,7 +217,7 @@ export default function NuevoClientePage() {
                         <div className="grid grid-cols-2 gap-3">
                             <div>
                                 <label className="text-[11px] font-bold text-[#86868B] uppercase tracking-[0.06em] block mb-1.5">
-                                    RFC <span style={{ color: 'var(--red)' }}>*</span>
+                                    RFC
                                 </label>
                                 <input value={form.rfc} onChange={e => set('rfc', e.target.value.toUpperCase())}
                                     placeholder="XAXX010101000"
@@ -244,7 +227,7 @@ export default function NuevoClientePage() {
                             {!es_extranjero ? (
                                 <div>
                                     <label className="text-[11px] font-bold text-[#86868B] uppercase tracking-[0.06em] block mb-1.5">
-                                        CURP <span style={{ color: 'var(--red)' }}>*</span>
+                                        CURP
                                     </label>
                                     <input value={form.curp} onChange={e => set('curp', e.target.value.toUpperCase())}
                                         placeholder="XAXX010101HXXXXXX00"
@@ -255,7 +238,7 @@ export default function NuevoClientePage() {
                                 <div className="flex flex-col gap-3">
                                     <div>
                                         <label className="text-[11px] font-bold text-[#86868B] uppercase tracking-[0.06em] block mb-1.5">
-                                            Número de pasaporte <span style={{ color: 'var(--red)' }}>*</span>
+                                            Número de pasaporte
                                         </label>
                                         <input value={form.numero_pasaporte} onChange={e => set('numero_pasaporte', e.target.value.toUpperCase())}
                                             placeholder="Ej: ABC123456"
@@ -278,7 +261,7 @@ export default function NuevoClientePage() {
                         <div className="grid grid-cols-2 gap-3">
                             <div>
                                 <label className="text-[11px] font-bold text-[#86868B] uppercase tracking-[0.06em] block mb-1.5">
-                                    Fecha de nacimiento <span style={{ color: 'var(--red)' }}>*</span>
+                                    Fecha de nacimiento
                                 </label>
                                 <input type="date" value={form.fecha_nacimiento} onChange={e => set('fecha_nacimiento', e.target.value)}
                                     className="w-full px-3 py-2.5 rounded-xl text-[13px] outline-none"
@@ -286,7 +269,7 @@ export default function NuevoClientePage() {
                             </div>
                             <div>
                                 <label className="text-[11px] font-bold text-[#86868B] uppercase tracking-[0.06em] block mb-1.5">
-                                    Género <span style={{ color: 'var(--red)' }}>*</span>
+                                    Género
                                 </label>
                                 <select value={form.genero} onChange={e => set('genero', e.target.value)}
                                     className="w-full px-3 py-2.5 rounded-xl text-[13px] outline-none"
@@ -300,7 +283,7 @@ export default function NuevoClientePage() {
 
                         <div>
                             <label className="text-[11px] font-bold text-[#86868B] uppercase tracking-[0.06em] block mb-1.5">
-                                Lugar de nacimiento <span style={{ color: 'var(--red)' }}>*</span>
+                                Lugar de nacimiento
                             </label>
                             <input value={form.lugar_nacimiento} onChange={e => set('lugar_nacimiento', e.target.value)}
                                 placeholder="Ej: Tampico, Tamaulipas, México"
@@ -311,7 +294,7 @@ export default function NuevoClientePage() {
                         <div className="grid grid-cols-2 gap-3">
                             <div>
                                 <label className="text-[11px] font-bold text-[#86868B] uppercase tracking-[0.06em] block mb-1.5">
-                                    Ocupación <span style={{ color: 'var(--red)' }}>*</span>
+                                    Ocupación
                                 </label>
                                 <input value={form.ocupacion} onChange={e => set('ocupacion', e.target.value)}
                                     placeholder="Empresario, Abogado, etc."
@@ -320,7 +303,7 @@ export default function NuevoClientePage() {
                             </div>
                             <div>
                                 <label className="text-[11px] font-bold text-[#86868B] uppercase tracking-[0.06em] block mb-1.5">
-                                    Estado civil <span style={{ color: 'var(--red)' }}>*</span>
+                                    Estado civil
                                 </label>
                                 <select value={form.estado_civil} onChange={e => set('estado_civil', e.target.value)}
                                     className="w-full px-3 py-2.5 rounded-xl text-[13px] outline-none"
@@ -337,7 +320,7 @@ export default function NuevoClientePage() {
 
                         <div>
                             <label className="text-[11px] font-bold text-[#86868B] uppercase tracking-[0.06em] block mb-1.5">
-                                Domicilio <span style={{ color: 'var(--red)' }}>*</span>
+                                Domicilio
                             </label>
                             <input value={form.domicilio} onChange={e => set('domicilio', e.target.value)}
                                 placeholder="Calle y número, CP, Ciudad, Estado, País"
@@ -385,7 +368,7 @@ export default function NuevoClientePage() {
                             <h2 className="text-[14px] font-bold text-[#1D1D1F]">Información migratoria</h2>
                             <div>
                                 <label className="text-[11px] font-bold text-[#86868B] uppercase tracking-[0.06em] block mb-1.5">
-                                    Número FM <span style={{ color: 'var(--red)' }}>*</span>
+                                    Número FM
                                 </label>
                                 <input value={form.numero_fm} onChange={e => set('numero_fm', e.target.value.toUpperCase())}
                                     placeholder="Número de FM2, FM3 o residencia permanente"
