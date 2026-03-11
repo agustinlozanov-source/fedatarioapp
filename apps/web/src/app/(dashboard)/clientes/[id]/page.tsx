@@ -10,7 +10,8 @@ import { Topbar } from '@/components/layout/Shell';
 import { getCliente, actualizarCliente } from '@/lib/db/clientes';
 import { getDocumentosCliente, subirDocumento } from '@/lib/db/documentos';
 import { getInstrumentos } from '@/lib/db/instrumentos';
-import { auth } from '@/lib/firebase';
+import { auth, storage } from '@/lib/firebase';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import type { Cliente, Documento, Instrumento, TipoDocumento } from '@fedatario/shared';
 
 const TIPOS_DOCUMENTO: { id: TipoDocumento; label: string; esencial: boolean }[] = [
@@ -101,9 +102,59 @@ export default function ClientePage() {
         if (!cliente) return;
         setSubiendoTipo(tipoSeleccionado);
         try {
+            // 1. Subir a Storage y guardar en Firestore
+            const path = `pendientes/${cliente.tenantId}/${id}/${Date.now()}_${file.name}`;
+            const storageRef = ref(storage, path);
+            await uploadBytes(storageRef, file);
+            const url = await getDownloadURL(storageRef);
+
             await subirDocumento(file, id, '', tipoSeleccionado, cliente.tenantId);
             const docs = await getDocumentosCliente(id);
             setDocumentos(docs);
+
+            // 2. Llamar al extractor y actualizar perfil del cliente
+            try {
+                const res = await fetch('https://fedatario-production.up.railway.app/extractor/url', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ storage_url: url, tipo_documento: tipoSeleccionado, cliente_id: id }),
+                });
+                if (res.ok) {
+                    const datos = await res.json();
+                    const extraidos = datos.datos_extraidos || {};
+                    // Mapear campos extraídos → campos del cliente (sobreescribe siempre)
+                    const mapeo: Record<string, string> = {
+                        nombre_completo: 'nombre_completo', rfc: 'rfc', curp: 'curp',
+                        fecha_nacimiento: 'fecha_nacimiento', lugar_nacimiento: 'lugar_nacimiento',
+                        ocupacion: 'ocupacion', estado_civil: 'estado_civil', genero: 'genero',
+                        clave_elector: 'clave_elector', seccion_ine: 'seccion_ine', idmex: 'idmex',
+                        numero_pasaporte: 'numero_pasaporte', numero_fm: 'numero_fm',
+                        domicilio_calle: 'domicilio_calle', domicilio_numero: 'domicilio_numero',
+                        domicilio_colonia: 'domicilio_colonia', domicilio_cp: 'domicilio_cp',
+                        domicilio_ciudad: 'domicilio_ciudad', domicilio_estado: 'domicilio_estado',
+                    };
+                    const actualizaciones: Record<string, any> = {};
+                    Object.entries(extraidos).forEach(([k, v]) => {
+                        if (mapeo[k] && v) actualizaciones[mapeo[k]] = v;
+                    });
+                    // Si viene domicilio como objeto, armarlo como string
+                    if (extraidos.domicilio_calle) {
+                        actualizaciones.domicilio = [
+                            extraidos.domicilio_calle, extraidos.domicilio_numero,
+                            extraidos.domicilio_colonia, extraidos.domicilio_cp,
+                            extraidos.domicilio_ciudad, extraidos.domicilio_estado,
+                        ].filter(Boolean).join(', ');
+                    }
+                    if (Object.keys(actualizaciones).length > 0) {
+                        await actualizarCliente(id, actualizaciones);
+                        const clienteActualizado = await getCliente(id);
+                        setCliente(clienteActualizado);
+                    }
+                }
+            } catch (extErr) {
+                // La extracción nunca bloquea — el documento ya quedó guardado
+                console.warn('Extracción automática falló:', extErr);
+            }
         } finally {
             setSubiendoTipo(null);
         }
@@ -284,7 +335,7 @@ export default function ClientePage() {
                                     className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-[13px] font-bold disabled:opacity-50"
                                     style={{ background: 'var(--blue)', color: 'white' }}>
                                     {subiendoTipo
-                                        ? <><Loader2 size={14} style={{ animation: 'spin 1s linear infinite' }} /> Subiendo...</>
+                                        ? <><Loader2 size={14} style={{ animation: 'spin 1s linear infinite' }} /> Analizando...</>
                                         : <><Upload size={14} /> Subir</>
                                     }
                                 </button>
