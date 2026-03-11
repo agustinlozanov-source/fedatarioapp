@@ -1,0 +1,17 @@
+[build]
+base = "fedatario"
+command = "rm -rf apps/web/node_modules apps/web/package-lock.json && npm install && npm run build --workspace=apps/web"
+publish = "apps/web/.next"
+
+[build.environment]
+NODE_VERSION = "22"
+NPM_FLAGS = "--legacy-peer-deps"
+
+[[redirects]]
+from = "/*"
+to = "/index.html"
+status = 200
+
+[env.production]
+[env.production.build.environment]
+NEXT_PUBLIC_AGENTS_URL = "https://fedatario-production.up.railway.app"
