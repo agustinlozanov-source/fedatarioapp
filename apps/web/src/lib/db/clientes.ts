@@ -83,4 +83,3 @@ export async function cargaMasivaClientes(
 export async function eliminarCliente(id: string): Promise<void> {
     await deleteDoc(doc(db, "clientes", id));
 }
-}
