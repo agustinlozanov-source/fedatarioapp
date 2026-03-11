@@ -1,5 +1,4 @@
 [build]
-base = "fedatario"
 command = "rm -rf apps/web/node_modules apps/web/package-lock.json && npm install && npm run build --workspace=apps/web"
 publish = "apps/web/.next"
 
