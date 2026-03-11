@@ -322,7 +322,7 @@ export default function InstrumentoDetallePage() {
         try {
             const res = await fetch(`${AGENTS_URL}/orquestador/generar`, {
                 method: 'POST', headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ instrumento_id: id, generar_docx: false }),
+                body: JSON.stringify({ instrumento_id: id, generar_docx: false, datos_instrumento: instrumento }),
             })
             const data = await res.json()
             if (!data.ok) throw new Error('Error en orquestador: ' + JSON.stringify(data))

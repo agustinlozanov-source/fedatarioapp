@@ -44,6 +44,7 @@ class OrquestadorInput(BaseModel):
     instrumento_id: str
     generar_docx: bool = False      # si True, también llama AGT-06
     nombre_archivo: Optional[str] = None
+    datos_instrumento: Optional[dict] = None  # si se provee, evita leer Firestore
 
 
 class OrquestadorResult(BaseModel):
@@ -280,37 +281,43 @@ def construir_payload(instrumento: dict) -> tuple[dict, list[str]]:
         if socios_aplanados and i < len(socios_aplanados):
             datos = socios_aplanados[i]
         elif cliente_id:
-            # Leer datos consolidados del Compendio (flujo real)
-            datos_extraidos = leer_datos_extraidos_socio(cliente_id, instrumento["id"])
-            cliente_base = leer_cliente(cliente_id)
+            # Intentar leer documentos_portal para enriquecer con datos OCR
+            # Si el JWT está roto, usar directamente los datos del instrumento
+            try:
+                datos_extraidos = leer_datos_extraidos_socio(cliente_id, instrumento["id"])
+                cliente_base = leer_cliente(cliente_id)
 
-            datos = {
-                "nombre_completo": datos_extraidos.get("nombre_completo") or cliente_base.get("nombre", ""),
-                "genero":          datos_extraidos.get("genero", "masculino"),
-                "nacionalidad_pais": datos_extraidos.get("nacionalidad_pais", "México"),
-                "lugar_nacimiento": datos_extraidos.get("lugar_nacimiento", ""),
-                "fecha_nacimiento": datos_extraidos.get("fecha_nacimiento", ""),
-                "estado_civil":    datos_extraidos.get("estado_civil", ""),
-                "ocupacion":       datos_extraidos.get("ocupacion", ""),
-                "domicilio": {
-                    "calle":   datos_extraidos.get("domicilio_calle", ""),
-                    "numero":  datos_extraidos.get("domicilio_numero", ""),
-                    "colonia": datos_extraidos.get("domicilio_colonia", ""),
-                    "cp":      datos_extraidos.get("domicilio_cp", ""),
-                    "ciudad":  datos_extraidos.get("domicilio_ciudad", ""),
-                    "estado":  datos_extraidos.get("domicilio_estado", ""),
-                },
-                "rfc":          datos_extraidos.get("rfc") or cliente_base.get("rfc", ""),
-                "curp":         datos_extraidos.get("curp") or cliente_base.get("curp", ""),
-                "clave_elector": datos_extraidos.get("clave_elector", ""),
-                "seccion_ine":   datos_extraidos.get("seccion_ine", ""),
-                "idmex":         datos_extraidos.get("idmex", ""),
-            }
+                datos = {
+                    "nombre_completo": datos_extraidos.get("nombre_completo") or cliente_base.get("nombre", "") or socio_ref.get("nombre_completo", ""),
+                    "genero":          datos_extraidos.get("genero") or socio_ref.get("genero", "masculino"),
+                    "nacionalidad_pais": datos_extraidos.get("nacionalidad_pais") or socio_ref.get("nacionalidad_pais", "México"),
+                    "lugar_nacimiento": datos_extraidos.get("lugar_nacimiento") or socio_ref.get("lugar_nacimiento", ""),
+                    "fecha_nacimiento": datos_extraidos.get("fecha_nacimiento") or socio_ref.get("fecha_nacimiento", ""),
+                    "estado_civil":    datos_extraidos.get("estado_civil") or socio_ref.get("estado_civil", ""),
+                    "ocupacion":       datos_extraidos.get("ocupacion") or socio_ref.get("ocupacion", ""),
+                    "domicilio": {
+                        "calle":   datos_extraidos.get("domicilio_calle", "") or socio_ref.get("domicilio", {}).get("calle", ""),
+                        "numero":  datos_extraidos.get("domicilio_numero", "") or socio_ref.get("domicilio", {}).get("numero", ""),
+                        "colonia": datos_extraidos.get("domicilio_colonia", "") or socio_ref.get("domicilio", {}).get("colonia", ""),
+                        "cp":      datos_extraidos.get("domicilio_cp", "") or socio_ref.get("domicilio", {}).get("cp", ""),
+                        "ciudad":  datos_extraidos.get("domicilio_ciudad", "") or socio_ref.get("domicilio", {}).get("ciudad", ""),
+                        "estado":  datos_extraidos.get("domicilio_estado", "") or socio_ref.get("domicilio", {}).get("estado", ""),
+                    },
+                    "rfc":          datos_extraidos.get("rfc") or cliente_base.get("rfc", "") or socio_ref.get("rfc", ""),
+                    "curp":         datos_extraidos.get("curp") or cliente_base.get("curp", "") or socio_ref.get("curp", ""),
+                    "clave_elector": datos_extraidos.get("clave_elector", "") or socio_ref.get("clave_elector", ""),
+                    "seccion_ine":   datos_extraidos.get("seccion_ine", "") or socio_ref.get("seccion_ine", ""),
+                    "idmex":         datos_extraidos.get("idmex", "") or socio_ref.get("idmex", ""),
+                }
 
-            # Validar campos críticos
-            for campo_critico in ("nombre_completo", "rfc", "curp", "fecha_nacimiento"):
-                if not datos.get(campo_critico):
-                    campos_faltantes.append(f"socio[{i}].{campo_critico}")
+                # Validar campos críticos
+                for campo_critico in ("nombre_completo", "rfc", "curp", "fecha_nacimiento"):
+                    if not datos.get(campo_critico):
+                        campos_faltantes.append(f"socio[{i}].{campo_critico}")
+
+            except Exception as e_fs:
+                print(f"⚠️ No se pudo leer Firestore para socio {i} (usando datos del instrumento): {e_fs}")
+                datos = socio_ref if isinstance(socio_ref, dict) else {}
         else:
             # Datos directamente en el objeto socio (legacy aplanado)
             datos = socio_ref if isinstance(socio_ref, dict) else {}
@@ -429,8 +436,11 @@ async def orquestar(input_data: OrquestadorInput) -> OrquestadorResult:
     """
     instrumento_id = input_data.instrumento_id
 
-    # 1. Leer Compendio
-    instrumento = leer_instrumento(instrumento_id)
+    # 1. Leer Compendio — si el frontend ya envió los datos, usarlos directamente
+    if input_data.datos_instrumento:
+        instrumento = {"id": instrumento_id, **input_data.datos_instrumento}
+    else:
+        instrumento = leer_instrumento(instrumento_id)
 
     # 2. Construir payload consolidado
     payload, campos_faltantes = construir_payload(instrumento)
