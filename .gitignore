@@ -2,4 +2,5 @@ apps/agents/google-credentials.json
 apps/agents/.env
 node_modules
 node_modules
-node_modules
+node_modulespackage-lock.json
+apps/*/package-lock.json
