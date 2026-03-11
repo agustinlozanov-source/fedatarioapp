@@ -81,7 +81,7 @@ export default function LibroPage() {
                       <div className="text-xs text-gray-500">Acta constitutiva</div>
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-600">
-                      {lib.partes.join(' · ')}
+                      {lib.partes?.join(' · ') || '—'}
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-900 font-mono">
                       {lib.folioInicio} – {lib.folioFin}
