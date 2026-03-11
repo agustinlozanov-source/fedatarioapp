@@ -61,7 +61,7 @@ const MAPEO_ROLES_BACKEND_A_FRONTEND: Record<string, RolSocio | ''> = {
 };
 
 // Mapeo inverso para cuando necesitamos mostrar el rol al backend
-const MAPEO_ROLES_FRONTEND_A_BACKEND: Record<RolSocio | '', string> = {};
+const MAPEO_ROLES_FRONTEND_A_BACKEND: Partial<Record<RolSocio | '', string>> = {};
 Object.entries(MAPEO_ROLES_BACKEND_A_FRONTEND).forEach(([backend, frontend]) => {
   if (frontend) {
     MAPEO_ROLES_FRONTEND_A_BACKEND[frontend] = backend;
