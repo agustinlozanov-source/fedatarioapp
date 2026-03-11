@@ -332,10 +332,38 @@ def construir_payload(instrumento: dict, skip_firestore: bool = False) -> tuple[
 
         domicilio_raw = datos.get("domicilio", {})
 
+        # Detectar si el socio es extranjero (camelCase del frontend o snake_case)
+        es_extranjero = (
+            socio_ref.get("esExtranjero") or
+            socio_ref.get("es_extranjero") or
+            datos.get("esExtranjero") or
+            datos.get("es_extranjero") or
+            False
+        )
+
+        # Nacionalidad: si es extranjero usar el campo nacionalidad/nacionalidad_pais,
+        # nunca dejar "México" para un extranjero
+        if es_extranjero:
+            nacionalidad_pais = (
+                datos.get("nacionalidad") or
+                datos.get("nacionalidad_pais") or
+                socio_ref.get("nacionalidad") or
+                "Extranjero"
+            )
+            # Limpiar campos exclusivos de INE
+            clave_elector = ""
+            seccion_ine   = ""
+            idmex         = ""
+        else:
+            nacionalidad_pais = datos.get("nacionalidad_pais") or datos.get("nacionalidad") or "México"
+            clave_elector = datos.get("clave_elector", "")
+            seccion_ine   = datos.get("seccion_ine", "")
+            idmex         = datos.get("idmex", "")
+
         socios_payload.append({
             "nombre_completo":  datos.get("nombre_completo", ""),
             "genero":           datos.get("genero", "masculino"),
-            "nacionalidad_pais": datos.get("nacionalidad_pais", "México"),
+            "nacionalidad_pais": nacionalidad_pais,
             "lugar_nacimiento": datos.get("lugar_nacimiento", ""),
             "fecha_nacimiento": fecha_nac.isoformat() if fecha_nac else None,
             "estado_civil":     datos.get("estado_civil", ""),
@@ -350,9 +378,9 @@ def construir_payload(instrumento: dict, skip_firestore: bool = False) -> tuple[
             },
             "rfc":           datos.get("rfc", ""),
             "curp":          datos.get("curp", ""),
-            "clave_elector": datos.get("clave_elector", ""),
-            "seccion_ine":   datos.get("seccion_ine", ""),
-            "idmex":         datos.get("idmex", ""),
+            "clave_elector": clave_elector,
+            "seccion_ine":   seccion_ine,
+            "idmex":         idmex,
             "rol":           ROL_LABEL.get(rol_raw, rol_raw),
             "porcentaje":    porcentaje,
         })

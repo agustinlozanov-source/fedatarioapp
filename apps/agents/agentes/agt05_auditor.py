@@ -94,7 +94,9 @@ def verificar_deletreo_clave_elector(texto: str, datos: InstrumentoRedactorInput
     """Verifica deletreo de clave elector, pero solo para socios mexicanos."""
     hallazgos = []
     for i, socio in enumerate(datos.socios, 1):
-        # Saltar verificación para socios extranjeros
+        # Saltar verificación para socios extranjeros o sin clave elector
+        if not socio.clave_elector:
+            continue
         if socio.nacionalidad_pais and socio.nacionalidad_pais.lower() != "méxico":
             continue
         
