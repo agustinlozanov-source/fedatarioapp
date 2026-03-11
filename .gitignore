@@ -1,4 +1,5 @@
 apps/agents/google-credentials.json
+apps/agents/*.json
 apps/agents/.env
 node_modules
 node_modules
