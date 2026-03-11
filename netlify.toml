@@ -1,5 +1,5 @@
 [build]
-command = "rm -rf apps/web/node_modules package-lock.json apps/web/package-lock.json && npm install --force && npm run build"
+command = "rm -rf node_modules package-lock.json apps/web/node_modules apps/web/package-lock.json && npm install --force && cd apps/web && npm run build"
 publish = "apps/web/.next"
 
 [build.environment]
