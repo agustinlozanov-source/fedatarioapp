@@ -215,12 +215,15 @@ async def procesar_cud_pdf(
             "fecha_extraccion": firestore.SERVER_TIMESTAMP,
         }
         
-        # Guardar en Firestore
+        # Intentar guardar en Firestore (best-effort: el frontend también lo guarda)
         if db:
-            db.collection("instrumentos").document(instrumento_id).update({
-                "mua_datos": datos_mua
-            })
-        
+            try:
+                db.collection("instrumentos").document(instrumento_id).update({
+                    "mua_datos": datos_mua
+                })
+            except Exception as fs_err:
+                logger.warning(f"No se pudo guardar en Firestore desde backend (el frontend lo hará): {fs_err}")
+
         return {
             "ok": True,
             "cud": resultado_cud.cud,

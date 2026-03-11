@@ -89,7 +89,7 @@ function CampoEditable({ label, value, onSave, tipo = 'text', fuente }: {
     label: string
     value: string | number | undefined
     onSave: ((val: string) => Promise<void>) | null  // null = solo lectura
-    tipo?: 'text' | 'number' | 'date'
+    tipo?: 'text' | 'number' | 'date' | 'textarea'
     fuente?: string  // texto informativo del origen del dato
 }) {
     const [editing, setEditing] = useState(false)
@@ -118,19 +118,26 @@ function CampoEditable({ label, value, onSave, tipo = 'text', fuente }: {
                 {fuente && <div className="text-[10px] text-gray-300 mt-0.5">{fuente}</div>}
             </div>
             {editing ? (
-                <div className="flex items-center gap-2 flex-1">
-                    <input type={tipo} value={draft} onChange={e => setDraft(e.target.value)}
-                        className="flex-1 text-sm text-gray-800 font-medium border border-gray-200 rounded-lg px-2 py-0.5 focus:outline-none focus:border-black" autoFocus />
-                    <button onClick={save} disabled={saving} className="p-1 rounded-md hover:bg-green-50 text-green-600 disabled:opacity-40">
-                        {saving ? <Loader2 size={13} className="animate-spin" /> : <Check size={13} />}
-                    </button>
-                    <button onClick={() => { setDraft(String(value ?? '')); setEditing(false) }} className="p-1 rounded-md hover:bg-red-50 text-red-400">
-                        <X size={13} />
-                    </button>
+                <div className="flex gap-2 flex-1">
+                    {tipo === 'textarea' ? (
+                        <textarea value={draft} onChange={e => setDraft(e.target.value)} rows={5}
+                            className="flex-1 text-sm text-gray-800 font-medium border border-gray-200 rounded-lg px-2 py-1.5 focus:outline-none focus:border-black resize-y" autoFocus />
+                    ) : (
+                        <input type={tipo} value={draft} onChange={e => setDraft(e.target.value)}
+                            className="flex-1 text-sm text-gray-800 font-medium border border-gray-200 rounded-lg px-2 py-0.5 focus:outline-none focus:border-black" autoFocus />
+                    )}
+                    <div className="flex flex-col gap-1">
+                        <button onClick={save} disabled={saving} className="p-1 rounded-md hover:bg-green-50 text-green-600 disabled:opacity-40">
+                            {saving ? <Loader2 size={13} className="animate-spin" /> : <Check size={13} />}
+                        </button>
+                        <button onClick={() => { setDraft(String(value ?? '')); setEditing(false) }} className="p-1 rounded-md hover:bg-red-50 text-red-400">
+                            <X size={13} />
+                        </button>
+                    </div>
                 </div>
             ) : (
-                <div className="flex items-center gap-2 flex-1 min-w-0">
-                    <span className="text-sm text-gray-800 font-medium flex-1 truncate">
+                <div className="flex items-start gap-2 flex-1 min-w-0">
+                    <span className={`text-sm text-gray-800 font-medium flex-1 ${tipo === 'textarea' ? 'whitespace-pre-wrap' : 'truncate'}`}>
                         {value ?? <span className="text-gray-300 italic text-xs">Sin datos</span>}
                     </span>
                     <div className="flex items-center gap-1 flex-shrink-0">
@@ -231,8 +238,8 @@ export default function InstrumentoDetallePage() {
     }
 
     const getDenominacion = (i: Instrumento) => i.denominacion_social || ''
-    const getCapital = (i: Instrumento) => i.capital_social ?? i.capital_fijo
-    const getObjeto = (i: Instrumento) => i.objeto_social_texto || ''
+    const getCapital = (i: Instrumento) => i.capital_social ?? i.capital_fijo ?? (i as any).capitalSocial
+    const getObjeto = (i: Instrumento) => i.objeto_social_texto || (i as any).objetoSocial || ''
     const getCUD = (i: Instrumento) => i.cud || i.cudMUA || ''
     const getNumPoliza = (i: Instrumento) => i.numero_poliza ?? i.numeroInstrumento
     const getDomicilio = (i: Instrumento) => i.domicilio_social || ''
@@ -489,7 +496,7 @@ export default function InstrumentoDetallePage() {
                     <section>
                         <h2 className="flex items-center gap-2 text-xs font-semibold text-gray-400 uppercase tracking-widest mb-3"><Hash size={13} /> Datos del Instrumento</h2>
                         <div className="bg-white border border-gray-100 rounded-2xl divide-y divide-gray-50">
-                            <CampoEditable label="Número de póliza" value={numPoliza} onSave={null} />
+                            <CampoEditable label="Número de póliza" value={numPoliza} tipo="number" onSave={v => guardarCampo('numero_poliza', Number(v))} />
                             <CampoEditable label="Fecha del instrumento" value={formatFecha(instrumento.fecha_instrumento)} onSave={v => guardarCampo('fecha_instrumento', v)} tipo="date" />
                         </div>
                     </section>
@@ -500,7 +507,6 @@ export default function InstrumentoDetallePage() {
                         <div className="bg-white border border-gray-100 rounded-2xl divide-y divide-gray-50">
                             <CampoEditable label="Denominación social" value={denominacion} onSave={v => guardarCampo('denominacion_social', v)} />
                             <CampoEditable label="Tipo de sociedad" value={tipoLabel[instrumento.tipo] ?? instrumento.tipo} onSave={null} />
-                            <CampoEditable label="Domicilio social" value={getDomicilio(instrumento)} onSave={v => guardarCampo('domicilio_social', v)} />
                             <CampoEditable label="Capital social" value={capital} tipo="number" onSave={v => guardarCampo('capital_social', Number(v))} />
                         </div>
                     </section>
@@ -639,8 +645,8 @@ export default function InstrumentoDetallePage() {
                     {/* Objeto social */}
                     <section>
                         <h2 className="flex items-center gap-2 text-xs font-semibold text-gray-400 uppercase tracking-widest mb-3"><Briefcase size={13} /> Objeto Social</h2>
-                        <div className="bg-white border border-gray-100 rounded-2xl px-5 py-4">
-                            <p className="text-sm text-gray-700 whitespace-pre-line leading-relaxed">{objeto || <span className="text-gray-300 italic">Sin objeto social</span>}</p>
+                        <div className="bg-white border border-gray-100 rounded-2xl divide-y divide-gray-50">
+                            <CampoEditable label="Objeto social" value={objeto} tipo="textarea" onSave={v => guardarCampo('objeto_social_texto', v)} />
                         </div>
                     </section>
                 </div>
