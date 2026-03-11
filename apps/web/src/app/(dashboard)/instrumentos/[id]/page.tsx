@@ -410,7 +410,13 @@ export default function InstrumentoDetallePage() {
                     errores: datosprocesados.errores,
                 }
             })
-            setInstrumento(prev => prev ? { ...prev, cudPdfUrl: url } : prev)
+            setInstrumento(prev => prev ? {
+                ...prev,
+                cudPdfUrl: url,
+                denominacion_social: datosprocesados.denominacion || prev.denominacion_social,
+                cud: datosprocesados.cud || prev.cud,
+                solicitante_mua: datosprocesados.nombre_solicitante || prev.solicitante_mua,
+            } : prev)
             setCudOk(`CUD procesado correctamente (${datosprocesados.confianza}% confianza)`)
             setTimeout(() => setCudOk(null), 4000)
         } catch (e: any) {

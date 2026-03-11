@@ -192,11 +192,15 @@ export default function ClientePage() {
                         if (mapeo[k] && v) actualizaciones[mapeo[k]] = v;
                     });
                     if (extraidos.domicilio_calle) {
-                        actualizaciones.domicilio = [
-                            extraidos.domicilio_calle, extraidos.domicilio_numero,
-                            extraidos.domicilio_colonia, extraidos.domicilio_cp,
-                            extraidos.domicilio_ciudad, extraidos.domicilio_estado,
-                        ].filter(Boolean).join(', ');
+                        actualizaciones.domicilio = {
+                            calle:   extraidos.domicilio_calle   || '',
+                            numero:  extraidos.domicilio_numero  || '',
+                            colonia: extraidos.domicilio_colonia || '',
+                            cp:      extraidos.domicilio_cp      || '',
+                            ciudad:  extraidos.domicilio_ciudad  || '',
+                            estado:  extraidos.domicilio_estado  || '',
+                            pais:    'México',
+                        };
                     }
                     if (Object.keys(actualizaciones).length > 0) {
                         await actualizarCliente(id, actualizaciones);

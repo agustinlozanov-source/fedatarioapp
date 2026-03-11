@@ -331,6 +331,9 @@ def construir_payload(instrumento: dict, skip_firestore: bool = False) -> tuple[
             campos_faltantes.append(f"socio[{i}].fecha_nacimiento_formato")
 
         domicilio_raw = datos.get("domicilio", {})
+        if isinstance(domicilio_raw, str):
+            # Domicilio guardado como string plano (formato legacy) — no puede usarse como objeto
+            domicilio_raw = {}
 
         # Detectar si el socio es extranjero (camelCase del frontend o snake_case)
         es_extranjero = (
