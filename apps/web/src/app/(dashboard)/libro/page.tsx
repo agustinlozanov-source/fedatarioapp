@@ -88,7 +88,7 @@ export default function LibroPage() {
                       <span className="text-gray-500 font-normal"> ({(lib.folioFin ?? 0) - (lib.folioInicio ?? 0) + 1}pp.)</span>
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-600">
-                      {formatDate(lib.fechaFirma)}
+                      {lib.fechaFirma ? formatDate(lib.fechaFirma) : "—"}
                     </td>
                     <td className="px-6 py-4">
                       <span className="px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs font-semibold">Firmado</span>
