@@ -106,7 +106,7 @@ export default function DocumentosPage() {
                                 {doc.estado === 'pendiente' && (
                                     <div className="flex gap-3 mt-4">
                                         <button
-                                            onClick={() => setVisorUrl(doc.url)}
+                                            onClick={() => setVisorUrl(doc.storageUrl)}
                                             className="flex items-center gap-2 px-4 py-2 bg-blue-100 text-blue-600 rounded-full hover:bg-blue-200 transition-colors text-sm font-semibold"
                                         >
                                             <Eye size={16} /> Ver documento
