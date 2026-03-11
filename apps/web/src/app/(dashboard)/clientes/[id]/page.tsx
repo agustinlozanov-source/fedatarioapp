@@ -10,8 +10,7 @@ import { Topbar } from '@/components/layout/Shell';
 import { getCliente, actualizarCliente } from '@/lib/db/clientes';
 import { getDocumentosCliente, subirDocumento } from '@/lib/db/documentos';
 import { getInstrumentos } from '@/lib/db/instrumentos';
-import { auth, storage } from '@/lib/firebase';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { auth } from '@/lib/firebase';
 import type { Cliente, Documento, Instrumento, TipoDocumento } from '@fedatario/shared';
 
 const TIPOS_DOCUMENTO: { id: TipoDocumento; label: string; esencial: boolean }[] = [
@@ -103,12 +102,7 @@ export default function ClientePage() {
         setSubiendoTipo(tipoSeleccionado);
         try {
             // 1. Subir a Storage y guardar en Firestore
-            const path = `pendientes/${cliente.tenantId}/${id}/${Date.now()}_${file.name}`;
-            const storageRef = ref(storage, path);
-            await uploadBytes(storageRef, file);
-            const url = await getDownloadURL(storageRef);
-
-            await subirDocumento(file, id, '', tipoSeleccionado, cliente.tenantId);
+            const { url } = await subirDocumento(file, id, '', tipoSeleccionado, cliente.tenantId);
             const docs = await getDocumentosCliente(id);
             setDocumentos(docs);
 

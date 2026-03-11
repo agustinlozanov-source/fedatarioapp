@@ -48,7 +48,7 @@ export async function subirDocumento(
     instrumentoId: string,
     tipo: TipoDocumento,
     tenantId: string
-): Promise<string> {
+): Promise<{ id: string; url: string }> {
     const path = `pendientes/${tenantId}/${instrumentoId}/${clienteId}/${Date.now()}_${file.name}`;
     const storageRef = ref(storage, path);
     await uploadBytes(storageRef, file);
@@ -66,7 +66,7 @@ export async function subirDocumento(
         datosExtraidos: {},
         creadoEn: serverTimestamp(),
     });
-    return docRef.id;
+    return { id: docRef.id, url };
 }
 
 export async function aprobarDocumento(
