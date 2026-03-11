@@ -35,10 +35,36 @@ const ESTADO_DOC = {
     rechazado: { label: 'Rechazado', color: 'var(--red)', bg: 'var(--red-bg)', icon: AlertCircle },
 };
 
+function domicilioLineaStr(dom: any): string | undefined {
+    if (!dom) return undefined;
+    if (typeof dom === 'string') return dom || undefined;
+    const parts = [
+        dom.calle,
+        dom.numero ? `No. ${dom.numero}` : undefined,
+        dom.colonia ? `Col. ${dom.colonia}` : undefined,
+        dom.cp ? `C.P. ${dom.cp}` : undefined,
+        dom.ciudad || dom.municipio,
+        dom.estado,
+    ].filter(Boolean);
+    return parts.length ? parts.join(', ') : undefined;
+}
+
+function calcularEdad(fecha?: string): number | undefined {
+    if (!fecha) return undefined;
+    try {
+        const nac = new Date(fecha + 'T12:00:00');
+        const hoy = new Date();
+        let edad = hoy.getFullYear() - nac.getFullYear();
+        const m = hoy.getMonth() - nac.getMonth();
+        if (m < 0 || (m === 0 && hoy.getDate() < nac.getDate())) edad--;
+        return isNaN(edad) || edad < 0 ? undefined : edad;
+    } catch { return undefined; }
+}
+
 function CampoEditable({ label, value, onSave, tipo = 'text', opciones }: {
     label: string;
     value?: string;
-    onSave: (val: string) => Promise<void>;
+    onSave: ((val: string) => Promise<void>) | null;
     tipo?: 'text' | 'date' | 'select';
     opciones?: string[];
 }) {
@@ -49,7 +75,7 @@ function CampoEditable({ label, value, onSave, tipo = 'text', opciones }: {
 
     const save = async () => {
         setSaving(true);
-        await onSave(draft);
+        await onSave!(draft);
         setSaving(false);
         setEditing(false);
     };
@@ -96,10 +122,12 @@ function CampoEditable({ label, value, onSave, tipo = 'text', opciones }: {
                                 {copied ? <Check size={11} className="text-green-600" /> : <Copy size={11} />}
                             </button>
                         )}
-                        <button onClick={() => { setDraft(String(value ?? '')); setEditing(true); }}
-                            className="p-1 rounded-md hover:bg-gray-100 text-gray-500">
-                            <Pencil size={11} />
-                        </button>
+                        {onSave && (
+                            <button onClick={() => { setDraft(String(value ?? '')); setEditing(true); }}
+                                className="p-1 rounded-md hover:bg-gray-100 text-gray-500">
+                                <Pencil size={11} />
+                            </button>
+                        )}
                     </div>
                 </div>
             )}
@@ -312,6 +340,7 @@ export default function ClientePage() {
                             <CampoEditable label="CURP" value={cliente.curp} onSave={v => actualizarCampo('curp', v)} />
                             <CampoEditable label="Género" value={(cliente as any).genero} onSave={v => actualizarCampo('genero', v)} tipo="select" opciones={['Masculino', 'Femenino', 'Otro']} />
                             <CampoEditable label="Fecha de nacimiento" value={(cliente as any).fecha_nacimiento} onSave={v => actualizarCampo('fecha_nacimiento', v)} tipo="date" />
+                            <CampoEditable label="Edad" value={calcularEdad((cliente as any).fecha_nacimiento) !== undefined ? `${calcularEdad((cliente as any).fecha_nacimiento)} años` : undefined} onSave={null} />
                             <CampoEditable label="Lugar de nacimiento" value={(cliente as any).lugar_nacimiento} onSave={v => actualizarCampo('lugar_nacimiento', v)} />
                             <CampoEditable label="Nacionalidad" value={(cliente as any).nacionalidad} onSave={v => actualizarCampo('nacionalidad', v)} />
                         </div>
@@ -355,19 +384,7 @@ export default function ClientePage() {
                         {/* Domicilio */}
                         <div className="bg-white border border-black/[0.07] rounded-2xl p-5">
                             <div className="text-[11px] font-bold text-[#86868B] uppercase tracking-[0.06em] mb-1">Domicilio</div>
-                            {typeof (cliente as any).domicilio === 'string' || !(cliente as any).domicilio ? (
-                                <CampoEditable label="Domicilio completo" value={(cliente as any).domicilio || ''} onSave={v => actualizarCampo('domicilio', v)} />
-                            ) : (
-                                <>
-                                    <CampoEditable label="Calle" value={(cliente as any).domicilio?.calle} onSave={v => actualizarDomicilio('calle', v)} />
-                                    <CampoEditable label="N° exterior" value={(cliente as any).domicilio?.numero || (cliente as any).domicilio?.noExt} onSave={v => actualizarDomicilio('numero', v)} />
-                                    <CampoEditable label="Colonia" value={(cliente as any).domicilio?.colonia} onSave={v => actualizarDomicilio('colonia', v)} />
-                                    <CampoEditable label="CP" value={(cliente as any).domicilio?.cp} onSave={v => actualizarDomicilio('cp', v)} />
-                                    <CampoEditable label="Ciudad / Municipio" value={(cliente as any).domicilio?.ciudad || (cliente as any).domicilio?.municipio} onSave={v => actualizarDomicilio('ciudad', v)} />
-                                    <CampoEditable label="Estado" value={(cliente as any).domicilio?.estado} onSave={v => actualizarDomicilio('estado', v)} />
-                                    <CampoEditable label="País" value={(cliente as any).domicilio?.pais} onSave={v => actualizarDomicilio('pais', v)} />
-                                </>
-                            )}
+                            <CampoEditable label="Domicilio" value={domicilioLineaStr((cliente as any).domicilio)} onSave={v => actualizarCampo('domicilio', v)} />
                         </div>
 
                         {/* Capacidades */}

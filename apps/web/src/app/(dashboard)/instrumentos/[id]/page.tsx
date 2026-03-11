@@ -83,6 +83,18 @@ function domicilioStr(d?: ClientePerfil['domicilio']) {
     return partes.length ? partes.join(', ') : undefined
 }
 
+function calcularEdad(fecha?: string): string | undefined {
+    if (!fecha) return undefined
+    try {
+        const nac = new Date(fecha + 'T12:00:00')
+        const hoy = new Date()
+        let edad = hoy.getFullYear() - nac.getFullYear()
+        const m = hoy.getMonth() - nac.getMonth()
+        if (m < 0 || (m === 0 && hoy.getDate() < nac.getDate())) edad--
+        return isNaN(edad) || edad < 0 ? undefined : `${edad} años`
+    } catch { return undefined }
+}
+
 // ── COMPONENTES ───────────────────────────────────────────────────────────────
 
 function CampoEditable({ label, value, onSave, tipo = 'text', fuente }: {
@@ -600,6 +612,7 @@ export default function InstrumentoDetallePage() {
                                             <CampoEditable label="RFC" value={perfil.rfc} fuente="RFC / Constancia SAT" onSave={salvarCliente('rfc')} />
                                             <CampoEditable label="CURP" value={perfil.curp} fuente="CURP / INE" onSave={salvarCliente('curp')} />
                                             <CampoEditable label="Fecha de nacimiento" value={formatFecha(perfil.fecha_nacimiento)} fuente="INE / CURP" onSave={salvarCliente('fecha_nacimiento')} tipo="date" />
+                                            <CampoEditable label="Edad" value={calcularEdad(perfil.fecha_nacimiento)} fuente="Calculada" onSave={null} />
                                             <CampoEditable label="Lugar de nacimiento" value={perfil.lugar_nacimiento} fuente="CURP" onSave={salvarCliente('lugar_nacimiento')} />
                                             <CampoEditable label="Género" value={perfil.genero} onSave={salvarCliente('genero')} />
                                             <CampoEditable label="Estado civil" value={perfil.estado_civil} onSave={salvarCliente('estado_civil')} />

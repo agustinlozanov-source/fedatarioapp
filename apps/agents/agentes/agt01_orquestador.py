@@ -365,7 +365,7 @@ def construir_payload(instrumento: dict, skip_firestore: bool = False) -> tuple[
 
         socios_payload.append({
             "nombre_completo":  datos.get("nombre_completo", ""),
-            "genero":           datos.get("genero", "masculino"),
+            "genero":           "femenino" if str(datos.get("genero", "masculino") or "masculino").lower().strip() in ("femenino", "femenina", "f", "mujer") else "masculino",
             "nacionalidad_pais": nacionalidad_pais,
             "lugar_nacimiento": datos.get("lugar_nacimiento", ""),
             "fecha_nacimiento": fecha_nac.isoformat() if fecha_nac else None,
