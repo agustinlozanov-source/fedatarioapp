@@ -191,7 +191,8 @@ export default function InstrumentoDetallePage() {
     const [loading, setLoading] = useState(true)
     const [generando, setGenerando] = useState(false)
     const [descargando, setDescargando] = useState(false)
-    const [borrador, setBorrador] = useState<BorradorResult | null>(null)
+    const [exportandoDocs, setExportandoDocs] = useState(false)
+    const [docsUrl, setDocsUrl] = useState<string | null>(null)
     const [error, setError] = useState<string | null>(null)
     const [cudOk, setCudOk] = useState<string | null>(null)
     const [tabActiva, setTabActiva] = useState<string>('compendio')
@@ -387,7 +388,25 @@ export default function InstrumentoDetallePage() {
         finally { setDescargando(false) }
     }
 
-    const subirPdfCud = async (file: File) => {
+    const exportarADocs = async () => {
+        if (!instrumento) return
+        setExportandoDocs(true)
+        setError(null)
+        try {
+            const res = await fetch(`${AGENTS_URL}/docx/exportar-docs`, {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ instrumento_id: id }),
+            })
+            if (!res.ok) {
+                const txt = await res.text().catch(() => '')
+                throw new Error(`Error ${res.status} exportando a Docs${txt ? ': ' + txt.slice(0, 200) : ''}`)
+            }
+            const data = await res.json()
+            setDocsUrl(data.url)
+            window.open(data.url, '_blank')
+        } catch (e: any) { setError(e.message) }
+        finally { setExportandoDocs(false) }
+    } = async (file: File) => {
         if (!id || !instrumento) return
         setSubiendoCud(true)
         setCudOk(null)
@@ -493,6 +512,9 @@ export default function InstrumentoDetallePage() {
                                 {descargando ? <><Loader2 size={15} className="animate-spin" /> Generando...</> : <><Download size={15} /> Descargar borrador</>}
                             </button>
                         )}
+                        <button onClick={exportarADocs} disabled={exportandoDocs} className="flex items-center gap-2 px-4 py-2 border border-gray-200 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-40 transition-colors">
+                            {exportandoDocs ? <><Loader2 size={15} className="animate-spin" /> Exportando...</> : <><FileText size={15} /> Abrir en Google Docs</>}
+                        </button>
                         <button onClick={generarBorrador} disabled={generando || !compendioListo}
                             title={!compendioListo ? `Campos faltantes: ${faltantes.join(' • ')}` : ''}
                             className="flex items-center gap-2 px-5 py-2 bg-black text-white rounded-xl text-sm font-medium hover:bg-gray-800 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
@@ -824,10 +846,16 @@ export default function InstrumentoDetallePage() {
                             <div className="bg-white border border-gray-100 rounded-2xl p-6">
                                 <div className="flex items-center justify-between mb-4">
                                     <div className="flex items-center gap-2"><Shield size={14} className="text-gray-400" /><span className="text-xs font-semibold text-gray-400 uppercase tracking-widest">Texto del Acta — Borrador</span></div>
+                                <div className="flex items-center gap-2">
                                     <button onClick={descargarDocx} disabled={descargando}
                                         className="flex items-center gap-2 px-4 py-2 bg-black text-white rounded-xl text-xs font-medium hover:bg-gray-800 disabled:opacity-40 transition-colors">
                                         {descargando ? <><Loader2 size={13} className="animate-spin" /> Generando...</> : <><Download size={13} /> Descargar .docx</>}
                                     </button>
+                                    <button onClick={exportarADocs} disabled={exportandoDocs}
+                                        className="flex items-center gap-2 px-4 py-2 border border-gray-200 rounded-xl text-xs font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-40 transition-colors">
+                                        {exportandoDocs ? <><Loader2 size={13} className="animate-spin" /> Exportando...</> : <><FileText size={13} /> Abrir en Google Docs</>}
+                                    </button>
+                                </div>
                                 </div>
                                 <pre className="text-xs text-gray-700 whitespace-pre-wrap font-mono leading-relaxed max-h-[600px] overflow-y-auto">{borrador.textoActa}</pre>
                             </div>
