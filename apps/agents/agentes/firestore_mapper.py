@@ -145,5 +145,5 @@ def firestore_to_redactor_input(data: Dict[str, Any]) -> InstrumentoRedactorInpu
         domicilio_social    = data.get("domicilio_social", "").strip(),
         capital_fijo        = int(data.get("capital_fijo", 100000)),
         socios              = socios,
-        objeto_social_texto = data.get("objeto_social_texto", "").strip(),
+        objeto_social_texto = (data.get("objeto_social_texto") or data.get("objetoSocial") or "").strip(),
     )
