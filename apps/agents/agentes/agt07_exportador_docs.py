@@ -450,8 +450,17 @@ def exportar_a_docs(secciones_obj: dict) -> dict:
     if folder_id:
         file_meta["parents"] = [folder_id]
 
-    created = drive.files().create(body=file_meta, fields="id").execute()
-    doc_id  = created["id"]
+    try:
+        created = drive.files().create(body=file_meta, fields="id").execute()
+    except HttpError as e:
+        if e.resp.status == 404 and folder_id:
+            # La cuenta OAuth no tiene acceso a la carpeta — crear en root
+            logger.warning(f"AGT-07: carpeta {folder_id} no accesible, creando en root")
+            file_meta.pop("parents", None)
+            created = drive.files().create(body=file_meta, fields="id").execute()
+        else:
+            raise
+    doc_id = created["id"]
     logger.info(f"AGT-07: Documento creado — {doc_id}")
 
     # ── 5. Configurar página (tamaño oficio, márgenes) ───────────────────────
