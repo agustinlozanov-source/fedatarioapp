@@ -426,7 +426,7 @@ export default function InstrumentoDetallePage() {
             formData.append('instrumento_id', id)
             
             console.log('Enviando PDF a procesar-cud-pdf...')
-            const respuesta = await fetch('https://fedatario-production.up.railway.app/procesar-cud-pdf', {
+            const respuesta = await fetch(`${AGENTS_URL}/procesar-cud-pdf`, {
                 method: 'POST',
                 body: formData
             })
@@ -587,7 +587,13 @@ export default function InstrumentoDetallePage() {
                                             const input = document.createElement('input')
                                             input.type = 'file'
                                             input.accept = '.pdf'
-                                            input.onchange = (e: any) => subirPdfCud(e.target.files[0])
+                                            input.style.display = 'none'
+                                            input.onchange = (e: any) => {
+                                                const file = e.target.files?.[0]
+                                                document.body.removeChild(input)
+                                                if (file) subirPdfCud(file)
+                                            }
+                                            document.body.appendChild(input)
                                             input.click()
                                         }} disabled={subiendoCud}
                                             className="text-sm text-gray-500 hover:text-gray-700 disabled:opacity-40">
@@ -599,7 +605,13 @@ export default function InstrumentoDetallePage() {
                                         const input = document.createElement('input')
                                         input.type = 'file'
                                         input.accept = '.pdf'
-                                        input.onchange = (e: any) => subirPdfCud(e.target.files[0])
+                                        input.style.display = 'none'
+                                        input.onchange = (e: any) => {
+                                            const file = e.target.files?.[0]
+                                            document.body.removeChild(input)
+                                            if (file) subirPdfCud(file)
+                                        }
+                                        document.body.appendChild(input)
                                         input.click()
                                     }} disabled={subiendoCud}
                                         className="px-4 py-2 bg-blue-50 text-blue-600 rounded-lg text-sm font-medium hover:bg-blue-100 disabled:opacity-40 transition-colors">
