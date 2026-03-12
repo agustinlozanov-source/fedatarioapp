@@ -183,6 +183,8 @@ def _expandir_abreviaturas(texto: str) -> str:
 
 def _parse_socio(s: Dict[str, Any]) -> SocioInput:
     dom = s.get("domicilio", {})
+    if not isinstance(dom, dict):
+        dom = {}   # domicilio guardado como string — ignorar, queda vacío
     genero = s.get("genero", "masculino").lower()
     return SocioInput(
         nombre_completo   = s["nombre_completo"].upper().strip(),
