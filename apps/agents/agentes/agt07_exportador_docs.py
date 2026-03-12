@@ -348,27 +348,45 @@ class DocsBuilder:
 
 def _purgar_drive_sa(drive) -> int:
     """
-    Elimina todos los Google Docs propiedad de la cuenta de servicio.
-    Los documentos ya transferidos al usuario no se ven afectados.
+    Elimina PERMANENTEMENTE todos los archivos propiedad de la cuenta de servicio,
+    incluyendo los que ya están en papelera (siguen contando contra la cuota).
+    Al final vacía la papelera para asegurar que se libera el espacio.
     Devuelve la cantidad de archivos eliminados.
     """
     eliminados = 0
     try:
-        resultado = drive.files().list(
-            q="'me' in owners and mimeType='application/vnd.google-apps.document' and trashed=false",
-            fields="files(id,name)",
-            pageSize=100,
-        ).execute()
-        archivos = resultado.get("files", [])
-        for archivo in archivos:
-            try:
-                drive.files().delete(fileId=archivo["id"]).execute()
-                eliminados += 1
-                logger.info(f"AGT-07 purga: eliminado '{archivo['name']}' ({archivo['id']})")
-            except Exception as e:
-                logger.warning(f"AGT-07 purga: no se pudo eliminar {archivo['id']}: {e}")
+        page_token = None
+        while True:
+            kwargs = dict(
+                q="'me' in owners",
+                fields="nextPageToken,files(id,name)",
+                pageSize=100,
+            )
+            if page_token:
+                kwargs["pageToken"] = page_token
+            resultado = drive.files().list(**kwargs).execute()
+            archivos = resultado.get("files", [])
+            for archivo in archivos:
+                try:
+                    drive.files().delete(fileId=archivo["id"]).execute()
+                    eliminados += 1
+                    logger.info(f"AGT-07 purga: eliminado '{archivo['name']}' ({archivo['id']})")
+                except Exception as e:
+                    logger.warning(f"AGT-07 purga: no se pudo eliminar {archivo['id']}: {e}")
+            page_token = resultado.get("nextPageToken")
+            if not page_token:
+                break
     except Exception as e:
         logger.warning(f"AGT-07 purga: error listando archivos: {e}")
+
+    # Vaciar papelera — los archivos eliminados siguen en papelera y siguen
+    # consumiendo cuota hasta que se vacía explícitamente
+    try:
+        drive.files().emptyTrash().execute()
+        logger.info("AGT-07 purga: papelera vaciada")
+    except Exception as e:
+        logger.warning(f"AGT-07 purga: no se pudo vaciar papelera: {e}")
+
     logger.info(f"AGT-07 purga: {eliminados} archivos eliminados de la cuenta de servicio")
     return eliminados
 
