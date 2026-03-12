@@ -10,7 +10,7 @@ import {
 import { Topbar } from '@/components/layout/Shell';
 import { getCliente, actualizarCliente } from '@/lib/db/clientes';
 import { getDocumentosCliente, subirDocumento, guardarDatosExtraidos } from '@/lib/db/documentos';
-import { expandirAbreviaturas } from '@/lib/utils/format';
+import { normalizarDomicilio, normalizarEstado, expandirAbreviaturas } from '@/lib/utils/format';
 import { getInstrumentos } from '@/lib/db/instrumentos';
 import { auth } from '@/lib/firebase';
 import type { Cliente, Documento, Instrumento, TipoDocumento } from '@fedatario/shared';

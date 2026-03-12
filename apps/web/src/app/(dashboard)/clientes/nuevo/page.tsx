@@ -6,7 +6,7 @@ import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { Topbar } from '@/components/layout/Shell';
 import { crearCliente } from '@/lib/db/clientes';
 import { storage, auth } from '@/lib/firebase';
-import { expandirAbreviaturas } from '@/lib/utils/format';
+import { normalizarDomicilio, normalizarEstado } from '@/lib/utils/format';
 import type { TipoDocumento } from '@fedatario/shared';
 
 const TIPOS_DOCUMENTO: { id: TipoDocumento; label: string; esencial: boolean }[] = [
@@ -151,11 +151,11 @@ export default function NuevoClientePage() {
                 nombre_completo: form.nombre_completo,
                 rfc: form.rfc,
                 fecha_nacimiento: form.fecha_nacimiento,
-                lugar_nacimiento: expandirAbreviaturas(form.lugar_nacimiento),
+                lugar_nacimiento: normalizarDomicilio(form.lugar_nacimiento),
                 ocupacion: form.ocupacion,
                 estado_civil: form.estado_civil,
                 genero: form.genero,
-                domicilio: expandirAbreviaturas(form.domicilio),
+                domicilio: normalizarDomicilio(form.domicilio),
                 portalActivo: true,
             };
 
@@ -291,6 +291,7 @@ export default function NuevoClientePage() {
                                 Lugar de nacimiento
                             </label>
                             <input value={form.lugar_nacimiento} onChange={e => set('lugar_nacimiento', e.target.value)}
+                                onBlur={e => set('lugar_nacimiento', normalizarDomicilio(e.target.value))}
                                 placeholder="Ej: Tampico, Tamaulipas, México"
                                 className="w-full px-3 py-2.5 rounded-xl text-[13px] outline-none"
                                 style={{ border: '1px solid var(--border)', background: 'white' }} />
@@ -328,6 +329,7 @@ export default function NuevoClientePage() {
                                 Domicilio
                             </label>
                             <input value={form.domicilio} onChange={e => set('domicilio', e.target.value)}
+                                onBlur={e => set('domicilio', normalizarDomicilio(e.target.value))}
                                 placeholder="Calle y número, CP, Ciudad, Estado, País"
                                 className="w-full px-3 py-2.5 rounded-xl text-[13px] outline-none"
                                 style={{ border: '1px solid var(--border)', background: 'white' }} />

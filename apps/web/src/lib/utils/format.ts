@@ -1,83 +1,68 @@
 import type { EstadoInstrumento, AgentePasoEstado } from '@fedatario/shared';
 
-/**
- * Expande abreviaturas comunes en textos de domicilio y lugar de nacimiento.
- * Ej: "FRACC VALLE, TAMPS" → "FRACCIONAMIENTO VALLE, TAMAULIPAS"
- */
-export function expandirAbreviaturas(texto: string): string {
-  if (!texto) return texto;
-  const reglas: [RegExp, string][] = [
-    // Tipo de vialidad
-    [/\bC\.\s*/gi,             'CALLE '],
-    [/\bCALL\.\s*/gi,          'CALLE '],
-    [/\bAV\.\s*/gi,            'AVENIDA '],
-    [/\bAVE\.\s*/gi,           'AVENIDA '],
-    [/\bBLVD\.\s*/gi,          'BOULEVARD '],
-    [/\bBLVR\.\s*/gi,          'BOULEVARD '],
-    [/\bCDA\.\s*/gi,           'CERRADA '],
-    [/\bCERR\.\s*/gi,          'CERRADA '],
-    [/\bCALZ\.\s*/gi,          'CALZADA '],
-    [/\bPROL\.\s*/gi,          'PROLONGACIÓN '],
-    [/\bCIRC\.\s*/gi,          'CIRCUITO '],
-    [/\bPERIF\.\s*/gi,         'PERIFÉRICO '],
-    [/\bAND\.\s*/gi,           'ANDADOR '],
-    [/\bCAM\.\s*/gi,           'CAMINO '],
-    [/\bRET\.\s*/gi,           'RETORNO '],
-    [/\bDIAG\.\s*/gi,          'DIAGONAL '],
-    // Tipo de asentamiento (punto opcional)
-    [/\bFRACC\.?(?!\w)\s*/gi,        'FRACCIONAMIENTO '],
-    [/\bCOL\.(?!\w)\s*/gi,           'COLONIA '],
-    [/\bBARR\.?(?!\w)\s*/gi,         'BARRIO '],
-    [/\bRES\.(?!\w)\s*/gi,           'RESIDENCIAL '],
-    [/\bU\.?H\.\s*/gi,               'UNIDAD HABITACIONAL '],
-    [/\bCTO\.(?!\w)\s*/gi,           'CONJUNTO '],
-    [/\bRDO\.(?!\w)\s*/gi,           'RANCHO '],
-    [/\bSEC\.(?!\w)\s*/gi,           'SECTOR '],
-    [/\bAMP\.?(?!\w)\s*/gi,          'AMPLIACIÓN '],
-    [/\bPOBL\.(?!\w)\s*/gi,          'POBLACIÓN '],
-    [/\bCIUDAD\s+IND\.?(?!\w)\s*/gi, 'CIUDAD INDUSTRIAL '],
-    // Estados (punto opcional)
-    [/\bTAMPS\.?(?!\w)\s*/gi,      'TAMAULIPAS '],
-    [/\bN\.?L\.?(?!\w)\s*/gi,      'NUEVO LEON '],
-    [/\bCDMX(?!\w)\s*/gi,          'CIUDAD DE MEXICO '],
-    [/\bD\.?F\.?(?!\w)\s*/gi,      'CIUDAD DE MEXICO '],
-    [/\bJAL\.?(?!\w)\s*/gi,        'JALISCO '],
-    [/\bVER\.?(?!\w)\s*/gi,        'VERACRUZ '],
-    [/\bGTO\.?(?!\w)\s*/gi,        'GUANAJUATO '],
-    [/\bPUE\.?(?!\w)\s*/gi,        'PUEBLA '],
-    [/\bCOAH\.?(?!\w)\s*/gi,       'COAHUILA '],
-    [/\bSON\.?(?!\w)\s*/gi,        'SONORA '],
-    [/\bSIN\.?(?!\w)\s*/gi,        'SINALOA '],
-    [/\bCHIH\.?(?!\w)\s*/gi,       'CHIHUAHUA '],
-    [/\bMICH\.?(?!\w)\s*/gi,       'MICHOACAN '],
-    [/\bOAX\.?(?!\w)\s*/gi,        'OAXACA '],
-    [/\bGRO\.?(?!\w)\s*/gi,        'GUERRERO '],
-    [/\bYUC\.?(?!\w)\s*/gi,        'YUCATAN '],
-    [/\bHGO\.?(?!\w)\s*/gi,        'HIDALGO '],
-    [/\bMOR\.?(?!\w)\s*/gi,        'MORELOS '],
-    [/\bQRO\.?(?!\w)\s*/gi,        'QUERETARO '],
-    [/\bQ\.?ROO\.?(?!\w)\s*/gi,    'QUINTANA ROO '],
-    [/\bAGS\.?(?!\w)\s*/gi,        'AGUASCALIENTES '],
-    [/\bBCN\.?(?!\w)\s*/gi,        'BAJA CALIFORNIA '],
-    [/\bBCS\.?(?!\w)\s*/gi,        'BAJA CALIFORNIA SUR '],
-    [/\bCAMP\.?(?!\w)\s*/gi,       'CAMPECHE '],
-    [/\bCHIS\.?(?!\w)\s*/gi,       'CHIAPAS '],
-    [/\bDGO\.?(?!\w)\s*/gi,        'DURANGO '],
-    [/\bMEX\.?(?!\w)\s*/gi,        'ESTADO DE MEXICO '],
-    [/\bNAY\.?(?!\w)\s*/gi,        'NAYARIT '],
-    [/\bSLP\.?(?!\w)\s*/gi,        'SAN LUIS POTOSI '],
-    [/\bTAB\.?(?!\w)\s*/gi,        'TABASCO '],
-    [/\bTLAX\.?(?!\w)\s*/gi,       'TLAXCALA '],
-    [/\bZAC\.?(?!\w)\s*/gi,        'ZACATECAS '],
-    // Numeración
-    [/\bNO\.\s*/gi,            'NÚMERO '],
-  ];
-  let resultado = texto.toUpperCase();
-  for (const [patron, reemplazo] of reglas) {
-    resultado = resultado.replace(patron, reemplazo);
-  }
-  return resultado.replace(/\s{2,}/g, ' ').trim();
+// ─── Normalización de domicilio ───────────────────────────────────────────────
+
+const _ABREV_VIALIDAD: Record<string, string> = {
+  BOULEVARD: 'BOULEVARD', CALZADA: 'CALZADA', CARRETERA: 'CARRETERA',
+  PROLONGACIÓN: 'PROLONGACIÓN', PRIVADA: 'PRIVADA', CIRCUITO: 'CIRCUITO',
+  AVENIDA: 'AVENIDA', ANDADOR: 'ANDADOR', CERRADA: 'CERRADA',
+  RETORNO: 'RETORNO', FRACCIONAMIENTO: 'FRACCIONAMIENTO',
+  'UNIDAD HABITACIONAL': 'UNIDAD HABITACIONAL', URBANIZACIÓN: 'URBANIZACIÓN',
+  SECCIÓN: 'SECCIÓN', COLONIA: 'COLONIA', DEPARTAMENTO: 'DEPARTAMENTO',
+  EDIFICIO: 'EDIFICIO', LOCAL: 'LOCAL', MANZANA: 'MANZANA',
+  INTERIOR: 'INTERIOR', LOTE: 'LOTE', 'SIN NÚMERO': 'SIN NÚMERO', CALLE: 'CALLE',
+  // Abreviaturas
+  BLVD: 'BOULEVARD', CALZ: 'CALZADA', CARR: 'CARRETERA',
+  PROL: 'PROLONGACIÓN', PRIV: 'PRIVADA', CIRC: 'CIRCUITO',
+  AVE: 'AVENIDA', AV: 'AVENIDA', AND: 'ANDADOR',
+  CDA: 'CERRADA', RET: 'RETORNO', FRACC: 'FRACCIONAMIENTO',
+  UHAB: 'UNIDAD HABITACIONAL', URB: 'URBANIZACIÓN',
+  SECC: 'SECCIÓN', COL: 'COLONIA', DEPTO: 'DEPARTAMENTO',
+  EDIF: 'EDIFICIO', LOC: 'LOCAL', MZ: 'MANZANA',
+  INT: 'INTERIOR', LT: 'LOTE', 'S/N': 'SIN NÚMERO', C: 'CALLE',
+};
+
+const _PATRON_VIALIDAD = new RegExp(
+  `\\b(${Object.keys(_ABREV_VIALIDAD)
+    .sort((a, b) => b.length - a.length)
+    .map(k => k.replace(/[/\\^$*+?.()|[\]{}]/g, '\\$&'))
+    .join('|')})\\b`,
+  'g'
+);
+
+const _ABREV_ESTADOS: Record<string, string> = {
+  AGS: 'AGUASCALIENTES', BC: 'BAJA CALIFORNIA', BCS: 'BAJA CALIFORNIA SUR',
+  CAMP: 'CAMPECHE', CHIS: 'CHIAPAS', CHIH: 'CHIHUAHUA',
+  CDMX: 'CIUDAD DE MEXICO', DF: 'CIUDAD DE MEXICO', COAH: 'COAHUILA',
+  COL: 'COLIMA', DGO: 'DURANGO', GTO: 'GUANAJUATO', GRO: 'GUERRERO',
+  HGO: 'HIDALGO', JAL: 'JALISCO', MEX: 'ESTADO DE MEXICO',
+  EDOMEX: 'ESTADO DE MEXICO', MICH: 'MICHOACAN', MOR: 'MORELOS',
+  NAY: 'NAYARIT', NL: 'NUEVO LEON', OAX: 'OAXACA', PUE: 'PUEBLA',
+  QRO: 'QUERETARO', QROO: 'QUINTANA ROO', SLP: 'SAN LUIS POTOSI',
+  SIN: 'SINALOA', SON: 'SONORA', TAB: 'TABASCO', TAMPS: 'TAMAULIPAS',
+  TLAX: 'TLAXCALA', VER: 'VERACRUZ', YUC: 'YUCATAN', ZAC: 'ZACATECAS',
+};
+
+/** Normaliza el campo calle/colonia/domicilio: quita puntos de abreviaturas y expande. */
+export function normalizarDomicilio(valor: string): string {
+  if (!valor) return valor;
+  return valor
+    .toUpperCase()
+    .replace(/\.(?=\s|$)/g, '')   // quita puntos al final de palabra
+    .replace(_PATRON_VIALIDAD, m => _ABREV_VIALIDAD[m] ?? m)
+    .replace(/\s{2,}/g, ' ')
+    .trim();
 }
+
+/** Normaliza el campo estado: expande abreviatura de estado mexicano. */
+export function normalizarEstado(valor: string): string {
+  if (!valor) return valor;
+  const clave = valor.toUpperCase().trim().replace(/\./g, '');
+  return _ABREV_ESTADOS[clave] ?? valor.toUpperCase();
+}
+
+/** Alias para uso en el backend (Python importa la versión Python, aquí para el frontend) */
+export const expandirAbreviaturas = normalizarDomicilio;
 
 export function formatDate(iso: string): string {
   return new Date(iso).toLocaleDateString('es-MX', { day: 'numeric', month: 'short', year: 'numeric' });
