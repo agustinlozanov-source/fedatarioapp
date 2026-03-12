@@ -449,11 +449,14 @@ def exportar_a_docs(secciones_obj: dict) -> dict:
     file_meta = {
         "name":     nombre_doc,
         "mimeType": "application/vnd.google-apps.document",
+        "parents":  [folder_id],
     }
-    if folder_id:
-        file_meta["parents"] = [folder_id]
 
-    created = drive.files().create(body=file_meta, fields="id").execute()
+    created = drive.files().create(
+        body=file_meta,
+        fields="id",
+        supportsAllDrives=True,
+    ).execute()
     doc_id  = created["id"]
     logger.info(f"AGT-07: Documento creado — {doc_id}")
 
