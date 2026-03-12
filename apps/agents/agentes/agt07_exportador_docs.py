@@ -114,6 +114,7 @@ def _ts(bold=False, italic=False, size=FONT_SIZE_BODY, color=None):
 TSF = "bold,italic,fontSize,foregroundColor,weightedFontFamily"
 
 def _border(width=0.75):
+    """ParagraphBorder — para borderBottom en párrafos (sí tiene padding)."""
     return {
         "color": {"color": {"rgbColor": COLOR_INK}},
         "width": {"magnitude": width, "unit": "PT"},
@@ -121,11 +122,19 @@ def _border(width=0.75):
         "dashStyle": "SOLID",
     }
 
+def _border_cell(width=0.5):
+    """TableCellBorder — para bordes de celdas (NO tiene padding)."""
+    return {
+        "color": {"color": {"rgbColor": COLOR_INK}},
+        "width": {"magnitude": width, "unit": "PT"},
+        "dashStyle": "SOLID",
+    }
+
 def _no_border():
+    """TableCellBorder sin borde visible (NO tiene padding)."""
     return {
         "color": {"color": {"rgbColor": {"red": 1.0, "green": 1.0, "blue": 1.0}}},
         "width": {"magnitude": 0, "unit": "PT"},
-        "padding": {"magnitude": 0, "unit": "PT"},
         "dashStyle": "SOLID",
     }
 
@@ -327,8 +336,8 @@ class DocsBuilder:
                 "tableCellStyle": {
                     "borderLeft":    _no_border(),
                     "borderRight":   _no_border(),
-                    "borderTop":     _border(0.5),
-                    "borderBottom":  _border(0.5),
+                    "borderTop":     _border_cell(0.5),
+                    "borderBottom":  _border_cell(0.5),
                     "paddingTop":    {"magnitude": 4, "unit": "PT"},
                     "paddingBottom": {"magnitude": 4, "unit": "PT"},
                     "paddingLeft":   {"magnitude": 6, "unit": "PT"},
