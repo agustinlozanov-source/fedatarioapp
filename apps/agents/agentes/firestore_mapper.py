@@ -74,15 +74,32 @@ def _parse_date(valor: Any) -> date:
     raise ValueError(f"Formato de fecha no reconocido: {type(valor)} → {valor!r}")
 
 
+_EC_MASCULINO = {"soltera": "Soltero", "casada": "Casado", "divorciada": "Divorciado",
+                 "viuda": "Viudo", "separada": "Separado"}
+_EC_FEMENINO  = {"soltero": "Soltera", "casado": "Casada", "divorciado": "Divorciada",
+                 "viudo": "Viuda", "separado": "Separada"}
+
+def _concordar_estado_civil(ec: str, genero: str) -> str:
+    """Asegura que el estado civil concuerde con el género del socio."""
+    if not ec:
+        return ec
+    key = ec.strip().lower()
+    if genero == "femenino":
+        return _EC_FEMENINO.get(key, ec)
+    else:
+        return _EC_MASCULINO.get(key, ec)
+
+
 def _parse_socio(s: Dict[str, Any]) -> SocioInput:
     dom = s.get("domicilio", {})
+    genero = s.get("genero", "masculino").lower()
     return SocioInput(
         nombre_completo   = s["nombre_completo"].upper().strip(),
-        genero            = s.get("genero", "masculino").lower(),
+        genero            = genero,
         nacionalidad_pais = s.get("nacionalidad_pais", "México"),
         lugar_nacimiento  = s.get("lugar_nacimiento", ""),
         fecha_nacimiento  = _parse_date(s["fecha_nacimiento"]),
-        estado_civil      = s.get("estado_civil", ""),
+        estado_civil      = _concordar_estado_civil(s.get("estado_civil", ""), genero),
         ocupacion         = s.get("ocupacion", ""),
         domicilio         = DomicilioInput(
             calle   = dom.get("calle", ""),

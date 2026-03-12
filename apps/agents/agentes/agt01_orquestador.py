@@ -203,6 +203,21 @@ def _parsear_edad(valor) -> int | None:
         return None
 
 
+_EC_FEMENINO = {"soltero": "Soltera", "casado": "Casada", "divorciado": "Divorciada",
+                "viudo": "Viuda", "separado": "Separada"}
+_EC_MASCULINO = {"soltera": "Soltero", "casada": "Casado", "divorciada": "Divorciado",
+                 "viuda": "Viudo", "separada": "Separado"}
+
+def _concordar_ec(ec: str, genero: str) -> str:
+    """Concuerda el estado civil con el género del socio."""
+    if not ec:
+        return ec
+    key = ec.strip().lower()
+    if genero == "femenino":
+        return _EC_FEMENINO.get(key, ec)
+    return _EC_MASCULINO.get(key, ec)
+
+
 # ── CONSTRUCCIÓN DEL PAYLOAD ──────────────────────────────────────────────────
 
 ROL_LABEL: dict[str, str] = {
@@ -381,7 +396,7 @@ def construir_payload(instrumento: dict, skip_firestore: bool = False) -> tuple[
             "nacionalidad_pais": nacionalidad_pais,
             "lugar_nacimiento": datos.get("lugar_nacimiento", ""),
             "fecha_nacimiento": fecha_nac.isoformat() if fecha_nac else None,
-            "estado_civil":     datos.get("estado_civil", ""),
+            "estado_civil":     _concordar_ec(datos.get("estado_civil", ""), "femenino" if str(datos.get("genero", "masculino") or "masculino").lower().strip() in ("femenino", "femenina", "f", "mujer") else "masculino"),
             "ocupacion":        datos.get("ocupacion", ""),
             "domicilio": {
                 "calle":   domicilio_raw.get("calle", ""),
