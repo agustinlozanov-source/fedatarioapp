@@ -117,6 +117,24 @@ def _para_style(alignment="JUSTIFIED", spacing_after=0, spacing_before=0, line_s
     }
 
 
+# ─── Helpers de detección ───────────────────────────────────────────────────
+
+def _es_relleno(texto: str) -> bool:
+    t = texto.strip()
+    return t.startswith(".-") or (t.startswith("-") and len(set(t.replace(" ", ""))) <= 2)
+
+def _es_enc(texto: str) -> bool:
+    t = texto.strip()
+    return t.startswith("=") and t.endswith("=")
+
+def _extraer_enc(texto: str) -> str:
+    return texto.strip().strip("=").strip()
+
+def _runs_son_encabezado(runs: list) -> bool:
+    no_relleno = [(t, b) for t, b in runs if not _es_relleno(t)]
+    return bool(no_relleno) and all(_es_enc(t) for t, _ in no_relleno)
+
+
 # ─── Constructor de requests ────────────────────────────────────────────────
 
 class DocsBuilder:
@@ -157,16 +175,29 @@ class DocsBuilder:
             }
         })
 
+    def vacio(self):
+        """Inserta un párrafo vacío."""
+        start = self.cursor
+        self._insert("\n")
+        end = self.cursor
+        self._fmt_para(start, end, _para_style(), "alignment,spaceAbove,spaceBelow,lineSpacing")
+
+    def encabezado_seccion(self, titulo: str):
+        """Encabezado de sección centrado y en negrita."""
+        self.para_con_runs([(titulo, True)], centered=True)
+
+    def parrafo(self, runs: list):
+        """Párrafo justificado normal."""
+        self.para_con_runs(runs, centered=False)
+
     def para_con_runs(self, runs: list, centered: bool = False):
         """
         Inserta un párrafo con runs (texto, es_negrita).
         Equivalente a _make_parrafo de AGT-06.
         """
+        runs = [(t, b) for t, b in runs if not _es_relleno(t)]
         if not runs:
-            start = self.cursor
-            self._insert("\n")
-            end = self.cursor
-            self._fmt_para(start, end, _para_style(), "alignment,spaceAbove,spaceBelow,lineSpacing")
+            self.vacio()
             return
 
         alignment = "CENTER" if centered else "JUSTIFIED"
@@ -299,9 +330,18 @@ def exportar_a_docs(secciones: list, nombre_doc: str = "Instrumento Público") -
         if sec.tipo == "vacio":
             b.para_con_runs([])
 
-        elif sec.tipo in ("parrafo", "encabezado"):
-            centered = sec.tipo == "encabezado"
-            b.para_con_runs(sec.runs, centered=centered)
+        elif sec.tipo == "parrafo":
+            if _runs_son_encabezado(sec.runs):
+                titulo = _extraer_enc(sec.runs[0][0]) if sec.runs else ""
+                if titulo:
+                    b.encabezado_seccion(titulo)
+            else:
+                b.parrafo(sec.runs)
+
+        elif sec.tipo == "encabezado":
+            titulo = _extraer_enc(sec.runs[0][0]) if sec.runs else ""
+            if titulo:
+                b.encabezado_seccion(titulo)
 
         elif sec.tipo == "tabla_accionaria":
             socios       = sec.data.get("socios", []) if isinstance(sec.data, dict) else []
@@ -355,16 +395,11 @@ def exportar_a_docs(secciones: list, nombre_doc: str = "Instrumento Público") -
                 b.para_con_runs([(linea, False)])
 
         elif sec.tipo == "firma":
-            nombre = sec.data.get("nombre", firma_nombre)
-            b.firma_block(nombre, firma_cargo)
+            # Solo renderizar el bloque del corredor, ignorar firmas de socios
+            pass
 
         elif sec.tipo == "corredor":
-            b.para_con_runs([("_______________________________________________", True)], centered=True)
-            b.para_con_runs([
-                ("LICENCIADO WILFREDO EMMANUEL RAMÍREZ NÚÑEZ. "
-                 "EL CORREDOR PÚBLICO NÚMERO 3 (TRES) "
-                 "DE LA PLAZA DEL ESTADO DE TAMAULIPAS.", True)
-            ], centered=True)
+            b.firma_block(firma_nombre, firma_cargo)
 
     # ── 5. Ejecutar todos los requests ──────────────────────────────────────
     b.flush(docs_svc)
