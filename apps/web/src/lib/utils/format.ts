@@ -1,5 +1,84 @@
 import type { EstadoInstrumento, AgentePasoEstado } from '@fedatario/shared';
 
+/**
+ * Expande abreviaturas comunes en textos de domicilio y lugar de nacimiento.
+ * Ej: "FRACC VALLE, TAMPS" → "FRACCIONAMIENTO VALLE, TAMAULIPAS"
+ */
+export function expandirAbreviaturas(texto: string): string {
+  if (!texto) return texto;
+  const reglas: [RegExp, string][] = [
+    // Tipo de vialidad
+    [/\bC\.\s*/gi,             'CALLE '],
+    [/\bCALL\.\s*/gi,          'CALLE '],
+    [/\bAV\.\s*/gi,            'AVENIDA '],
+    [/\bAVE\.\s*/gi,           'AVENIDA '],
+    [/\bBLVD\.\s*/gi,          'BOULEVARD '],
+    [/\bBLVR\.\s*/gi,          'BOULEVARD '],
+    [/\bCDA\.\s*/gi,           'CERRADA '],
+    [/\bCERR\.\s*/gi,          'CERRADA '],
+    [/\bCALZ\.\s*/gi,          'CALZADA '],
+    [/\bPROL\.\s*/gi,          'PROLONGACIÓN '],
+    [/\bCIRC\.\s*/gi,          'CIRCUITO '],
+    [/\bPERIF\.\s*/gi,         'PERIFÉRICO '],
+    [/\bAND\.\s*/gi,           'ANDADOR '],
+    [/\bCAM\.\s*/gi,           'CAMINO '],
+    [/\bRET\.\s*/gi,           'RETORNO '],
+    [/\bDIAG\.\s*/gi,          'DIAGONAL '],
+    // Tipo de asentamiento (punto opcional)
+    [/\bFRACC\.?\s*/gi,        'FRACCIONAMIENTO '],
+    [/\bCOL\.\s*/gi,           'COLONIA '],
+    [/\bBARR\.?\s*/gi,         'BARRIO '],
+    [/\bRES\.\s*/gi,           'RESIDENCIAL '],
+    [/\bU\.?H\.\s*/gi,         'UNIDAD HABITACIONAL '],
+    [/\bCTO\.\s*/gi,           'CONJUNTO '],
+    [/\bRDO\.\s*/gi,           'RANCHO '],
+    [/\bSEC\.\s*/gi,           'SECTOR '],
+    [/\bAMP\.?\s*/gi,          'AMPLIACIÓN '],
+    [/\bPOBL\.\s*/gi,          'POBLACIÓN '],
+    [/\bCIUDAD\s+IND\.?\s*/gi, 'CIUDAD INDUSTRIAL '],
+    // Estados (punto opcional)
+    [/\bTAMPS\.?\b\s*/gi,      'TAMAULIPAS '],
+    [/\bN\.?L\.?\s*/gi,        'NUEVO LEON '],
+    [/\bCDMX\b\s*/gi,          'CIUDAD DE MEXICO '],
+    [/\bD\.?F\.?\s*/gi,        'CIUDAD DE MEXICO '],
+    [/\bJAL\.?\b\s*/gi,        'JALISCO '],
+    [/\bVER\.?\b\s*/gi,        'VERACRUZ '],
+    [/\bGTO\.?\b\s*/gi,        'GUANAJUATO '],
+    [/\bPUE\.?\b\s*/gi,        'PUEBLA '],
+    [/\bCOAH\.?\b\s*/gi,       'COAHUILA '],
+    [/\bSON\.?\b\s*/gi,        'SONORA '],
+    [/\bSIN\.?\b\s*/gi,        'SINALOA '],
+    [/\bCHIH\.?\b\s*/gi,       'CHIHUAHUA '],
+    [/\bMICH\.?\b\s*/gi,       'MICHOACAN '],
+    [/\bOAX\.?\b\s*/gi,        'OAXACA '],
+    [/\bGRO\.?\b\s*/gi,        'GUERRERO '],
+    [/\bYUC\.?\b\s*/gi,        'YUCATAN '],
+    [/\bHGO\.?\b\s*/gi,        'HIDALGO '],
+    [/\bMOR\.?\b\s*/gi,        'MORELOS '],
+    [/\bQRO\.?\b\s*/gi,        'QUERETARO '],
+    [/\bQ\.?ROO\.?\s*/gi,      'QUINTANA ROO '],
+    [/\bAGS\.?\b\s*/gi,        'AGUASCALIENTES '],
+    [/\bBCN\.?\b\s*/gi,        'BAJA CALIFORNIA '],
+    [/\bBCS\.?\b\s*/gi,        'BAJA CALIFORNIA SUR '],
+    [/\bCAMP\.?\b\s*/gi,       'CAMPECHE '],
+    [/\bCHIS\.?\b\s*/gi,       'CHIAPAS '],
+    [/\bDGO\.?\b\s*/gi,        'DURANGO '],
+    [/\bMEX\.?\b\s*/gi,        'ESTADO DE MEXICO '],
+    [/\bNAY\.?\b\s*/gi,        'NAYARIT '],
+    [/\bSLP\.?\b\s*/gi,        'SAN LUIS POTOSI '],
+    [/\bTAB\.?\b\s*/gi,        'TABASCO '],
+    [/\bTLAX\.?\b\s*/gi,       'TLAXCALA '],
+    [/\bZAC\.?\b\s*/gi,        'ZACATECAS '],
+    // Numeración
+    [/\bNO\.\s*/gi,            'NÚMERO '],
+  ];
+  let resultado = texto.toUpperCase();
+  for (const [patron, reemplazo] of reglas) {
+    resultado = resultado.replace(patron, reemplazo);
+  }
+  return resultado.replace(/\s{2,}/g, ' ').trim();
+}
+
 export function formatDate(iso: string): string {
   return new Date(iso).toLocaleDateString('es-MX', { day: 'numeric', month: 'short', year: 'numeric' });
 }

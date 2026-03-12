@@ -10,6 +10,7 @@ import {
 import { Topbar } from '@/components/layout/Shell';
 import { getCliente, actualizarCliente } from '@/lib/db/clientes';
 import { getDocumentosCliente, subirDocumento, guardarDatosExtraidos } from '@/lib/db/documentos';
+import { expandirAbreviaturas } from '@/lib/utils/format';
 import { getInstrumentos } from '@/lib/db/instrumentos';
 import { auth } from '@/lib/firebase';
 import type { Cliente, Documento, Instrumento, TipoDocumento } from '@fedatario/shared';
@@ -160,14 +161,18 @@ export default function ClientePage() {
         }).finally(() => setCargando(false));
     }, [id]);
 
+    const CAMPOS_DIRECCION = new Set(['domicilio', 'lugar_nacimiento']);
+
     const actualizarCampo = async (campo: string, valor: string) => {
-        await actualizarCliente(id, { [campo]: valor } as any);
-        setCliente(prev => prev ? { ...prev, [campo]: valor } as any : prev);
+        const valorFinal = CAMPOS_DIRECCION.has(campo) ? expandirAbreviaturas(valor) : valor;
+        await actualizarCliente(id, { [campo]: valorFinal } as any);
+        setCliente(prev => prev ? { ...prev, [campo]: valorFinal } as any : prev);
     };
 
     const actualizarDomicilio = async (subcampo: string, valor: string) => {
         const domActual = typeof (cliente as any)?.domicilio === 'object' ? (cliente as any).domicilio : {};
-        const nuevoDom = { ...domActual, [subcampo]: valor };
+        const valorFinal = expandirAbreviaturas(valor);
+        const nuevoDom = { ...domActual, [subcampo]: valorFinal };
         await actualizarCliente(id, { domicilio: nuevoDom } as any);
         setCliente(prev => prev ? { ...prev, domicilio: nuevoDom } as any : prev);
     };
@@ -218,14 +223,17 @@ export default function ClientePage() {
                     });
                     if (extraidos.domicilio_calle) {
                         actualizaciones.domicilio = {
-                            calle:   extraidos.domicilio_calle   || '',
+                            calle:   expandirAbreviaturas(extraidos.domicilio_calle   || ''),
                             numero:  extraidos.domicilio_numero  || '',
-                            colonia: extraidos.domicilio_colonia || '',
+                            colonia: expandirAbreviaturas(extraidos.domicilio_colonia || ''),
                             cp:      extraidos.domicilio_cp      || '',
-                            ciudad:  extraidos.domicilio_ciudad  || '',
-                            estado:  extraidos.domicilio_estado  || '',
+                            ciudad:  expandirAbreviaturas(extraidos.domicilio_ciudad  || ''),
+                            estado:  expandirAbreviaturas(extraidos.domicilio_estado  || ''),
                             pais:    'México',
                         };
+                    }
+                    if (actualizaciones.lugar_nacimiento) {
+                        actualizaciones.lugar_nacimiento = expandirAbreviaturas(actualizaciones.lugar_nacimiento);
                     }
                     if (Object.keys(actualizaciones).length > 0) {
                         await actualizarCliente(id, actualizaciones);

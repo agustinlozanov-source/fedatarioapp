@@ -6,6 +6,7 @@ import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { Topbar } from '@/components/layout/Shell';
 import { crearCliente } from '@/lib/db/clientes';
 import { storage, auth } from '@/lib/firebase';
+import { expandirAbreviaturas } from '@/lib/utils/format';
 import type { TipoDocumento } from '@fedatario/shared';
 
 const TIPOS_DOCUMENTO: { id: TipoDocumento; label: string; esencial: boolean }[] = [
@@ -150,11 +151,11 @@ export default function NuevoClientePage() {
                 nombre_completo: form.nombre_completo,
                 rfc: form.rfc,
                 fecha_nacimiento: form.fecha_nacimiento,
-                lugar_nacimiento: form.lugar_nacimiento,
+                lugar_nacimiento: expandirAbreviaturas(form.lugar_nacimiento),
                 ocupacion: form.ocupacion,
                 estado_civil: form.estado_civil,
                 genero: form.genero,
-                domicilio: form.domicilio,
+                domicilio: expandirAbreviaturas(form.domicilio),
                 portalActivo: true,
             };
 
