@@ -440,9 +440,7 @@ def exportar_a_docs(secciones_obj: dict) -> dict:
     poliza_num   = secciones_obj.get("numero_poliza", "0000")
     nombre_doc   = f"Póliza {poliza_num} — {denominacion}"
 
-    # ── 2. Liberar cuota: purgar docs propios de la SA antes de crear ────────
     folder_id = os.environ.get("GOOGLE_DRIVE_FOLDER_ID")
-    _purgar_drive_sa(drive)
 
     # ── 2. Crear documento con Docs API directamente ────────────────────────────
     created_doc = docs.documents().create(
