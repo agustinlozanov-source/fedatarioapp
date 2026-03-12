@@ -346,6 +346,58 @@ class DocsBuilder:
 
 # ─── Función principal ──────────────────────────────────────────────────────
 
+def _purgar_drive_sa(drive) -> int:
+    """
+    Elimina todos los Google Docs propiedad de la cuenta de servicio.
+    Los documentos ya transferidos al usuario no se ven afectados.
+    Devuelve la cantidad de archivos eliminados.
+    """
+    eliminados = 0
+    try:
+        resultado = drive.files().list(
+            q="'me' in owners and mimeType='application/vnd.google-apps.document' and trashed=false",
+            fields="files(id,name)",
+            pageSize=100,
+        ).execute()
+        archivos = resultado.get("files", [])
+        for archivo in archivos:
+            try:
+                drive.files().delete(fileId=archivo["id"]).execute()
+                eliminados += 1
+                logger.info(f"AGT-07 purga: eliminado '{archivo['name']}' ({archivo['id']})")
+            except Exception as e:
+                logger.warning(f"AGT-07 purga: no se pudo eliminar {archivo['id']}: {e}")
+    except Exception as e:
+        logger.warning(f"AGT-07 purga: error listando archivos: {e}")
+    logger.info(f"AGT-07 purga: {eliminados} archivos eliminados de la cuenta de servicio")
+    return eliminados
+
+
+def _transferir_propiedad(drive, doc_id: str, folder_id: str) -> bool:
+    """
+    Transfiere la propiedad del documento al dueño de la carpeta destino.
+    Así los archivos futuros no consumen cuota de la cuenta de servicio.
+    """
+    try:
+        folder = drive.files().get(fileId=folder_id, fields="owners").execute()
+        owners = folder.get("owners", [])
+        if not owners:
+            logger.warning("AGT-07: la carpeta no tiene dueño identificable")
+            return False
+        owner_email = owners[0]["emailAddress"]
+        drive.permissions().create(
+            fileId=doc_id,
+            body={"type": "user", "role": "owner", "emailAddress": owner_email},
+            transferOwnership=True,
+            fields="id",
+        ).execute()
+        logger.info(f"AGT-07: propiedad transferida a {owner_email}")
+        return True
+    except Exception as e:
+        logger.warning(f"AGT-07: no se pudo transferir propiedad: {e}")
+        return False
+
+
 def exportar_a_docs(secciones_obj: dict) -> dict:
     """
     Exporta el instrumento a Google Docs.
@@ -371,8 +423,11 @@ def exportar_a_docs(secciones_obj: dict) -> dict:
     poliza_num   = secciones_obj.get("numero_poliza", "0000")
     nombre_doc   = f"Póliza {poliza_num} — {denominacion}"
 
-    # ── 2. Crear documento vacío en Drive ────────────────────────────────────
+    # ── 2. Liberar cuota: purgar docs propios de la SA antes de crear ────────
     folder_id = os.environ.get("GOOGLE_DRIVE_FOLDER_ID")
+    _purgar_drive_sa(drive)
+
+    # ── 3. Crear documento vacío en Drive ────────────────────────────────────
     file_meta = {
         "name":     nombre_doc,
         "mimeType": "application/vnd.google-apps.document",
@@ -384,7 +439,11 @@ def exportar_a_docs(secciones_obj: dict) -> dict:
     doc_id  = created["id"]
     logger.info(f"AGT-07: Documento creado — {doc_id}")
 
-    # ── 3. Configurar página (tamaño oficio, márgenes) ───────────────────────
+    # ── 4. Transferir propiedad al dueño de la carpeta (evita cuota SA) ──────
+    if folder_id:
+        _transferir_propiedad(drive, doc_id, folder_id)
+
+    # ── 5. Configurar página (tamaño oficio, márgenes) ───────────────────────
     docs.documents().batchUpdate(
         documentId=doc_id,
         body={"requests": [{
@@ -404,7 +463,7 @@ def exportar_a_docs(secciones_obj: dict) -> dict:
         }]},
     ).execute()
 
-    # ── 4. Construir contenido ───────────────────────────────────────────────
+    # ── 6. Construir contenido ───────────────────────────────────────────────
     b = DocsBuilder(doc_id)
 
     # Encabezado
@@ -485,11 +544,11 @@ def exportar_a_docs(secciones_obj: dict) -> dict:
         cargo=corredor.get("cargo", "Corredor Público Número 3 · Plaza del Estado de Tamaulipas"),
     )
 
-    # ── 5. Ejecutar todos los requests ──────────────────────────────────────
+    # ── 7. Ejecutar todos los requests ──────────────────────────────────────
     b.flush(docs)
     logger.info(f"AGT-07: Contenido escrito — {len(b.reqs)} requests ejecutados")
 
-    # ── 6. Hacer el documento visible (compartir con anyone con link) ────────
+    # ── 8. Hacer el documento visible (compartir con anyone con link) ────────
     # Opcional — comentar si no se quiere acceso público
     drive.permissions().create(
         fileId=doc_id,
