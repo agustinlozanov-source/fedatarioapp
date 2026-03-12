@@ -317,15 +317,20 @@ def exportar_a_docs(secciones: list, nombre_doc: str = "Instrumento Público") -
                 else:
                     nombre   = getattr(s, "nombre_completo", getattr(s, "nombre", ""))
                     nac      = getattr(s, "nacionalidad_pais", "")
-                    pct      = getattr(s, "porcentaje", 0)
-                    # SocioInput no tiene acciones/valor_nominal — los calculamos
-                    # con capital_fijo almacenado en sec.data
+                    pct      = getattr(s, "porcentaje", 0) or 0
                     acc_attr = getattr(s, "acciones", None)
                     val_attr = getattr(s, "valor_nominal", None)
                     if acc_attr is None or val_attr is None:
-                        cap_socio = float(capital_fijo) * (float(pct) / 100) if capital_fijo and pct else 0.0
-                        acc       = int(cap_socio // 1000)
-                        val       = f"${cap_socio:,.2f}"
+                        if pct and capital_fijo:
+                            # Usa el porcentaje real del socio (60/40, 50/50, etc.)
+                            cap_socio = float(capital_fijo) * (float(pct) / 100)
+                        elif capital_fijo and socios:
+                            # Fallback: división igualitaria (misma lógica que AGT-06)
+                            cap_socio = float(capital_fijo) / len(socios)
+                        else:
+                            cap_socio = 0.0
+                        acc = int(cap_socio // 1000)
+                        val = f"${cap_socio:,.2f}"
                     else:
                         acc = acc_attr
                         val = val_attr

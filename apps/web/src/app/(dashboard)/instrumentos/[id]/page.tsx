@@ -651,6 +651,10 @@ export default function InstrumentoDetallePage() {
 
                                         <div className="divide-y divide-gray-50">
                                             {/* Datos personales — desde clientes/{id} */}
+                                            <CampoEditable label="% Participación" value={socio.porcentaje != null ? String(socio.porcentaje) : ''} tipo="number" fuente="Formulario" onSave={async (v) => {
+                                                const nuevos = (instrumento.socios ?? []).map((s, j) => j === i ? { ...s, porcentaje: Number(v) } : s)
+                                                await guardarCampo('socios', nuevos)
+                                            }} />
                                             <CampoEditable label="RFC" value={perfil.rfc} fuente="RFC / Constancia SAT" onSave={salvarCliente('rfc')} />
                                             <CampoEditable label="CURP" value={perfil.curp} fuente="CURP / INE" onSave={salvarCliente('curp')} />
                                             <CampoEditable label="Fecha de nacimiento" value={formatFecha(perfil.fecha_nacimiento)} fuente="INE / CURP" onSave={salvarCliente('fecha_nacimiento')} tipo="date" />

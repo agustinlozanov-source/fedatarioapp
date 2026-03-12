@@ -205,6 +205,7 @@ def _parse_socio(s: Dict[str, Any]) -> SocioInput:
         clave_elector = s.get("clave_elector", "").upper().strip(),
         seccion_ine   = str(s.get("seccion_ine", "")).strip(),
         idmex         = str(s.get("idmex", "")).strip(),
+        porcentaje    = float(s.get("porcentaje", 0.0)),
     )
 
 
