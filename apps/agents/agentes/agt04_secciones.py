@@ -60,6 +60,12 @@ def secciones_encabezado(d) -> List[Seccion]:
     nombres    = " y ".join(s.nombre_completo for s in d.socios)
     den        = d.denominacion_social
 
+    # Género del grupo de comparecientes
+    todos_masculinos  = all(s.genero == "masculino" for s in d.socios)
+    todos_femeninos   = all(s.genero == "femenino"  for s in d.socios)
+    ciudadanos_label  = ("las Ciudadanas" if todos_femeninos
+                         else "los Ciudadanos")
+
     # Línea 1 — tres encabezados juntos en el mismo párrafo del original
     lib_txt  = f"LIBRO DE REGISTRO {d.libro_registro} ({libro_l})"
     inst_txt = "I N S T R U M E N T O  P Ú B L I C O"
@@ -84,7 +90,7 @@ def secciones_encabezado(d) -> List[Seccion]:
                f"CORREDOR PÚBLICO NÚMERO 3 (TRES) DE LA PLAZA DEL ESTADO DE TAMAULIPAS, "
                f"con Registro Federal de Contribuyentes: RANW, ocho, cinco, cero, seis, "
                f"dos, ocho, UW, tres. Comparecen en esta oficina de la Correduría Pública "
-               f"Número 3 (Tres) de la Plaza de Tamaulipas, los Ciudadanos {nombres} quienes "
+               f"Número 3 (Tres) de la Plaza de Tamaulipas, {ciudadanos_label} {nombres} quienes "
                f"expresan que es su intención solicitar los servicios del suscrito Fedatario "
                f"Público a fin de otorgar la "),
             _b("Constitución de una Sociedad Mercantil, "),
@@ -263,9 +269,11 @@ def secciones_antecedentes(d) -> List[Seccion]:
     abrev  = ('SOCIEDAD ANÓNIMA DE CAPITAL VARIABLE o seguido de sus abreviaturas S.A. de C.V.'
               if d.tipo_sociedad == "SA_de_CV"
               else 'SOCIEDAD DE RESPONSABILIDAD LIMITADA DE CAPITAL VARIABLE o seguido de sus abreviaturas S. de R.L. de C.V.')
-    den    = d.denominacion_social
+    den        = d.denominacion_social
+    # Normalizar nombre del solicitante (puede venir con saltos de línea del PDF)
+    solicitante = ' '.join(d.solicitante_mua.split())
 
-    return [
+    secs_ant = [
         _p(
             _r("Una vez cerciorado el suscrito Corredor Público de la identificación plena "
                "de los comparecientes y levantada la Protesta de Decir Verdad, dicen que es "
@@ -283,7 +291,7 @@ def secciones_antecedentes(d) -> List[Seccion]:
         _p(
             _b("ÚNICA.- "),
             _r(f"Declaran los comparecientes que para la celebración del presente acto "
-               f"la Ciudadana {d.solicitante_mua} solicitó a la Secretaría de Economía, a través "
+               f"la Ciudadana {solicitante} solicitó a la Secretaría de Economía, a través "
                f'del portal identificado como "https://mua.economia.gob.mx" la Autorización de '
                f"Uso de Denominación o Razón Social que corresponderá a ésta sociedad. Documento "
                f"que me permito obtener copia fotostática directamente de su matriz y la cual "),
@@ -306,7 +314,7 @@ def secciones_antecedentes(d) -> List[Seccion]:
         _p(_b(f"{d.cud}."), _g(f"{d.cud}.")),
         _p(_b("Resolución"), _g("Resolución")),
         _p(
-            _r(f"En atención a la solicitud realizada por {d.solicitante_mua}, a través del "
+            _r(f"En atención a la solicitud realizada por {solicitante}, a través del "
                f"Sistema establecido por la Secretaría de Economía para autorizar el uso de "
                f"Denominaciones o Razones Sociales, y con fundamento en lo dispuesto por los "
                f"artículos 15, 16 y 16 A de la Ley de Inversión Extranjera; 34 fracción XII bis "
@@ -319,8 +327,16 @@ def secciones_antecedentes(d) -> List[Seccion]:
             _g("DENOMINACIÓN O RAZÓN SOCIAL:"),
         ),
         _p(_b(f"{den}"), _g(den)),
-        _p(_b("=== Fin de la transcripción ==="), _g("===")),
     ]
+
+    # Leyenda de resolución completa del CUD (extraída del PDF por extractor_cud.py)
+    resolucion = getattr(d, 'texto_resolucion', '') or ''
+    if resolucion.strip():
+        resolucion_limpia = ' '.join(resolucion.split())
+        secs_ant.append(_p(_r(resolucion_limpia), _g(resolucion_limpia[-50:])))
+
+    secs_ant.append(_p(_b("=== Fin de la transcripción ==="), _g("===")))
+    return secs_ant
 
 
 def secciones_declaraciones() -> List[Seccion]:
@@ -471,14 +487,23 @@ def secciones_transitorias_sa(d) -> List[Seccion]:
     ]
 
     # SEGUNDA — Administrador único
-    admin   = d.socios[0]
+    admin          = d.socios[0]
+    admin_edad     = edad_actual(admin.fecha_nacimiento, d.fecha_instrumento)
+    admin_edad_l   = numero_letra(admin_edad)
+    admin_rfc_l    = deletrear_alfanumerico(admin.rfc)
+    admin_ciudadano = genero_str(admin, "al ciudadano", "a la ciudadana")
+    admin_nac       = genero_str(admin, "mexicano", "mexicana")
     secs.append(_p(
         _b("SEGUNDA.- "),
         _r("La Administración de la Sociedad estará a cargo de "),
         _b("UN ADMINISTRADOR ÚNICO "),
-        _r(f"designándose para tal efecto al ciudadano "),
+        _r(f"designándose para tal efecto {admin_ciudadano} "),
         _b(admin.nombre_completo),
-        _r(". Quien durará en su encargo indefinidamente hasta que la propia Asamblea "
+        _r(f", de generales; {admin_edad} ({admin_edad_l.capitalize()}) años de edad, "
+           f"{admin_nac}, {admin.estado_civil}, ocupación {admin.ocupacion}, con domicilio "
+           f"en Ciudad {admin.domicilio.ciudad}, {admin.domicilio.estado}, indicando su "
+           f"Registro Federal de Causantes (RFC) {admin.rfc} ({admin_rfc_l}). "
+           "Quien durará en su encargo indefinidamente hasta que la propia Asamblea "
            "General convoque con este motivo preciso Orden del día.- Por la naturaleza "
            "del encargo designado el "),
         _b(f"ADMINISTRADOR ÚNICO: {admin.nombre_completo}, "),
@@ -500,17 +525,20 @@ def secciones_transitorias_sa(d) -> List[Seccion]:
 
     # TERCERA — Comisario
     if len(d.socios) >= 2:
-        com    = d.socios[1]
-        com_l  = numero_letra(edad_actual(com.fecha_nacimiento, d.fecha_instrumento))
-        rfc_l  = deletrear_alfanumerico(com.rfc)
+        com         = d.socios[1]
+        com_edad    = edad_actual(com.fecha_nacimiento, d.fecha_instrumento)
+        com_l       = numero_letra(com_edad)
+        rfc_l       = deletrear_alfanumerico(com.rfc)
+        com_ciudadano = genero_str(com, "al Ciudadano", "a la Ciudadana")
+        com_nac       = genero_str(com, "mexicano", "mexicana")
         secs.append(_p(
             _b("TERCERA.- "),
             _r("Se Designa como "),
             _b("COMISARIO DE LA SOCIEDAD, "),
-            _r(f"a la Ciudadana "),
+            _r(f"{com_ciudadano} "),
             _b(com.nombre_completo),
-            _r(f", de generales; {edad_actual(com.fecha_nacimiento, d.fecha_instrumento)} "
-               f"({com_l.capitalize()}) años de edad, mexicana, {com.estado_civil}, "
+            _r(f", de generales; {com_edad} "
+               f"({com_l.capitalize()}) años de edad, {com_nac}, {com.estado_civil}, "
                f"ocupación {com.ocupacion}, con domicilio en Ciudad {com.domicilio.ciudad}, "
                f"{com.domicilio.estado}, indicando su Registro Federal de Causantes (RFC) "
                f"{com.rfc} ({rfc_l})."),
@@ -540,13 +568,14 @@ def secciones_transitorias_srl(d) -> List[Seccion]:
     ]
 
     # SEGUNDA — Gerente General
-    gerente   = d.socios[0]
-    ger_rfc_l = deletrear_alfanumerico(gerente.rfc)
+    gerente       = d.socios[0]
+    ger_rfc_l     = deletrear_alfanumerico(gerente.rfc)
+    ger_ciudadano = genero_str(gerente, "al ciudadano", "a la ciudadana")
     secs.append(_p(
         _b("SEGUNDA.- "),
         _r("La Administración de la Sociedad estará a cargo de un "),
         _b("GERENTE GENERAL "),
-        _r("designándose para tal efecto al ciudadano "),
+        _r(f"designándose para tal efecto {ger_ciudadano} "),
         _b(gerente.nombre_completo),
         _r(f", con Registro Federal de Causantes (RFC) {gerente.rfc} ({ger_rfc_l}). "
            "Quien durará en su encargo indefinidamente hasta que la propia Asamblea "

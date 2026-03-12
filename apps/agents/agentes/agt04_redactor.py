@@ -749,6 +749,7 @@ def generar_acta(d: InstrumentoRedactorInput) -> dict:
         "num_socios": len(d.socios),
         "denominacion": d.denominacion_social,
         "numero_poliza": d.numero_poliza,
+        "secciones": secciones_obj,
     }
 
 

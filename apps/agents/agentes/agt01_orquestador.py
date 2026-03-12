@@ -453,21 +453,30 @@ async def llamar_auditor(texto_acta: str, datos: dict) -> dict:
         return {"ok": False, "error": str(e)}
 
 
-async def llamar_docx(texto_acta: str, datos: dict, instrumento_id: str) -> bytes:
-    import httpx
-    import os
-    AGENTS_URL = os.getenv("AGENTS_URL", "http://localhost:5001")
-    nombre = datos.get("denominacion_social", "acta").lower().replace(" ", "_")
-    nombres_socios = [s["nombre_completo"] for s in datos.get("socios", [])]
-    async with httpx.AsyncClient(timeout=60.0) as client:
-        res = await client.post(f"{AGENTS_URL}/docx/generar", json={
-            "texto_acta": texto_acta,
-            "nombre_archivo": nombre,
-            "nombres_socios": nombres_socios,
-            "instrumento_id": instrumento_id,
-        })
-        res.raise_for_status()
-        return res.content
+async def llamar_docx(secciones: list, instrumento_id: str, nombre_archivo: str) -> str | None:
+    """
+    Genera el .docx en proceso usando las secciones ya producidas por AGT-04.
+    Guarda el archivo en Firebase Storage y retorna la URL de descarga.
+    Si Firebase Storage no está disponible, retorna None.
+    """
+    from agentes.agt06_docx import generar_docx
+
+    docx_bytes = generar_docx("", secciones=secciones)
+
+    try:
+        from firebase_admin import storage as fb_storage
+        bucket = fb_storage.bucket()
+        blob_path = f"actas/{instrumento_id}/{nombre_archivo}.docx"
+        blob = bucket.blob(blob_path)
+        blob.upload_from_string(
+            docx_bytes,
+            content_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        )
+        blob.make_public()
+        return blob.public_url
+    except Exception as e:
+        logger.warning(f"\u26a0\ufe0f No se pudo guardar docx en Storage: {e}")
+        return None
 
 
 # ── FUNCIÓN PRINCIPAL ─────────────────────────────────────────────────────────
@@ -497,7 +506,8 @@ async def orquestar(input_data: OrquestadorInput) -> OrquestadorResult:
     data_redactor = await llamar_redactor(payload)
     if not data_redactor.get("ok"):
         raise RuntimeError(f"AGT-04 error: {data_redactor}")
-    texto_acta = data_redactor["data"]["texto_acta"]
+    texto_acta   = data_redactor["data"]["texto_acta"]
+    secciones_obj = data_redactor["data"].get("secciones", [])
 
     # 4. AGT-05 Auditor (opcional, no bloquea si falla)
     auditoria = {
@@ -514,11 +524,15 @@ async def orquestar(input_data: OrquestadorInput) -> OrquestadorResult:
     except Exception as e:
         logger.warning(f"⚠️ AGT-05 Auditor falló pero continuamos: {e}")
 
-    # 5. AGT-06 DOCX (opcional)
+    # 5. AGT-06 DOCX (opcional) — usa secciones ya generadas por AGT-04
     docx_generado = False
     if input_data.generar_docx and auditoria.get("score", 0) >= 90:
-        await llamar_docx(texto_acta, payload, instrumento_id)
-        docx_generado = True
+        if secciones_obj:
+            nombre_archivo = payload.get("denominacion_social", "acta").lower().replace(" ", "_")
+            await llamar_docx(secciones_obj, instrumento_id, nombre_archivo)
+            docx_generado = True
+        else:
+            logger.warning("⚠️ AGT-06 omitido: AGT-04 no produjo secciones estructuradas")
 
     return OrquestadorResult(
         ok=True,

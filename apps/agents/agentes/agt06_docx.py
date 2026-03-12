@@ -353,17 +353,29 @@ def _build_tabla_capital_srl(body, socios, capital_fijo):
 # TABLA DE FIRMAS
 # ─────────────────────────────────────────────
 
-def _celda_firma(texto, bold=False, bordes_nil=None, col_pct=2651):
+def _celda_firma(texto, bold=False, bordes_nil=None, col_w=COL_IZQ_DXA):
+    """
+    col_w en DXA. bordes_nil: lista de lados a poner 'nil' (sin borde).
+    Lados no listados quedan con borde 'single'.
+    """
     tc   = OxmlElement('w:tc')
     tcPr = OxmlElement('w:tcPr')
     tcW  = OxmlElement('w:tcW')
-    tcW.set(qn('w:w'), str(col_pct)); tcW.set(qn('w:type'), 'pct')
+    tcW.set(qn('w:w'), str(col_w)); tcW.set(qn('w:type'), 'dxa')
     tcPr.append(tcW)
-    if bordes_nil:
-        tcB = OxmlElement('w:tcBorders')
-        for side in bordes_nil:
-            b = OxmlElement(f'w:{side}'); b.set(qn('w:val'), 'nil'); tcB.append(b)
-        tcPr.append(tcB)
+    nil_set = set(bordes_nil or [])
+    tcB = OxmlElement('w:tcBorders')
+    for side in ['top', 'left', 'bottom', 'right']:
+        b = OxmlElement(f'w:{side}')
+        if side in nil_set:
+            b.set(qn('w:val'), 'nil')
+        else:
+            b.set(qn('w:val'), 'single')
+            b.set(qn('w:sz'), '6')
+            b.set(qn('w:space'), '0')
+            b.set(qn('w:color'), 'auto')
+        tcB.append(b)
+    tcPr.append(tcB)
     tc.append(tcPr)
     p = OxmlElement('w:p'); p.append(_pPr())
     if texto: p.append(_make_run(texto, bold, sz=SZ))
@@ -371,14 +383,25 @@ def _celda_firma(texto, bold=False, bordes_nil=None, col_pct=2651):
     return tc
 
 def _build_tabla_firma(body, nombre: str, es_ultimo: bool):
+    """
+    Tabla de firma de 2 columnas × 2 filas:
+      Fila 1 (nombre): [NOMBRE. | Nombre completo.]
+                        bordes top+bottom visibles (bottom = línea de firma)
+                        bordes left+right=nil
+      Fila 2 (firma):  [Firma. | Huellas...]
+                        sin ningún borde (espacio físico para firma/huella)
+      Fila 3 (solo último socio): fila vacía de altura extra
+    """
     tbl  = OxmlElement('w:tbl')
     tblPr= OxmlElement('w:tblPr')
-    tblW = OxmlElement('w:tblW'); tblW.set(qn('w:w'),'5000'); tblW.set(qn('w:type'),'pct')
+    tblW = OxmlElement('w:tblW')
+    tblW.set(qn('w:w'), str(COL_IZQ_DXA + COL_DER_DXA))
+    tblW.set(qn('w:type'), 'dxa')
     tblPr.append(tblW)
+    # Sin bordes de tabla — los bordes se controlan por celda
     tblB = OxmlElement('w:tblBorders')
     for side in ['top','left','bottom','right','insideH','insideV']:
-        b = OxmlElement(f'w:{side}'); b.set(qn('w:val'),'single')
-        b.set(qn('w:sz'),'4'); b.set(qn('w:space'),'0'); b.set(qn('w:color'),'auto')
+        b = OxmlElement(f'w:{side}'); b.set(qn('w:val'), 'none')
         tblB.append(b)
     tblPr.append(tblB); tbl.append(tblPr)
     grid = OxmlElement('w:tblGrid')
@@ -386,33 +409,41 @@ def _build_tabla_firma(body, nombre: str, es_ultimo: bool):
         gc = OxmlElement('w:gridCol'); gc.set(qn('w:w'), str(w)); grid.append(gc)
     tbl.append(grid)
 
-    # Fila 1: NOMBRE | Nombre completo.
-    # XML real: izq tiene left+bottom=nil; der tiene bottom+right=nil
+    # Fila 1: nombre + "Nombre completo."
+    # Borde top+bottom visibles (bottom es la línea donde firma); left+right=nil
+    # La separación central (insideV) también nil — no hay línea vertical entre columnas
     tr1 = OxmlElement('w:tr')
     tr1.append(_celda_firma(nombre + ".", bold=True,
-                             bordes_nil=['left', 'bottom'], col_pct=COL_IZQ_PCT))
+                             bordes_nil=['left', 'right'],
+                             col_w=COL_IZQ_DXA))
     tr1.append(_celda_firma("Nombre completo.",
-                             bordes_nil=['bottom', 'right'], col_pct=COL_DER_PCT))
+                             bordes_nil=['left', 'right'],
+                             col_w=COL_DER_DXA))
     tbl.append(tr1)
 
-    # Fila 2: Firma. | Huellas ...
-    # XML real: ambas celdas tienen top+left+bottom+right=nil
+    # Fila 2: "Firma." | "Huellas..." — sin bordes (espacio físico)
     tr2 = OxmlElement('w:tr')
     tr2.append(_celda_firma("Firma.",
-                             bordes_nil=['top', 'left', 'bottom', 'right'], col_pct=COL_IZQ_PCT))
+                             bordes_nil=['top', 'left', 'bottom', 'right'],
+                             col_w=COL_IZQ_DXA))
     tr2.append(_celda_firma("Huellas Índices Izquierdo y Derecho.",
-                             bordes_nil=['top', 'left', 'bottom', 'right'], col_pct=COL_DER_PCT))
+                             bordes_nil=['top', 'left', 'bottom', 'right'],
+                             col_w=COL_DER_DXA))
     tbl.append(tr2)
 
-    # Fila 3 (solo último socio): celda vacía para espacio de firma física
+    # Fila 3 (solo último socio): fila vacía de altura extra para espacio de firma
     if es_ultimo:
         tr3 = OxmlElement('w:tr')
-        tr3.append(_celda_firma("", bordes_nil=['top', 'left', 'bottom', 'right'], col_pct=COL_IZQ_PCT))
-        tr3.append(_celda_firma("", bordes_nil=['top', 'left', 'bottom', 'right'], col_pct=COL_DER_PCT))
+        # Altura mínima para el espacio físico de firma (~1.5cm = 850 twips)
+        trPr3 = OxmlElement('w:trPr')
+        trH3  = OxmlElement('w:trHeight')
+        trH3.set(qn('w:val'), '850'); trH3.set(qn('w:hRule'), 'atLeast')
+        trPr3.append(trH3); tr3.append(trPr3)
+        tr3.append(_celda_firma("", bordes_nil=['top','left','bottom','right'], col_w=COL_IZQ_DXA))
+        tr3.append(_celda_firma("", bordes_nil=['top','left','bottom','right'], col_w=COL_DER_DXA))
         tbl.append(tr3)
 
     body.append(tbl)
-    # Párrafo vacío tras tabla
     body.append(_make_parrafo([]))
 
 

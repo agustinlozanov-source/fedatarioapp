@@ -299,7 +299,9 @@ async def docx_generar(body: DocxInput):
 
         secciones_obj = None
 
-        if body.instrumento_id and not texto_acta:
+        # instrumento_id tiene prioridad: genera secciones frescas desde Firestore.
+        # Solo cae a texto_acta (legacy) si no hay instrumento_id.
+        if body.instrumento_id:
             if not db:
                 raise HTTPException(status_code=500, detail="Firebase no disponible")
             snap = db.collection("instrumentos").document(body.instrumento_id).get()
@@ -309,12 +311,14 @@ async def docx_generar(body: DocxInput):
             resultado = generar_acta(redactor_input)
             texto_acta = resultado["texto_acta"]
             nombres_socios = [s.nombre_completo for s in redactor_input.socios]
-            # Generar secciones estructuradas (con tablas reales)
-            try:
-                from agentes.agt04_secciones import generar_secciones
-                secciones_obj = generar_secciones(redactor_input)
-            except Exception as e:
-                logger.warning(f"secciones fallaron, usando legacy: {e}")
+            # Secciones estructuradas: primero intentar las del resultado, luego regenerar
+            secciones_obj = resultado.get("secciones") or None
+            if not secciones_obj:
+                try:
+                    from agentes.agt04_secciones import generar_secciones
+                    secciones_obj = generar_secciones(redactor_input)
+                except Exception as e:
+                    logger.warning(f"secciones fallaron, usando legacy: {e}")
 
         if not texto_acta and secciones_obj is None:
             raise HTTPException(status_code=400, detail="Se requiere texto_acta o instrumento_id válido")
