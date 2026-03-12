@@ -29,6 +29,7 @@ import firebase_admin
 from dotenv import load_dotenv
 from firebase_admin import credentials, firestore
 from pydantic import BaseModel
+from agentes.firestore_mapper import _expandir_abreviaturas
 
 load_dotenv()
 
@@ -399,12 +400,12 @@ def construir_payload(instrumento: dict, skip_firestore: bool = False) -> tuple[
             "estado_civil":     _concordar_ec(datos.get("estado_civil", ""), "femenino" if str(datos.get("genero", "masculino") or "masculino").lower().strip() in ("femenino", "femenina", "f", "mujer") else "masculino"),
             "ocupacion":        datos.get("ocupacion", ""),
             "domicilio": {
-                "calle":   domicilio_raw.get("calle", ""),
+                "calle":   _expandir_abreviaturas(domicilio_raw.get("calle", "")),
                 "numero":  domicilio_raw.get("numero", ""),
-                "colonia": domicilio_raw.get("colonia", ""),
+                "colonia": _expandir_abreviaturas(domicilio_raw.get("colonia", "")),
                 "cp":      domicilio_raw.get("cp", ""),
-                "ciudad":  domicilio_raw.get("ciudad", ""),
-                "estado":  domicilio_raw.get("estado", ""),
+                "ciudad":  _expandir_abreviaturas(domicilio_raw.get("ciudad", "")),
+                "estado":  _expandir_abreviaturas(domicilio_raw.get("estado", "")),
             },
             "rfc":           datos.get("rfc", ""),
             "curp":          datos.get("curp", ""),

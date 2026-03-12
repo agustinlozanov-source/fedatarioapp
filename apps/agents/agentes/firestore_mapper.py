@@ -90,6 +90,98 @@ def _concordar_estado_civil(ec: str, genero: str) -> str:
         return _EC_MASCULINO.get(key, ec)
 
 
+# Abreviaturas → texto completo (orden importa: más específicas primero)
+_ABREVIATURAS = [
+    # Tipo de vialidad
+    (r'\bC\.\s*',         "CALLE "),
+    (r'\bCALL\.\s*',      "CALLE "),
+    (r'\bAV\.\s*',        "AVENIDA "),
+    (r'\bAVE\.\s*',       "AVENIDA "),
+    (r'\bBLVD\.\s*',      "BOULEVARD "),
+    (r'\bBLVR\.\s*',      "BOULEVARD "),
+    (r'\bCDA\.\s*',       "CERRADA "),
+    (r'\bCERR\.\s*',      "CERRADA "),
+    (r'\bCALZ\.\s*',      "CALZADA "),
+    (r'\bPROL\.\s*',      "PROLONGACIÓN "),
+    (r'\bCIRC\.\s*',      "CIRCUITO "),
+    (r'\bPERIF\.\s*',     "PERIFÉRICO "),
+    (r'\bAND\.\s*',       "ANDADOR "),
+    (r'\bPASAJE\s*',      "PASAJE "),
+    (r'\bCAM\.\s*',       "CAMINO "),
+    (r'\bRET\.\s*',       "RETORNO "),
+    (r'\bDIAG\.\s*',      "DIAGONAL "),
+    # Tipo de asentamiento
+    (r'\bFRACC\.\s*',     "FRACCIONAMIENTO "),
+    (r'\bCOL\.\s*',       "COLONIA "),
+    (r'\bBARR\.\s*',      "BARRIO "),
+    (r'\bRES\.\s*',       "RESIDENCIAL "),
+    (r'\bU\.?H\.\s*',     "UNIDAD HABITACIONAL "),
+    (r'\bCTO\.\s*',       "CONJUNTO "),
+    (r'\bRDO\.\s*',       "RANCHO "),
+    (r'\bEJIDO\s+',       "EJIDO "),
+    (r'\bSEC\.\s*',       "SECTOR "),
+    (r'\bAMP\.\s*',       "AMPLIACIÓN "),
+    (r'\bPOBL\.\s*',      "POBLACIÓN "),
+    (r'\bCIUDAD\s+IND\.\s*', "CIUDAD INDUSTRIAL "),
+    # Estados comunes abreviados
+    (r'\bTAMPS\.\s*',     "TAMAULIPAS"),
+    (r'\bN\.?L\.\s*',     "NUEVO LEÓN"),
+    (r'\bCDMX\s*',        "CIUDAD DE MÉXICO"),
+    (r'\bD\.?F\.\s*',     "CIUDAD DE MÉXICO"),
+    (r'\bJAL\.\s*',       "JALISCO"),
+    (r'\bVER\.\s*',       "VERACRUZ"),
+    (r'\bGTO\.\s*',       "GUANAJUATO"),
+    (r'\bPUE\.\s*',       "PUEBLA"),
+    (r'\bCOAH\.\s*',      "COAHUILA"),
+    (r'\bSON\.\s*',       "SONORA"),
+    (r'\bSIN\.\s*',       "SINALOA"),
+    (r'\bCHIH\.\s*',      "CHIHUAHUA"),
+    (r'\bMICH\.\s*',      "MICHOACÁN"),
+    (r'\bOAX\.\s*',       "OAXACA"),
+    (r'\bGRO\.\s*',       "GUERRERO"),
+    (r'\bYUC\.\s*',       "YUCATÁN"),
+    (r'\bHGO\.\s*',       "HIDALGO"),
+    (r'\bMOR\.\s*',       "MORELOS"),
+    (r'\bQRO\.\s*',       "QUERÉTARO"),
+    (r'\bQ\.?ROO\.\s*',   "QUINTANA ROO"),
+    (r'\bAGS\.\s*',       "AGUASCALIENTES"),
+    (r'\bBCN\.\s*',       "BAJA CALIFORNIA"),
+    (r'\bBCS\.\s*',       "BAJA CALIFORNIA SUR"),
+    (r'\bCAMP\.\s*',      "CAMPECHE"),
+    (r'\bCHIS\.\s*',      "CHIAPAS"),
+    (r'\bCOL\b',          "COLIMA"),  # solo como estado (sin punto)
+    (r'\bDGO\.\s*',       "DURANGO"),
+    (r'\bMEX\.\s*',       "ESTADO DE MÉXICO"),
+    (r'\bNAY\.\s*',       "NAYARIT"),
+    (r'\bSLP\.\s*',       "SAN LUIS POTOSÍ"),
+    (r'\bTAB\.\s*',       "TABASCO"),
+    (r'\bTLAX\.\s*',      "TLAXCALA"),
+    (r'\bZAC\.\s*',       "ZACATECAS"),
+    # Números ordinales
+    (r'\bNO\.\s*',        "NÚMERO "),
+    (r'\bNÚM\.\s*',       "NÚMERO "),
+    (r'\bNUM\.\s*',       "NÚMERO "),
+    (r'\bINT\.\s*',       "INTERIOR "),
+    (r'\bDEPTO\.\s*',     "DEPARTAMENTO "),
+    (r'\bPISO\s+',        "PISO "),
+    (r'\bLOC\.\s*',       "LOCAL "),
+    (r'\bOF\.\s*',        "OFICINA "),
+]
+
+import re as _re
+
+def _expandir_abreviaturas(texto: str) -> str:
+    """Expande abreviaturas del domicilio al texto completo."""
+    if not texto:
+        return texto
+    t = texto.upper().strip()
+    for patron, reemplazo in _ABREVIATURAS:
+        t = _re.sub(patron, reemplazo, t, flags=_re.IGNORECASE)
+    # Limpiar espacios dobles
+    t = _re.sub(r'  +', ' ', t).strip()
+    return t
+
+
 def _parse_socio(s: Dict[str, Any]) -> SocioInput:
     dom = s.get("domicilio", {})
     genero = s.get("genero", "masculino").lower()
@@ -102,12 +194,12 @@ def _parse_socio(s: Dict[str, Any]) -> SocioInput:
         estado_civil      = _concordar_estado_civil(s.get("estado_civil", ""), genero),
         ocupacion         = s.get("ocupacion", ""),
         domicilio         = DomicilioInput(
-            calle   = dom.get("calle", ""),
+            calle   = _expandir_abreviaturas(dom.get("calle", "")),
             numero  = str(dom.get("numero", "")),
-            colonia = dom.get("colonia", ""),
+            colonia = _expandir_abreviaturas(dom.get("colonia", "")),
             cp      = str(dom.get("cp", "")),
-            ciudad  = dom.get("ciudad", ""),
-            estado  = dom.get("estado", ""),
+            ciudad  = _expandir_abreviaturas(dom.get("ciudad", "")),
+            estado  = _expandir_abreviaturas(dom.get("estado", "")),
         ),
         rfc           = s.get("rfc", "").upper().strip(),
         curp          = s.get("curp", "").upper().strip(),
