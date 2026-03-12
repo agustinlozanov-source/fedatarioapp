@@ -268,17 +268,20 @@ def sincronizar_a_cliente(
 
     # Domicilio anidado (INE + comprobante_domicilio)
     if tipo_documento in ("ine", "comprobante_domicilio"):
+        from agentes.firestore_mapper import _expandir_abreviaturas
         domicilio_existente = datos_actuales.get("domicilio") or {}
         candidatos = {
-            "calle":   datos_extraidos.get("domicilio_calle"),
+            "calle":   _expandir_abreviaturas(datos_extraidos.get("domicilio_calle") or ""),
             "numero":  datos_extraidos.get("domicilio_numero"),
-            "colonia": datos_extraidos.get("domicilio_colonia"),
+            "colonia": _expandir_abreviaturas(datos_extraidos.get("domicilio_colonia") or ""),
             "cp":      datos_extraidos.get("domicilio_cp"),
-            "ciudad":  datos_extraidos.get("domicilio_ciudad") or datos_extraidos.get("domicilio_municipio"),
-            "estado":  datos_extraidos.get("domicilio_estado"),
+            "ciudad":  _expandir_abreviaturas(datos_extraidos.get("domicilio_ciudad") or datos_extraidos.get("domicilio_municipio") or ""),
+            "estado":  _expandir_abreviaturas(datos_extraidos.get("domicilio_estado") or ""),
             "pais":    "México",
         }
-        domicilio_nuevo = {k: v for k, v in candidatos.items() if v and not domicilio_existente.get(k)}
+        # Filtrar vacíos y no sobreescribir datos ya existentes
+        candidatos = {k: v for k, v in candidatos.items() if v}
+        domicilio_nuevo = {k: v for k, v in candidatos.items() if not domicilio_existente.get(k)}
         if domicilio_nuevo:
             campos_a_actualizar["domicilio"] = {**domicilio_existente, **domicilio_nuevo}
 
