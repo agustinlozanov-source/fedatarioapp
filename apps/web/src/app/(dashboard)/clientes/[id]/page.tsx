@@ -41,9 +41,9 @@ function domicilioLineaStr(dom: any): string | undefined {
     if (typeof dom === 'string') return dom || undefined;
     const parts = [
         dom.calle,
-        dom.numero ? `No. ${dom.numero}` : undefined,
-        dom.colonia ? `Col. ${dom.colonia}` : undefined,
-        dom.cp ? `C.P. ${dom.cp}` : undefined,
+        dom.numero,
+        dom.colonia,
+        dom.cp,
         dom.ciudad || dom.municipio,
         dom.estado,
     ].filter(Boolean);
@@ -228,7 +228,7 @@ export default function ClientePage() {
                             colonia: expandirAbreviaturas(extraidos.domicilio_colonia || ''),
                             cp:      extraidos.domicilio_cp      || '',
                             ciudad:  expandirAbreviaturas(extraidos.domicilio_ciudad  || ''),
-                            estado:  expandirAbreviaturas(extraidos.domicilio_estado  || ''),
+                            estado:  normalizarEstado(extraidos.domicilio_estado  || ''),
                             pais:    'México',
                         };
                     }
