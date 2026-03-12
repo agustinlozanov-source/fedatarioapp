@@ -288,7 +288,7 @@ class DocsBuilder:
         tabla_elem = None
         for elem in reversed(body):
             if "table" in elem:
-                tabla_elem = elem["table"]
+                tabla_elem = elem          # StructuralElement completo (tiene startIndex/endIndex)
                 break
 
         if not tabla_elem:
@@ -296,7 +296,7 @@ class DocsBuilder:
             return None, []
 
         celdas = []
-        for row in tabla_elem.get("tableRows", []):
+        for row in tabla_elem["table"].get("tableRows", []):
             fila = []
             for cell in row.get("tableCells", []):
                 content = cell.get("content", [])
