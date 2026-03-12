@@ -445,24 +445,28 @@ def exportar_a_docs(secciones_obj: dict) -> dict:
     folder_id = os.environ.get("GOOGLE_DRIVE_FOLDER_ID")
     _purgar_drive_sa(drive)
 
-    # ── 3. Crear documento vacío en Drive ────────────────────────────────────
-    file_meta = {
-        "name":     nombre_doc,
-        "mimeType": "application/vnd.google-apps.document",
-        "parents":  [folder_id],
-    }
-
-    created = drive.files().create(
-        body=file_meta,
-        fields="id",
-        supportsAllDrives=True,
+    # ── 2. Crear documento con Docs API directamente ────────────────────────────
+    created_doc = docs.documents().create(
+        body={"title": nombre_doc}
     ).execute()
-    doc_id  = created["id"]
+    doc_id = created_doc["documentId"]
     logger.info(f"AGT-07: Documento creado — {doc_id}")
 
-    # ── 4. Transferir propiedad al dueño de la carpeta (evita cuota SA) ──────
+    # ── 3. Mover a la carpeta de Drive ───────────────────────────────────────────
     if folder_id:
-        _transferir_propiedad(drive, doc_id, folder_id)
+        file = drive.files().get(
+            fileId=doc_id,
+            fields="parents",
+            supportsAllDrives=True,
+        ).execute()
+        previous_parents = ",".join(file.get("parents", []))
+        drive.files().update(
+            fileId=doc_id,
+            addParents=folder_id,
+            removeParents=previous_parents,
+            fields="id, parents",
+            supportsAllDrives=True,
+        ).execute()
 
     # ── 5. Configurar página (tamaño oficio, márgenes) ───────────────────────
     docs.documents().batchUpdate(
