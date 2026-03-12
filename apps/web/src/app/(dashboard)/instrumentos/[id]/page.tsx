@@ -363,14 +363,14 @@ export default function InstrumentoDetallePage() {
     }
 
     const descargarDocx = async () => {
-        if (!borrador || !instrumento) return
+        if (!instrumento) return
         setDescargando(true)
         setError(null)
         try {
             const res = await fetch(`${AGENTS_URL}/docx/generar`, {
                 method: 'POST', headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    texto_acta: borrador.textoActa,
+                    texto_acta: borrador?.textoActa ?? '',
                     nombre_archivo: getDenominacion(instrumento).toLowerCase().replace(/\s+/g, '_') || 'acta',
                     nombres_socios: instrumento.socios?.map(s => s.nombre_completo) ?? [],
                     instrumento_id: id,
@@ -510,11 +510,9 @@ export default function InstrumentoDetallePage() {
                         {numPoliza && <p className="text-sm text-gray-500 mt-1">Póliza #{numPoliza}</p>}
                     </div>
                     <div className="flex gap-3">
-                        {borrador && (
-                            <button onClick={descargarDocx} disabled={descargando} className="flex items-center gap-2 px-4 py-2 border border-gray-200 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-40 transition-colors">
-                                {descargando ? <><Loader2 size={15} className="animate-spin" /> Generando...</> : <><Download size={15} /> Descargar borrador</>}
-                            </button>
-                        )}
+                        <button onClick={descargarDocx} disabled={descargando} className="flex items-center gap-2 px-4 py-2 border border-gray-200 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-40 transition-colors">
+                            {descargando ? <><Loader2 size={15} className="animate-spin" /> Generando...</> : <><Download size={15} /> Descargar .docx</>}
+                        </button>
                         <button onClick={exportarADocs} disabled={exportandoDocs} className="flex items-center gap-2 px-4 py-2 border border-gray-200 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-40 transition-colors">
                             {exportandoDocs ? <><Loader2 size={15} className="animate-spin" /> Exportando...</> : <><FileText size={15} /> Abrir en Google Docs</>}
                         </button>
