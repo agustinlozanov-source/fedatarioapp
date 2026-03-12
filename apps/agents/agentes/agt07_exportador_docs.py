@@ -304,7 +304,8 @@ def exportar_a_docs(secciones: list, nombre_doc: str = "Instrumento Público") -
             b.para_con_runs(sec.runs, centered=centered)
 
         elif sec.tipo == "tabla_accionaria":
-            socios = sec.data.get("socios", []) if isinstance(sec.data, dict) else []
+            socios       = sec.data.get("socios", []) if isinstance(sec.data, dict) else []
+            capital_fijo = sec.data.get("capital_fijo", 0) if isinstance(sec.data, dict) else 0
             b.para_con_runs([("Accionista | Nacionalidad | Acciones | Valor Nominal | %", True)], centered=True)
             for s in socios:
                 if isinstance(s, dict):
@@ -314,11 +315,20 @@ def exportar_a_docs(secciones: list, nombre_doc: str = "Instrumento Público") -
                     val    = s.get("valor_nominal", "")
                     pct    = s.get("porcentaje", "")
                 else:
-                    nombre = getattr(s, "nombre_completo", getattr(s, "nombre", ""))
-                    nac    = getattr(s, "nacionalidad_pais", "")
-                    acc    = getattr(s, "acciones", "")
-                    val    = getattr(s, "valor_nominal", "")
-                    pct    = getattr(s, "porcentaje", "")
+                    nombre   = getattr(s, "nombre_completo", getattr(s, "nombre", ""))
+                    nac      = getattr(s, "nacionalidad_pais", "")
+                    pct      = getattr(s, "porcentaje", 0)
+                    # SocioInput no tiene acciones/valor_nominal — los calculamos
+                    # con capital_fijo almacenado en sec.data
+                    acc_attr = getattr(s, "acciones", None)
+                    val_attr = getattr(s, "valor_nominal", None)
+                    if acc_attr is None or val_attr is None:
+                        cap_socio = float(capital_fijo) * (float(pct) / 100) if capital_fijo and pct else 0.0
+                        acc       = int(cap_socio // 1000)
+                        val       = f"${cap_socio:,.2f}"
+                    else:
+                        acc = acc_attr
+                        val = val_attr
                 linea = f"{nombre} | {nac} | {acc} | {val} | {pct}%"
                 b.para_con_runs([(linea, False)])
 
