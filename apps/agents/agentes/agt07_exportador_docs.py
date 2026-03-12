@@ -442,28 +442,17 @@ def exportar_a_docs(secciones_obj: dict) -> dict:
 
     folder_id = os.environ.get("GOOGLE_DRIVE_FOLDER_ID")
 
-    # ── 2. Crear documento con Docs API directamente ────────────────────────────
-    created_doc = docs.documents().create(
-        body={"title": nombre_doc}
-    ).execute()
-    doc_id = created_doc["documentId"]
-    logger.info(f"AGT-07: Documento creado — {doc_id}")
-
-    # ── 3. Mover a la carpeta de Drive ───────────────────────────────────────────
+    # ── 2. Crear documento en Drive (OAuth2 = sin problema de cuota) ─────────
+    file_meta = {
+        "name":     nombre_doc,
+        "mimeType": "application/vnd.google-apps.document",
+    }
     if folder_id:
-        file = drive.files().get(
-            fileId=doc_id,
-            fields="parents",
-            supportsAllDrives=True,
-        ).execute()
-        previous_parents = ",".join(file.get("parents", []))
-        drive.files().update(
-            fileId=doc_id,
-            addParents=folder_id,
-            removeParents=previous_parents,
-            fields="id, parents",
-            supportsAllDrives=True,
-        ).execute()
+        file_meta["parents"] = [folder_id]
+
+    created = drive.files().create(body=file_meta, fields="id").execute()
+    doc_id  = created["id"]
+    logger.info(f"AGT-07: Documento creado — {doc_id}")
 
     # ── 5. Configurar página (tamaño oficio, márgenes) ───────────────────────
     docs.documents().batchUpdate(
