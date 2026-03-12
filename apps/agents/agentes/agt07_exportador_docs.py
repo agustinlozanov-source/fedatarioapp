@@ -32,18 +32,18 @@ logger = logging.getLogger(__name__)
 
 # ─── Constantes de diseño ───────────────────────────────────────────────────
 
-FONT_BODY        = "IM Fell English"   # Cambiar a "Hadassah Friedlaender" cuando esté disponible
-FONT_SIZE_BODY   = 12.5               # pt
-FONT_SIZE_ENC    = 10.0               # pt  (encabezados de sección)
-LINE_SPACING     = 1.45               # múltiplo
+FONT_BODY        = "Times New Roman"
+FONT_SIZE_BODY   = 11.0               # pt
+FONT_SIZE_ENC    = 11.0               # pt  (encabezados de sección)
+LINE_SPACING     = 1.5                # múltiplo
 COLOR_INK        = {"red": 0.05, "green": 0.05, "blue": 0.05}
 COLOR_SOFT       = {"red": 0.27, "green": 0.27, "blue": 0.27}
 
 # Márgenes en puntos (1 cm = 28.35 pt)
-MARGIN_TOP    = int(3.4  * 28.35)
+MARGIN_TOP    = int(3.0  * 28.35)
 MARGIN_BOTTOM = int(3.0  * 28.35)
-MARGIN_LEFT   = int(4.25 * 28.35)
-MARGIN_RIGHT  = int(2.8  * 28.35)
+MARGIN_LEFT   = int(4.5  * 28.35)   # interior
+MARGIN_RIGHT  = int(3.5  * 28.35)   # exterior
 
 SCOPES = [
     "https://www.googleapis.com/auth/documents",
