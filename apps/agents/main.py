@@ -378,11 +378,11 @@ async def exportar_docs(request: Request):
         instrumento_id = body.get("instrumento_id")
         if not instrumento_id:
             raise HTTPException(status_code=400, detail="instrumento_id es requerido")
-        secciones_obj = obtener_secciones_de_firestore(instrumento_id)
-        secciones    = secciones_obj.get("secciones", [])
-        denominacion = secciones_obj.get("denominacion", "SOCIEDAD")
+        secciones_obj  = obtener_secciones_de_firestore(instrumento_id)
+        secciones     = secciones_obj.get("secciones", [])
+        denominacion  = secciones_obj.get("denominacion", "SOCIEDAD")
         numero_poliza = secciones_obj.get("numero_poliza", "0000")
-        nombre_doc   = f"Póliza {numero_poliza} — {denominacion}"
+        nombre_doc    = f"Póliza {numero_poliza} — {denominacion}"
         resultado = exportar_a_docs(secciones, nombre_doc)
         return resultado
     except HTTPException:
