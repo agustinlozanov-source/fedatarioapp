@@ -8,8 +8,8 @@ Dependencias:
     pip install google-api-python-client google-auth
 
 Variables de entorno requeridas:
-    GOOGLE_SERVICE_ACCOUNT_JSON  — ruta al archivo service_account.json
-    GOOGLE_DRIVE_FOLDER_ID       — ID de la carpeta destino en Drive
+    GOOGLE_OAUTH_CREDENTIALS  — JSON con client_id, client_secret y refresh_token
+    GOOGLE_DRIVE_FOLDER_ID    — ID de la carpeta destino en Drive
 
 Uso independiente:
     from agt07_exportador_docs import exportar_a_docs
@@ -26,7 +26,7 @@ import json
 import logging
 from typing import Optional
 
-from google.oauth2 import service_account
+from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 
@@ -49,37 +49,36 @@ MARGIN_BOTTOM = int(3.0  * 28.35)
 MARGIN_LEFT   = int(4.25 * 28.35)
 MARGIN_RIGHT  = int(2.8  * 28.35)
 
-SCOPES = [
-    "https://www.googleapis.com/auth/documents",
-    "https://www.googleapis.com/auth/drive",
-]
-
-
 # ─── Autenticación ──────────────────────────────────────────────────────────
 
 def _get_services():
     """
-    Devuelve (docs_service, drive_service) autenticados con service account.
+    Devuelve (docs_service, drive_service) autenticados con OAuth2.
 
-    Lee GOOGLE_SERVICE_ACCOUNT_JSON de dos formas:
-      - En local:   ruta a un archivo JSON  (ej. "./service_account.json")
-      - En Railway: contenido JSON completo  (ej. '{"type":"service_account",...}')
+    Lee GOOGLE_OAUTH_CREDENTIALS de dos formas:
+      - En local:   ruta a un archivo JSON  (ej. "./refresh_token.json")
+      - En Railway: contenido JSON completo
     """
-    sa_env = os.environ.get("GOOGLE_SERVICE_ACCOUNT_JSON", "")
+    oauth_env = os.environ.get("GOOGLE_OAUTH_CREDENTIALS", "")
 
-    if not sa_env:
+    if not oauth_env:
         raise EnvironmentError(
-            "GOOGLE_SERVICE_ACCOUNT_JSON no está definida. "
-            "En local apunta a la ruta del archivo; en Railway pega el contenido JSON completo."
+            "GOOGLE_OAUTH_CREDENTIALS no está definida."
         )
 
-    # Si empieza con '{' asumimos que es el JSON directamente (Railway)
-    if sa_env.strip().startswith("{"):
-        sa_info = json.loads(sa_env)
-        creds = service_account.Credentials.from_service_account_info(sa_info, scopes=SCOPES)
+    if oauth_env.strip().startswith("{"):
+        oauth_info = json.loads(oauth_env)
     else:
-        # Es una ruta a archivo (local)
-        creds = service_account.Credentials.from_service_account_file(sa_env, scopes=SCOPES)
+        with open(oauth_env, "r") as f:
+            oauth_info = json.load(f)
+
+    creds = Credentials(
+        token=None,
+        refresh_token=oauth_info["refresh_token"],
+        client_id=oauth_info["client_id"],
+        client_secret=oauth_info["client_secret"],
+        token_uri="https://oauth2.googleapis.com/token",
+    )
 
     docs  = build("docs",  "v1", credentials=creds)
     drive = build("drive", "v3", credentials=creds)
