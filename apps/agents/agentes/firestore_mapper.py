@@ -63,7 +63,14 @@ def _parse_date(valor: Any) -> date:
     if isinstance(valor, datetime):
         return valor.date()
     if isinstance(valor, str):
-        return date.fromisoformat(valor[:10])
+        v = valor.strip()
+        # Formato DD/MM/YYYY o DD-MM-YYYY
+        if len(v) == 10 and v[2] in ('/', '-') and v[5] in ('/', '-'):
+            sep = v[2]
+            day, month, year = v.split(sep)
+            return date(int(year), int(month), int(day))
+        # Formato ISO YYYY-MM-DD
+        return date.fromisoformat(v[:10])
     raise ValueError(f"Formato de fecha no reconocido: {type(valor)} → {valor!r}")
 
 
