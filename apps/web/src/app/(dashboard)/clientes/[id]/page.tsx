@@ -337,7 +337,15 @@ export default function ClientePage() {
                             <CampoEditable label="CURP" value={cliente.curp} onSave={v => actualizarCampo('curp', v)} />
                             <CampoEditable label="Género" value={(cliente as any).genero} onSave={v => actualizarCampo('genero', v)} tipo="select" opciones={['Masculino', 'Femenino', 'Otro']} />
                             <CampoEditable label="Fecha de nacimiento" value={(cliente as any).fecha_nacimiento} onSave={v => actualizarCampo('fecha_nacimiento', v)} tipo="date" />
-                            <CampoEditable label="Edad" value={calcularEdad((cliente as any).fecha_nacimiento) !== undefined ? `${calcularEdad((cliente as any).fecha_nacimiento)} años` : undefined} onSave={null} />
+                            <CampoEditable
+                                label="Edad"
+                                value={(cliente as any).edad
+                                    ? (String((cliente as any).edad).includes('años') ? (cliente as any).edad : `${(cliente as any).edad} años`)
+                                    : (calcularEdad((cliente as any).fecha_nacimiento) !== undefined ? `${calcularEdad((cliente as any).fecha_nacimiento)} años` : undefined)
+                                }
+                                onSave={v => actualizarCampo('edad', v)}
+                                tipo="number"
+                            />
                             <CampoEditable label="Lugar de nacimiento" value={(cliente as any).lugar_nacimiento} onSave={v => actualizarCampo('lugar_nacimiento', v)} />
                             <CampoEditable label="Nacionalidad" value={(cliente as any).nacionalidad} onSave={v => actualizarCampo('nacionalidad', v)} />
                         </div>

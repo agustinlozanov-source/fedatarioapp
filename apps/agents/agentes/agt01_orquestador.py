@@ -192,6 +192,17 @@ def leer_cliente(cliente_id: str) -> dict:
     return {"id": snap.id, **snap.to_dict()}
 
 
+def _parsear_edad(valor) -> int | None:
+    """Convierte 'edad' de Firestore a int. Acepta 35, '35', '35 años', etc."""
+    if not valor and valor != 0:
+        return None
+    try:
+        partes = str(valor).split()
+        return int(partes[0]) if partes else None
+    except (ValueError, TypeError):
+        return None
+
+
 # ── CONSTRUCCIÓN DEL PAYLOAD ──────────────────────────────────────────────────
 
 ROL_LABEL: dict[str, str] = {
@@ -275,6 +286,7 @@ def construir_payload(instrumento: dict, skip_firestore: bool = False) -> tuple[
         porcentaje = socio_ref.get("porcentaje", 0) if isinstance(socio_ref, dict) else 0
 
         # Intentar datos aplanados legacy primero (para pruebas)
+        cliente_base: dict = {}
         if socios_aplanados and i < len(socios_aplanados):
             datos = socios_aplanados[i]
         elif cliente_id and not skip_firestore:
@@ -384,6 +396,7 @@ def construir_payload(instrumento: dict, skip_firestore: bool = False) -> tuple[
             "clave_elector": clave_elector,
             "seccion_ine":   seccion_ine,
             "idmex":         idmex,
+            "edad":          _parsear_edad(cliente_base.get("edad") or datos.get("edad")),
             "rol":           ROL_LABEL.get(rol_raw, rol_raw),
             "porcentaje":    porcentaje,
         })

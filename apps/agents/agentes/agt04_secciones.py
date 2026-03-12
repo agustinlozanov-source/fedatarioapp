@@ -100,7 +100,7 @@ def secciones_encabezado(d) -> List[Seccion]:
 
 
 def secciones_datos_socio(socio, letras: dict, ref_date) -> List[Seccion]:
-    edad   = edad_actual(socio.fecha_nacimiento, ref_date)
+    edad   = socio.edad if getattr(socio, 'edad', None) is not None else edad_actual(socio.fecha_nacimiento, ref_date)
     edad_l = numero_letra(edad)
     fec_l  = fecha_letra(socio.fecha_nacimiento)
     dom    = socio.domicilio

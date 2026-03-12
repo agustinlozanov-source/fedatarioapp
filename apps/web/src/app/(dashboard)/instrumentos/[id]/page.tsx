@@ -28,6 +28,7 @@ interface Socio {
 interface ClientePerfil {
     nombre_completo?: string
     curp?: string; rfc?: string; fecha_nacimiento?: string
+    edad?: string          // override manual — si está, se usa directo en el acta
     lugar_nacimiento?: string; genero?: string; estado_civil?: string
     ocupacion?: string; nacionalidad?: string; regimen_fiscal?: string
     clave_elector?: string; seccion_ine?: string; idmex?: string; vigencia_ine?: string
@@ -91,14 +92,14 @@ function domicilioStr(d?: ClientePerfil['domicilio'] | string) {
     return partes.length ? partes.join(', ') : undefined
 }
 
-function calcularEdad(fecha?: string): string | undefined {
+function calcularEdad(fecha?: string, referencia?: string): string | undefined {
     if (!fecha) return undefined
     try {
         const nac = new Date(fecha + 'T12:00:00')
-        const hoy = new Date()
-        let edad = hoy.getFullYear() - nac.getFullYear()
-        const m = hoy.getMonth() - nac.getMonth()
-        if (m < 0 || (m === 0 && hoy.getDate() < nac.getDate())) edad--
+        const ref = referencia ? new Date(referencia + 'T12:00:00') : new Date()
+        let edad = ref.getFullYear() - nac.getFullYear()
+        const m = ref.getMonth() - nac.getMonth()
+        if (m < 0 || (m === 0 && ref.getDate() < nac.getDate())) edad--
         return isNaN(edad) || edad < 0 ? undefined : `${edad} años`
     } catch { return undefined }
 }
@@ -289,6 +290,7 @@ export default function InstrumentoDetallePage() {
             domicilio:       base.domicilio       || socio.domicilio,
             nacionalidad:    base.nacionalidad,
             regimen_fiscal:  base.regimen_fiscal,
+            edad:            base.edad,   // override manual desde clientes/{id}
         }
     }
 
@@ -620,7 +622,16 @@ export default function InstrumentoDetallePage() {
                                             <CampoEditable label="RFC" value={perfil.rfc} fuente="RFC / Constancia SAT" onSave={salvarCliente('rfc')} />
                                             <CampoEditable label="CURP" value={perfil.curp} fuente="CURP / INE" onSave={salvarCliente('curp')} />
                                             <CampoEditable label="Fecha de nacimiento" value={formatFecha(perfil.fecha_nacimiento)} fuente="INE / CURP" onSave={salvarCliente('fecha_nacimiento')} tipo="date" />
-                                            <CampoEditable label="Edad" value={calcularEdad(perfil.fecha_nacimiento)} fuente="Calculada" onSave={null} />
+                                            <CampoEditable
+                                                label="Edad"
+                                                value={perfil.edad
+                                                    ? (String(perfil.edad).includes('años') ? perfil.edad : `${perfil.edad} años`)
+                                                    : calcularEdad(perfil.fecha_nacimiento, instrumento?.fecha_instrumento)
+                                                }
+                                                fuente={perfil.edad ? 'Manual' : `Al ${formatFecha(instrumento?.fecha_instrumento) ?? 'hoy'}`}
+                                                onSave={salvarCliente('edad')}
+                                                tipo="number"
+                                            />
                                             <CampoEditable label="Lugar de nacimiento" value={perfil.lugar_nacimiento} fuente="CURP" onSave={salvarCliente('lugar_nacimiento')} />
                                             <CampoEditable label="Género" value={perfil.genero} onSave={salvarCliente('genero')} />
                                             <CampoEditable label="Estado civil" value={perfil.estado_civil} onSave={salvarCliente('estado_civil')} />

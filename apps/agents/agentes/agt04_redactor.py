@@ -49,6 +49,7 @@ class SocioInput(BaseModel):
     clave_elector: Optional[str] = None         # "RMZLED87081328H500"
     seccion_ine: Optional[str] = None           # "0606"
     idmex: Optional[str] = None                 # "2604718651"
+    edad: Optional[int] = None                  # override manual — si se proporciona, no se calcula
     rol: str = ""                               # Agregado para referencia
     porcentaje: float = 0.0                     # Agregado para referencia
 
@@ -300,7 +301,7 @@ def bloque_datos_socio(socio: SocioInput, letras: dict, ref_date: date) -> str:
     # Manejar fecha_nacimiento None
     fecha_nac = socio.fecha_nacimiento or date(1980, 1, 1)
     
-    edad = edad_actual(fecha_nac, ref_date)
+    edad = socio.edad if socio.edad is not None else edad_actual(fecha_nac, ref_date)
     edad_l = numero_letra(edad)
     fec_l  = fecha_letra(fecha_nac)
     dom    = socio.domicilio
