@@ -297,6 +297,8 @@ async def docx_generar(body: DocxInput):
         texto_acta = body.texto_acta
         nombres_socios = body.nombres_socios or None
 
+        secciones_obj = None
+
         if body.instrumento_id and not texto_acta:
             if not db:
                 raise HTTPException(status_code=500, detail="Firebase no disponible")
@@ -307,11 +309,21 @@ async def docx_generar(body: DocxInput):
             resultado = generar_acta(redactor_input)
             texto_acta = resultado["texto_acta"]
             nombres_socios = [s.nombre_completo for s in redactor_input.socios]
+            # Generar secciones estructuradas (con tablas reales)
+            try:
+                from agentes.agt04_secciones import generar_secciones
+                secciones_obj = generar_secciones(redactor_input)
+            except Exception as e:
+                logger.warning(f"secciones fallaron, usando legacy: {e}")
 
-        if not texto_acta:
+        if not texto_acta and secciones_obj is None:
             raise HTTPException(status_code=400, detail="Se requiere texto_acta o instrumento_id válido")
 
-        docx_bytes = generar_docx(texto_acta, nombres_socios=nombres_socios)
+        # Usar secciones estructuradas si disponibles (tablas reales), si no modo legacy
+        if secciones_obj:
+            docx_bytes = generar_docx("", secciones=secciones_obj)
+        else:
+            docx_bytes = generar_docx(texto_acta, nombres_socios=nombres_socios)
         filename = f"{body.nombre_archivo}.docx"
 
         return StreamingResponse(

@@ -28,10 +28,12 @@ from agentes.agt04_secciones import Seccion, Seg
 # ─────────────────────────────────────────────
 # CONSTANTES
 # ─────────────────────────────────────────────
-FUENTE     = "Hadassah Friedlaender"
-SZ         = 24          # 12pt (confirmado en 8 documentos reales)
-INTERLINEA = 360
-FONDO_GRIS = "C9C9C9"
+FUENTE        = "Hadassah Friedlaender"
+FUENTE_EAST   = "Times New Roman"   # eastAsia exacto del original
+SZ            = 20                   # 10pt — en celdas (XML real: sz=20)
+SZ_BODY       = 21                   # 10.5pt — en párrafos de cuerpo
+INTERLINEA   = 360
+FONDO_GRIS   = "C9C9C9"
 
 PG_W, PG_H           = 12240, 20160
 MAR_TOP, MAR_BOTTOM  = 2410, 2127
@@ -51,17 +53,21 @@ COLS_SRL_SOCIOS = [4243, 1417, 2562]   # NOMBRE+RFC   | VALOR | CON LETRA
 # HELPERS XML
 # ─────────────────────────────────────────────
 
-def _rPr(bold=False):
+def _rPr(bold=False, sz=None):
+    """sz=None usa SZ_BODY (párrafos), sz=SZ para celdas de tabla."""
+    sz_val = sz if sz is not None else SZ_BODY
     rPr = OxmlElement('w:rPr')
     rf  = OxmlElement('w:rFonts')
-    for attr in ['ascii','hAnsi','eastAsia','cs']:
-        rf.set(qn(f'w:{attr}'), FUENTE)
+    rf.set(qn('w:ascii'),    FUENTE)
+    rf.set(qn('w:hAnsi'),    FUENTE)
+    rf.set(qn('w:eastAsia'), FUENTE_EAST)
+    rf.set(qn('w:cs'),       FUENTE)
     rPr.append(rf)
     if bold:
         rPr.append(OxmlElement('w:b'))
         rPr.append(OxmlElement('w:bCs'))
     for tag in ['w:sz', 'w:szCs']:
-        el = OxmlElement(tag); el.set(qn('w:val'), str(SZ)); rPr.append(el)
+        el = OxmlElement(tag); el.set(qn('w:val'), str(sz_val)); rPr.append(el)
     return rPr
 
 def _pPr(centered=False):
@@ -76,9 +82,9 @@ def _pPr(centered=False):
     pPr.append(jc)
     return pPr
 
-def _make_run(texto: str, bold=False):
+def _make_run(texto: str, bold=False, sz=None):
     r = OxmlElement('w:r')
-    r.append(_rPr(bold))
+    r.append(_rPr(bold, sz=sz))
     t = OxmlElement('w:t')
     t.set('{http://www.w3.org/XML/1998/namespace}space', 'preserve')
     t.text = texto
@@ -141,7 +147,7 @@ def _celda_acc(texto, bold=False, centered=False, fondo=None, col_w=2000, doble=
         shd.set(qn('w:color'),'auto'); shd.set(qn('w:fill'), fondo); tcPr.append(shd)
     vA = OxmlElement('w:vAlign'); vA.set(qn('w:val'),'center'); tcPr.append(vA)
     tc.append(tcPr)
-    p = OxmlElement('w:p'); p.append(_pPr(centered)); p.append(_make_run(texto, bold))
+    p = OxmlElement('w:p'); p.append(_pPr(centered)); p.append(_make_run(texto, bold, sz=SZ))
     tc.append(p)
     return tc
 
@@ -227,7 +233,7 @@ def _celda_srl(texto, bold=False, centered=False, fondo=None, col_w=2000):
         shd.set(qn('w:color'), 'auto'); shd.set(qn('w:fill'), fondo); tcPr.append(shd)
     vA = OxmlElement('w:vAlign'); vA.set(qn('w:val'), 'center'); tcPr.append(vA)
     tc.append(tcPr)
-    p = OxmlElement('w:p'); p.append(_pPr(centered)); p.append(_make_run(texto, bold))
+    p = OxmlElement('w:p'); p.append(_pPr(centered)); p.append(_make_run(texto, bold, sz=SZ))
     tc.append(p)
     return tc
 
@@ -360,7 +366,7 @@ def _celda_firma(texto, bold=False, bordes_nil=None, col_pct=2651):
         tcPr.append(tcB)
     tc.append(tcPr)
     p = OxmlElement('w:p'); p.append(_pPr())
-    if texto: p.append(_make_run(texto, bold))
+    if texto: p.append(_make_run(texto, bold, sz=SZ))
     tc.append(p)
     return tc
 
@@ -380,24 +386,29 @@ def _build_tabla_firma(body, nombre: str, es_ultimo: bool):
         gc = OxmlElement('w:gridCol'); gc.set(qn('w:w'), str(w)); grid.append(gc)
     tbl.append(grid)
 
+    # Fila 1: NOMBRE | Nombre completo.
+    # XML real: izq tiene left+bottom=nil; der tiene bottom+right=nil
     tr1 = OxmlElement('w:tr')
     tr1.append(_celda_firma(nombre + ".", bold=True,
-                             bordes_nil=['left','bottom'], col_pct=COL_IZQ_PCT))
+                             bordes_nil=['left', 'bottom'], col_pct=COL_IZQ_PCT))
     tr1.append(_celda_firma("Nombre completo.",
-                             bordes_nil=['bottom','right'], col_pct=COL_DER_PCT))
+                             bordes_nil=['bottom', 'right'], col_pct=COL_DER_PCT))
     tbl.append(tr1)
 
+    # Fila 2: Firma. | Huellas ...
+    # XML real: ambas celdas tienen top+left+bottom+right=nil
     tr2 = OxmlElement('w:tr')
     tr2.append(_celda_firma("Firma.",
-                             bordes_nil=['top','left','bottom','right'], col_pct=COL_IZQ_PCT))
+                             bordes_nil=['top', 'left', 'bottom', 'right'], col_pct=COL_IZQ_PCT))
     tr2.append(_celda_firma("Huellas Índices Izquierdo y Derecho.",
-                             bordes_nil=['top','left','bottom','right'], col_pct=COL_DER_PCT))
+                             bordes_nil=['top', 'left', 'bottom', 'right'], col_pct=COL_DER_PCT))
     tbl.append(tr2)
 
+    # Fila 3 (solo último socio): celda vacía para espacio de firma física
     if es_ultimo:
         tr3 = OxmlElement('w:tr')
-        tr3.append(_celda_firma("", bordes_nil=['top','left','bottom','right'], col_pct=COL_IZQ_PCT))
-        tr3.append(_celda_firma("", bordes_nil=['top','left','bottom','right'], col_pct=COL_DER_PCT))
+        tr3.append(_celda_firma("", bordes_nil=['top', 'left', 'bottom', 'right'], col_pct=COL_IZQ_PCT))
+        tr3.append(_celda_firma("", bordes_nil=['top', 'left', 'bottom', 'right'], col_pct=COL_DER_PCT))
         tbl.append(tr3)
 
     body.append(tbl)
