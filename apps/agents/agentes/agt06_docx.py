@@ -31,7 +31,7 @@ from agentes.agt04_secciones import Seccion, Seg
 FUENTE        = "Hadassah Friedlaender"
 FUENTE_EAST   = "Times New Roman"   # eastAsia exacto del original
 SZ            = 20                   # 10pt — en celdas (XML real: sz=20)
-SZ_BODY       = 21                   # 10.5pt — en párrafos de cuerpo
+SZ_BODY       = 20                   # 10pt — en párrafos de cuerpo
 INTERLINEA   = 360
 FONDO_GRIS   = "C9C9C9"
 
@@ -47,6 +47,10 @@ COL_IZQ_DXA, COL_DER_DXA = 4373, 3875
 # S de RL de CV — dos tablas de 3 columnas (medidas reales de documentos)
 COLS_SRL_PARTES = [1691, 2552, 3969]   # PARTE SOCIAL | VALOR | CON LETRA
 COLS_SRL_SOCIOS = [4243, 1417, 2562]   # NOMBRE+RFC   | VALOR | CON LETRA
+
+# Ancho de línea real en caracteres (Hadassah Friedlaender 10pt, página oficio)
+# Ancho texto = 12240 - 2410 - 1582 = 8248 twips ≈ 14.55cm → ~72 caracteres
+LINE_CHARS = 72
 
 
 # ─────────────────────────────────────────────
@@ -70,7 +74,7 @@ def _rPr(bold=False, sz=None):
         el = OxmlElement(tag); el.set(qn('w:val'), str(sz_val)); rPr.append(el)
     return rPr
 
-def _pPr(centered=False):
+def _pPr(centered=False, borde=False):
     pPr = OxmlElement('w:pPr')
     sp  = OxmlElement('w:spacing')
     sp.set(qn('w:after'), '0')
@@ -80,6 +84,16 @@ def _pPr(centered=False):
     jc = OxmlElement('w:jc')
     jc.set(qn('w:val'), 'center' if centered else 'both')
     pPr.append(jc)
+    if borde:
+        pBdr = OxmlElement('w:pBdr')
+        for side in ('top', 'bottom'):
+            b = OxmlElement(f'w:{side}')
+            b.set(qn('w:val'), 'single')
+            b.set(qn('w:sz'), '6')
+            b.set(qn('w:space'), '1')
+            b.set(qn('w:color'), 'auto')
+            pBdr.append(b)
+        pPr.append(pBdr)
     return pPr
 
 def _make_run(texto: str, bold=False, sz=None):
@@ -91,11 +105,38 @@ def _make_run(texto: str, bold=False, sz=None):
     r.append(t)
     return r
 
-def _make_parrafo(runs: List[Seg], centered=False):
-    """Construye un elemento <w:p> con todos los runs."""
+def _fill_dashes(previo_len: int) -> str:
+    """Genera guiones de relleno hasta LINE_CHARS basándose en el texto previo."""
+    usado = max(previo_len, 0)
+    faltantes = max(LINE_CHARS - usado - 2, 4)  # -2 por ".- "
+    # Pares "- " hasta llenar, truncar al largo exacto
+    relleno = ("- " * (faltantes // 2 + 2))[:faltantes].rstrip()
+    return f".- {relleno}"
+
+
+def _make_parrafo(runs: List[Seg], centered=False, borde=False):
+    """Construye un elemento <w:p> con todos los runs.
+    
+    Los runs que vienen de _g() en secciones tienen texto que empieza con '.- '
+    y son el relleno de guiones. Los recalculamos aquí con LINE_CHARS real
+    para que lleguen al margen independientemente de la fuente proporcional.
+    """
     p = OxmlElement('w:p')
-    p.append(_pPr(centered))
+    p.append(_pPr(centered, borde=borde))
+
+    # Calcular longitud acumulada del texto anterior al primer run de relleno
+    texto_acumulado = 0
+    runs_procesados = []
     for texto, bold in runs:
+        if texto and texto.startswith('.- '):
+            # Es un run de relleno _g() — recalcular con ancho real
+            nuevo_relleno = _fill_dashes(texto_acumulado)
+            runs_procesados.append((nuevo_relleno, bold))
+        else:
+            runs_procesados.append((texto, bold))
+            texto_acumulado += len(texto or '')
+
+    for texto, bold in runs_procesados:
         if texto:
             p.append(_make_run(texto, bold))
     return p
@@ -484,9 +525,17 @@ def _procesar_secciones(body, secciones: List[Seccion]):
         if sec.tipo == "vacio":
             body.append(_make_parrafo([]))
 
-        elif sec.tipo in ("parrafo", "encabezado"):
-            centered = sec.tipo == "encabezado"
-            body.append(_make_parrafo(sec.runs, centered=centered))
+        elif sec.tipo == "encabezado":
+            # Extraer texto limpio quitando los = del _enc() de secciones
+            texto_raw = ''.join(t for t, _ in sec.runs)
+            # _enc produce "==== TITULO ====" — extraer solo el título
+            import re as _re
+            m = _re.match(r'^=+\s*(.*?)\s*=+$', texto_raw.strip())
+            titulo = m.group(1) if m else texto_raw.strip()
+            body.append(_make_parrafo([(titulo, True)], centered=True, borde=True))
+
+        elif sec.tipo == "parrafo":
+            body.append(_make_parrafo(sec.runs))
 
         elif sec.tipo == "tabla_accionaria":
             _build_tabla_accionaria(body, sec.data['socios'], sec.data['capital_fijo'])

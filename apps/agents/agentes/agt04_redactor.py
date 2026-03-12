@@ -83,6 +83,8 @@ class InstrumentoRedactorInput(BaseModel):
 UNIDADES = ["", "uno", "dos", "tres", "cuatro", "cinco", "seis", "siete",
             "ocho", "nueve", "diez", "once", "doce", "trece", "catorce",
             "quince", "dieciséis", "diecisiete", "dieciocho", "diecinueve"]
+VEINTIS  = ["veinte", "veintiuno", "veintidós", "veintitrés", "veinticuatro",
+            "veinticinco", "veintiséis", "veintisiete", "veintiocho", "veintinueve"]
 DECENAS  = ["", "", "veinte", "treinta", "cuarenta", "cincuenta",
             "sesenta", "setenta", "ochenta", "noventa"]
 CENTENAS = ["", "ciento", "doscientos", "trescientos", "cuatrocientos",
@@ -126,7 +128,9 @@ def _num_a_letra(n: int) -> str:
     if n >= 20:
         decena = n // 10
         unidad = n % 10
-        if unidad:
+        if decena == 2 and unidad:
+            resultado += VEINTIS[unidad] + " "
+        elif unidad:
             resultado += DECENAS[decena] + " y " + UNIDADES[unidad] + " "
         else:
             resultado += DECENAS[decena] + " "
