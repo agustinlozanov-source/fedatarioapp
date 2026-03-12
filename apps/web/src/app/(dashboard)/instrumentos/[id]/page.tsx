@@ -190,6 +190,7 @@ export default function InstrumentoDetallePage() {
     const [documentosPorSocio, setDocumentosPorSocio] = useState<Record<string, DocInfo[]>>({})
     const [loading, setLoading] = useState(true)
     const [generando, setGenerando] = useState(false)
+    const [descargando, setDescargando] = useState(false)
     const [borrador, setBorrador] = useState<BorradorResult | null>(null)
     const [error, setError] = useState<string | null>(null)
     const [cudOk, setCudOk] = useState<string | null>(null)
@@ -361,6 +362,8 @@ export default function InstrumentoDetallePage() {
 
     const descargarDocx = async () => {
         if (!borrador || !instrumento) return
+        setDescargando(true)
+        setError(null)
         try {
             const res = await fetch(`${AGENTS_URL}/docx/generar`, {
                 method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -371,13 +374,17 @@ export default function InstrumentoDetallePage() {
                     instrumento_id: id,
                 })
             })
-            if (!res.ok) throw new Error('Error generando .docx')
+            if (!res.ok) {
+                const txt = await res.text().catch(() => '')
+                throw new Error(`Error ${res.status} generando .docx${txt ? ': ' + txt.slice(0, 200) : ''}`)
+            }
             const blob = await res.blob()
             const url = URL.createObjectURL(blob)
             const a = document.createElement('a')
             a.href = url; a.download = `${getDenominacion(instrumento) || 'acta'}_borrador.docx`; a.click()
             URL.revokeObjectURL(url)
         } catch (e: any) { setError(e.message) }
+        finally { setDescargando(false) }
     }
 
     const subirPdfCud = async (file: File) => {
@@ -481,9 +488,9 @@ export default function InstrumentoDetallePage() {
                         {numPoliza && <p className="text-sm text-gray-500 mt-1">Póliza #{numPoliza}</p>}
                     </div>
                     <div className="flex gap-3">
-                        {borrador && borrador.auditoria.score >= 90 && (
-                            <button onClick={descargarDocx} className="flex items-center gap-2 px-4 py-2 border border-gray-200 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors">
-                                <Download size={15} /> Descargar borrador
+                        {borrador && (
+                            <button onClick={descargarDocx} disabled={descargando} className="flex items-center gap-2 px-4 py-2 border border-gray-200 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-40 transition-colors">
+                                {descargando ? <><Loader2 size={15} className="animate-spin" /> Generando...</> : <><Download size={15} /> Descargar borrador</>}
                             </button>
                         )}
                         <button onClick={generarBorrador} disabled={generando || !compendioListo}
@@ -815,7 +822,13 @@ export default function InstrumentoDetallePage() {
                                 <div className="ml-auto text-right"><p className="text-2xl font-bold">{borrador.auditoria.score}</p><p className="text-xs opacity-60">/ 100</p></div>
                             </div>
                             <div className="bg-white border border-gray-100 rounded-2xl p-6">
-                                <div className="flex items-center gap-2 mb-4"><Shield size={14} className="text-gray-400" /><span className="text-xs font-semibold text-gray-400 uppercase tracking-widest">Texto del Acta — Borrador</span></div>
+                                <div className="flex items-center justify-between mb-4">
+                                    <div className="flex items-center gap-2"><Shield size={14} className="text-gray-400" /><span className="text-xs font-semibold text-gray-400 uppercase tracking-widest">Texto del Acta — Borrador</span></div>
+                                    <button onClick={descargarDocx} disabled={descargando}
+                                        className="flex items-center gap-2 px-4 py-2 bg-black text-white rounded-xl text-xs font-medium hover:bg-gray-800 disabled:opacity-40 transition-colors">
+                                        {descargando ? <><Loader2 size={13} className="animate-spin" /> Generando...</> : <><Download size={13} /> Descargar .docx</>}
+                                    </button>
+                                </div>
                                 <pre className="text-xs text-gray-700 whitespace-pre-wrap font-mono leading-relaxed max-h-[600px] overflow-y-auto">{borrador.textoActa}</pre>
                             </div>
                         </>
