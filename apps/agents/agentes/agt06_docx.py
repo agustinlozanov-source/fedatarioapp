@@ -29,7 +29,7 @@ from agentes.agt04_secciones import Seccion, Seg
 # CONSTANTES
 # ─────────────────────────────────────────────
 FUENTE     = "Hadassah Friedlaender"
-SZ         = 20
+SZ         = 24          # 12pt (confirmado en 8 documentos reales)
 INTERLINEA = 360
 FONDO_GRIS = "C9C9C9"
 
@@ -41,6 +41,10 @@ MAR_HEADER, MAR_FOOTER, MAR_GUTTER = 709, 760, 0
 COLS_ACC = [2976, 1844, 1417, 1981]
 COL_IZQ_PCT, COL_DER_PCT = 2651, 2349
 COL_IZQ_DXA, COL_DER_DXA = 4373, 3875
+
+# S de RL de CV — dos tablas de 3 columnas (medidas reales de documentos)
+COLS_SRL_PARTES = [1691, 2552, 3969]   # PARTE SOCIAL | VALOR | CON LETRA
+COLS_SRL_SOCIOS = [4243, 1417, 2562]   # NOMBRE+RFC   | VALOR | CON LETRA
 
 
 # ─────────────────────────────────────────────
@@ -201,6 +205,145 @@ def _build_tabla_accionaria(body, socios, capital_fijo):
 
 
 # ─────────────────────────────────────────────
+# TABLAS DE CAPITAL — S DE RL DE CV
+# ─────────────────────────────────────────────
+
+def _celda_srl(texto, bold=False, centered=False, fondo=None, col_w=2000):
+    """Celda para tablas de S de RL de CV (bordes simples)."""
+    tc   = OxmlElement('w:tc')
+    tcPr = OxmlElement('w:tcPr')
+    tcW  = OxmlElement('w:tcW')
+    tcW.set(qn('w:w'), str(col_w)); tcW.set(qn('w:type'), 'dxa')
+    tcPr.append(tcW)
+    tcB = OxmlElement('w:tcBorders')
+    for side in ['top', 'left', 'bottom', 'right']:
+        b = OxmlElement(f'w:{side}')
+        b.set(qn('w:val'), 'single')
+        b.set(qn('w:sz'), '4'); b.set(qn('w:space'), '0'); b.set(qn('w:color'), 'auto')
+        tcB.append(b)
+    tcPr.append(tcB)
+    if fondo:
+        shd = OxmlElement('w:shd'); shd.set(qn('w:val'), 'clear')
+        shd.set(qn('w:color'), 'auto'); shd.set(qn('w:fill'), fondo); tcPr.append(shd)
+    vA = OxmlElement('w:vAlign'); vA.set(qn('w:val'), 'center'); tcPr.append(vA)
+    tc.append(tcPr)
+    p = OxmlElement('w:p'); p.append(_pPr(centered)); p.append(_make_run(texto, bold))
+    tc.append(p)
+    return tc
+
+
+def _tbl_srl_base(cols):
+    """Crea la estructura base de una tabla SRL con los anchos dados."""
+    tbl  = OxmlElement('w:tbl')
+    tblPr = OxmlElement('w:tblPr')
+    tblW  = OxmlElement('w:tblW'); tblW.set(qn('w:w'), '5000'); tblW.set(qn('w:type'), 'pct')
+    tblPr.append(tblW)
+    tblB  = OxmlElement('w:tblBorders')
+    for side in ['top', 'left', 'bottom', 'right', 'insideH', 'insideV']:
+        b = OxmlElement(f'w:{side}'); b.set(qn('w:val'), 'single')
+        b.set(qn('w:sz'), '4'); b.set(qn('w:space'), '0'); b.set(qn('w:color'), 'auto')
+        tblB.append(b)
+    tblPr.append(tblB); tbl.append(tblPr)
+    grid = OxmlElement('w:tblGrid')
+    for w in cols:
+        gc = OxmlElement('w:gridCol'); gc.set(qn('w:w'), str(w)); grid.append(gc)
+    tbl.append(grid)
+    return tbl
+
+
+def _build_tabla_capital_srl(body, socios, capital_fijo):
+    """
+    Construye las DOS tablas de capital para S de RL de CV:
+      1. Tabla de partes sociales (3 cols: PARTE | VALOR | CON LETRA)
+      2. Tabla de socios con RFC   (3 cols: NOMBRE+RFC | VALOR | CON LETRA)
+    """
+    from agentes.agt04_redactor import numero_letra, pesos_letra, deletrear_alfanumerico
+
+    cap_por_socio = capital_fijo // len(socios)
+
+    # ── Tabla A: Partes Sociales ──────────────────────────────
+    tblA = _tbl_srl_base(COLS_SRL_PARTES)
+
+    # Header
+    tr_hA = OxmlElement('w:tr')
+    for txt, w in zip(
+        ["PARTE SOCIAL - - - - - - - - - - - - - - - - - - - - -",
+         "VALOR DE CADA PARTE: - - - - - - - - - - - - - - - -",
+         "- - - VALOR DESCRITO CON LETRA - - - - - - - - - - - - - - - - - - - - -"],
+        COLS_SRL_PARTES
+    ):
+        tr_hA.append(_celda_srl(txt, bold=True, centered=True, fondo=FONDO_GRIS, col_w=w))
+    tblA.append(tr_hA)
+
+    # Filas socios
+    for s in socios:
+        monto_l = pesos_letra(cap_por_socio)
+        tr = OxmlElement('w:tr')
+        tr.append(_celda_srl(f"- - - - - - U N A - - - - - - - - - - - - - - - - - - - - - - - - - - - -",
+                             col_w=COLS_SRL_PARTES[0]))
+        tr.append(_celda_srl(f"- - - ${cap_por_socio:,.2f} - - - - - - - - - - - - - - - - - -",
+                             col_w=COLS_SRL_PARTES[1]))
+        tr.append(_celda_srl(f"{monto_l}.- - - - - - - - - - - - - - - - - - - - - - - - - -",
+                             col_w=COLS_SRL_PARTES[2]))
+        tblA.append(tr)
+
+    # Total
+    total_mnt   = cap_por_socio * len(socios)
+    total_mnt_l = pesos_letra(total_mnt)
+    tr_tA = OxmlElement('w:tr')
+    tr_tA.append(_celda_srl("T O T A L: - - - - - - - - - - - - - - - - - - - - - - - - - -",
+                             bold=True, col_w=COLS_SRL_PARTES[0]))
+    tr_tA.append(_celda_srl(f"- - - ${total_mnt:,.2f} - - - - - - - - - - - - - - - -",
+                             col_w=COLS_SRL_PARTES[1]))
+    tr_tA.append(_celda_srl(f"- - - {total_mnt_l}.- - - - - - - - - - - - - - - - - - - -",
+                             col_w=COLS_SRL_PARTES[2]))
+    tblA.append(tr_tA)
+    body.append(tblA)
+    body.append(_make_parrafo([]))
+
+    # ── Tabla B: Socios con RFC ───────────────────────────────
+    tblB = _tbl_srl_base(COLS_SRL_SOCIOS)
+
+    # Header
+    tr_hB = OxmlElement('w:tr')
+    for txt, w in zip(
+        ["NOMBRE COMPLETO DEL SOCIO Y REGISTRO FEDERAL DE CONTRIBUYENTES: - - - - - - - - - - - - - - -",
+         "- - VALOR - - - - PARTE SOCIAL - - - - - - - - - - - -",
+         "- - - - - - CON LETRA - - - - - - - - - - - - - - - - - - - - - - - - - -"],
+        COLS_SRL_SOCIOS
+    ):
+        tr_hB.append(_celda_srl(txt, bold=True, centered=True, fondo=FONDO_GRIS, col_w=w))
+    tblB.append(tr_hB)
+
+    # Filas socios
+    for s in socios:
+        rfc_l   = deletrear_alfanumerico(s.rfc)
+        monto_l = pesos_letra(cap_por_socio)
+        tr = OxmlElement('w:tr')
+        tr.append(_celda_srl(
+            f"{s.nombre_completo}.- {s.rfc} ({rfc_l}).- - - - - - - - - - - - - - -",
+            bold=True, col_w=COLS_SRL_SOCIOS[0]))
+        tr.append(_celda_srl(
+            f"- - ${cap_por_socio:,.2f} - - - - - - - - - - - - - - - -",
+            col_w=COLS_SRL_SOCIOS[1]))
+        tr.append(_celda_srl(
+            f"- - {monto_l}.- - - - - - - - - - - - - - - - - -",
+            col_w=COLS_SRL_SOCIOS[2]))
+        tblB.append(tr)
+
+    # Total
+    tr_tB = OxmlElement('w:tr')
+    tr_tB.append(_celda_srl("T O T A L: - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -",
+                             bold=True, col_w=COLS_SRL_SOCIOS[0]))
+    tr_tB.append(_celda_srl(f"- - ${total_mnt:,.2f} - - - - - - - - - - - - - - - -",
+                             col_w=COLS_SRL_SOCIOS[1]))
+    tr_tB.append(_celda_srl(f"- - {total_mnt_l}.- - - - - - - - - - - - - - - - - -",
+                             col_w=COLS_SRL_SOCIOS[2]))
+    tblB.append(tr_tB)
+    body.append(tblB)
+
+
+# ─────────────────────────────────────────────
 # TABLA DE FIRMAS
 # ─────────────────────────────────────────────
 
@@ -305,6 +448,9 @@ def _procesar_secciones(body, secciones: List[Seccion]):
 
         elif sec.tipo == "tabla_accionaria":
             _build_tabla_accionaria(body, sec.data['socios'], sec.data['capital_fijo'])
+
+        elif sec.tipo == "tabla_capital_srl":
+            _build_tabla_capital_srl(body, sec.data['socios'], sec.data['capital_fijo'])
 
         elif sec.tipo == "firma":
             _build_tabla_firma(body, sec.data['nombre'], sec.data['es_ultimo'])

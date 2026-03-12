@@ -524,6 +524,64 @@ def secciones_transitorias_sa(d) -> List[Seccion]:
     return secs
 
 
+def secciones_transitorias_srl(d) -> List[Seccion]:
+    """Cláusulas transitorias para S de RL de CV con sus dos tablas de capital."""
+    secs = [
+        _e("C L Á U S U L A S  T R A N S I T O R I A S"),
+        _p(
+            _b("PRIMERA.- "),
+            _r("Los comparecientes suscriben y pagan en efectivo la totalidad de las "
+               "partes sociales que constituyen el Capital Social mínimo fijo, constituyendo "
+               "por este acto la tabla de participación societaria para quedar integrada como sigue:"),
+            _g("sigue:"),
+        ),
+        # Las dos tablas SRL (partes sociales + socios con RFC) se construyen en AGT-06
+        Seccion("tabla_capital_srl", [], socios=d.socios, capital_fijo=d.capital_fijo),
+    ]
+
+    # SEGUNDA — Gerente General
+    gerente   = d.socios[0]
+    ger_rfc_l = deletrear_alfanumerico(gerente.rfc)
+    secs.append(_p(
+        _b("SEGUNDA.- "),
+        _r("La Administración de la Sociedad estará a cargo de un "),
+        _b("GERENTE GENERAL "),
+        _r("designándose para tal efecto al ciudadano "),
+        _b(gerente.nombre_completo),
+        _r(f", con Registro Federal de Causantes (RFC) {gerente.rfc} ({ger_rfc_l}). "
+           "Quien durará en su encargo indefinidamente hasta que la propia Asamblea "
+           "General convoque con este motivo preciso Orden del día.- Por la naturaleza "
+           "del encargo designado el "),
+        _b(f"GERENTE GENERAL: {gerente.nombre_completo}, "),
+        _r("a quien se le confieren "),
+        _b("TODAS LAS FACULTADES GENERALES Y AÚN LAS ESPECIALES "),
+        _r("que conforme a la Ley requieran Cláusula Especial en términos del artículo "
+           "2,554 (Dos mil quinientos cincuenta y cuatro) del Código Civil Federal; 1,890 "
+           "(Mil ochocientos noventa) del Código Civil para el Estado de Tamaulipas y sus "
+           "demás correlativos con el resto de los Códigos Civiles de la República Mexicana, "
+           "así conforme al artículo 10 (Diez) de la Ley General de Sociedades Mercantiles; "
+           "9 (Nueve) de la Ley General de Títulos y Operaciones de Crédito; Cláusula "
+           "Vigésima Sexta de los presentes estatutos sociales; y demás cláusulas análogas, "
+           "relativas y correlativas que se le confieren de manera ilimitada para actuar en "
+           "su Carácter de Representante Legal de la persona moral mercantil. Facultades sin "
+           "limitación ni condición alguna y que se tienen por transcritas, como si se "
+           "insertasen a la letra."),
+        _g("insertasen a la letra."),
+    ))
+
+    secs += [
+        _p(_b("TERCERA.- "), _r("Los encargos designados han sido aceptados."),
+           _g("han sido aceptados.")),
+        _p(_b("CUARTA.- "),
+           _r("Por excepción y en razón a la reconocida solvencia moral y social de los "
+              "comparecientes, se acuerda por unanimidad; No requerir Caución por el manejo "
+              "de sus encargos a las personas que forman la Gerencia ni al Consejo de "
+              "Vigilancia social."),
+           _g("Vigilancia social.")),
+    ]
+    return secs
+
+
 def secciones_documentos_cotejados(d) -> List[Seccion]:
     las   = letras_archivo(len(d.socios))
     l_mua = letra_mua(len(d.socios))
@@ -606,7 +664,10 @@ def generar_secciones(d) -> List[Seccion]:
     out += secciones_objeto_social(d)
     if d.tipo_sociedad == "SA_de_CV":
         out += secciones_clausulas_sa(d)
-    out += secciones_transitorias_sa(d)
+    if d.tipo_sociedad == "SA_de_CV":
+        out += secciones_transitorias_sa(d)
+    else:
+        out += secciones_transitorias_srl(d)
     out += secciones_documentos_cotejados(d)
     out += secciones_certificaciones(d)
     return out
