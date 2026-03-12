@@ -287,7 +287,7 @@ def construir_payload(instrumento: dict, skip_firestore: bool = False) -> tuple[
 
     numero_poliza = instrumento.get("numeroInstrumento") or instrumento.get("numero_poliza", 0)
     libro_registro = instrumento.get("libro_registro", 5)
-    ciudad_fedatario = instrumento.get("ciudad_fedatario", "MATAMOROS")
+    ciudad_fedatario = (instrumento.get("ciudad_fedatario") or instrumento.get("ciudadFedatario") or instrumento.get("ciudad_corredor") or "MATAMOROS").upper().strip()
 
     # ── Socios ─────────────────────────────────────────────────────────────────
     socios_instrumento = instrumento.get("socios", [])
@@ -395,7 +395,7 @@ def construir_payload(instrumento: dict, skip_firestore: bool = False) -> tuple[
             "nombre_completo":  datos.get("nombre_completo", ""),
             "genero":           "femenino" if str(datos.get("genero", "masculino") or "masculino").lower().strip() in ("femenino", "femenina", "f", "mujer") else "masculino",
             "nacionalidad_pais": nacionalidad_pais,
-            "lugar_nacimiento": datos.get("lugar_nacimiento", ""),
+            "lugar_nacimiento": _expandir_abreviaturas(datos.get("lugar_nacimiento", "")),
             "fecha_nacimiento": fecha_nac.isoformat() if fecha_nac else None,
             "estado_civil":     _concordar_ec(datos.get("estado_civil", ""), "femenino" if str(datos.get("genero", "masculino") or "masculino").lower().strip() in ("femenino", "femenina", "f", "mujer") else "masculino"),
             "ocupacion":        datos.get("ocupacion", ""),
