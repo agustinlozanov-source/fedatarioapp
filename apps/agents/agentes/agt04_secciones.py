@@ -19,6 +19,24 @@ LINE_WIDTH = 79
 def _r(t: str) -> Seg: return (t, False)
 def _b(t: str) -> Seg: return (t, True)
 
+# Tipos de vialidad reconocidos (para no duplicar "Calle CALLE 4A")
+_TIPOS_VIALIDAD = {
+    'CALLE','AVENIDA','BOULEVARD','CALZADA','PRIVADA','CERRADA',
+    'ANDADOR','RETORNO','CARRETERA','CIRCUITO','PROLONGACION',
+    'PROLONGACIÓN','FRACCIONAMIENTO','UNIDAD HABITACIONAL',
+    'URBANIZACION','URBANIZACIÓN',
+}
+
+def _calle_txt(calle: str) -> str:
+    """Devuelve la calle con tipo de vialidad, sin duplicar si ya lo tiene."""
+    c = (calle or '').strip().upper()
+    if not c:
+        return ''
+    primera = c.split()[0]
+    if primera in _TIPOS_VIALIDAD:
+        return c          # ya contiene el tipo, usar directo
+    return f'CALLE {c}'  # no tiene tipo, agregar CALLE por defecto
+
 def _g(previo: str = "") -> Seg:
     usado = len(previo.rstrip())
     faltantes = max(LINE_WIDTH - usado - 3, 4)
@@ -125,7 +143,7 @@ def secciones_datos_socio(socio, letras: dict, ref_date) -> List[Seccion]:
                     f"de {mes_nac} del año {socio.fecha_nacimiento.year} "
                     f"({_num_a_letra(socio.fecha_nacimiento.year).capitalize()})")
 
-    domicilio_txt = (f"Calle {dom.calle}. ")
+    domicilio_txt = (f"{_calle_txt(dom.calle)}. ")
     num_txt       = (f"{dom.numero} ({num_l.capitalize()}). ")
     col_txt       = (f"{dom.colonia}. ")
     cp_txt        = (f"{dom.cp} ({cp_l}). ")
@@ -163,7 +181,7 @@ def secciones_datos_socio(socio, letras: dict, ref_date) -> List[Seccion]:
         ),
         _p(
             _b("Dice que su Domicilio está en: "),
-            _r(f"Calle {dom.calle}. "),
+            _r(domicilio_txt),
             _b("Número: "),
             _r(num_txt),
             _b("Colonia o Fraccionamiento: "),
