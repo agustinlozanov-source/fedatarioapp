@@ -193,6 +193,7 @@ export default function InstrumentoDetallePage() {
     const [descargando, setDescargando] = useState(false)
     const [exportandoDocs, setExportandoDocs] = useState(false)
     const [docsUrl, setDocsUrl] = useState<string | null>(null)
+    const [borrador, setBorrador] = useState<BorradorResult | null>(null)
     const [error, setError] = useState<string | null>(null)
     const [cudOk, setCudOk] = useState<string | null>(null)
     const [tabActiva, setTabActiva] = useState<string>('compendio')
@@ -406,7 +407,9 @@ export default function InstrumentoDetallePage() {
             window.open(data.url, '_blank')
         } catch (e: any) { setError(e.message) }
         finally { setExportandoDocs(false) }
-    } = async (file: File) => {
+    }
+
+    const subirPdfCud = async (file: File) => {
         if (!id || !instrumento) return
         setSubiendoCud(true)
         setCudOk(null)
