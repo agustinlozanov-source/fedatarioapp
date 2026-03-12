@@ -175,8 +175,8 @@ def secciones_datos_socio(socio, letras: dict, ref_date) -> List[Seccion]:
             _b("Estado: "),
             _r(edo_txt),
             _b("País: "),
-            _r("México"),
-            _g("País: México"),
+            _r("MÉXICO"),
+            _g("País: MÉXICO"),
         ),
         _p(
             _b("RFC (Registro Federal de Contribuyentes): "),

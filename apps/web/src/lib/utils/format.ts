@@ -61,6 +61,37 @@ export function normalizarEstado(valor: string): string {
   return _ABREV_ESTADOS[clave] ?? valor.toUpperCase();
 }
 
+// ─── Mapa para lugar_nacimiento: estados + ciudades ──────────────────────────
+const _ABREV_LUGAR: Record<string, string> = {
+  // Ciudades frecuentes en INE
+  MTY: 'MONTERREY', GDL: 'GUADALAJARA',
+  CDMX: 'CIUDAD DE MEXICO', DF: 'CIUDAD DE MEXICO',
+  // 32 entidades federativas
+  AGS: 'AGUASCALIENTES', BC: 'BAJA CALIFORNIA', BCS: 'BAJA CALIFORNIA SUR',
+  CAMP: 'CAMPECHE', CHIS: 'CHIAPAS', CHIH: 'CHIHUAHUA',
+  COAH: 'COAHUILA', COL: 'COLIMA', DGO: 'DURANGO', GTO: 'GUANAJUATO',
+  GRO: 'GUERRERO', HGO: 'HIDALGO', JAL: 'JALISCO', MEX: 'ESTADO DE MEXICO',
+  EDOMEX: 'ESTADO DE MEXICO', MICH: 'MICHOACAN', MOR: 'MORELOS',
+  NAY: 'NAYARIT', NL: 'NUEVO LEON', OAX: 'OAXACA', PUE: 'PUEBLA',
+  QRO: 'QUERETARO', QROO: 'QUINTANA ROO', SLP: 'SAN LUIS POTOSI',
+  SIN: 'SINALOA', SON: 'SONORA', TAB: 'TABASCO', TAMPS: 'TAMAULIPAS',
+  TLAX: 'TLAXCALA', VER: 'VERACRUZ', YUC: 'YUCATAN', ZAC: 'ZACATECAS',
+};
+
+/**
+ * Normaliza lugar_nacimiento: expansión de abreviaturas de ciudades y estados.
+ * (No usa el mapa de vialidad para no convertir "COL." en "COLONIA".)
+ */
+export function normalizarLugar(valor: string): string {
+  if (!valor) return valor;
+  return valor
+    .toUpperCase()
+    .replace(/\.(?=\s|$)/g, '')   // quita puntos de abreviaturas
+    .replace(/\b([A-Z]+)\b/g, m => _ABREV_LUGAR[m] ?? m)
+    .replace(/\s{2,}/g, ' ')
+    .trim();
+}
+
 /** Alias para uso en el backend (Python importa la versión Python, aquí para el frontend) */
 export const expandirAbreviaturas = normalizarDomicilio;
 

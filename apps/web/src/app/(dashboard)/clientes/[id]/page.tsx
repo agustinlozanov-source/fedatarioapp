@@ -10,7 +10,7 @@ import {
 import { Topbar } from '@/components/layout/Shell';
 import { getCliente, actualizarCliente } from '@/lib/db/clientes';
 import { getDocumentosCliente, subirDocumento, guardarDatosExtraidos } from '@/lib/db/documentos';
-import { normalizarDomicilio, normalizarEstado, expandirAbreviaturas } from '@/lib/utils/format';
+import { normalizarDomicilio, normalizarEstado, expandirAbreviaturas, normalizarLugar } from '@/lib/utils/format';
 import { getInstrumentos } from '@/lib/db/instrumentos';
 import { auth } from '@/lib/firebase';
 import type { Cliente, Documento, Instrumento, TipoDocumento } from '@fedatario/shared';
@@ -102,7 +102,7 @@ function CampoEditable({ label, value, onSave, tipo = 'text', opciones }: {
                             {opciones.map(o => <option key={o} value={o}>{o}</option>)}
                         </select>
                     ) : (
-                        <input type={tipo} value={draft} onChange={e => setDraft(e.target.value)}
+                        <input type={tipo} value={draft} onChange={e => setDraft(tipo === 'text' ? e.target.value.toUpperCase() : e.target.value)}
                             className="flex-1 text-[13px] text-[#1D1D1F] font-semibold border border-gray-200 rounded-lg px-2 py-1 focus:outline-none focus:border-black" autoFocus />
                     )}
                     <button onClick={save} disabled={saving} className="p-1 rounded-md hover:bg-green-50 text-green-600 disabled:opacity-40">
@@ -164,7 +164,9 @@ export default function ClientePage() {
     const CAMPOS_DIRECCION = new Set(['domicilio', 'lugar_nacimiento']);
 
     const actualizarCampo = async (campo: string, valor: string) => {
-        const valorFinal = CAMPOS_DIRECCION.has(campo) ? expandirAbreviaturas(valor) : valor;
+        const valorFinal = campo === 'lugar_nacimiento' ? normalizarLugar(valor)
+            : CAMPOS_DIRECCION.has(campo) ? expandirAbreviaturas(valor)
+            : valor;
         await actualizarCliente(id, { [campo]: valorFinal } as any);
         setCliente(prev => prev ? { ...prev, [campo]: valorFinal } as any : prev);
     };
@@ -233,7 +235,7 @@ export default function ClientePage() {
                         };
                     }
                     if (actualizaciones.lugar_nacimiento) {
-                        actualizaciones.lugar_nacimiento = expandirAbreviaturas(actualizaciones.lugar_nacimiento);
+                        actualizaciones.lugar_nacimiento = normalizarLugar(actualizaciones.lugar_nacimiento);
                     }
                     if (Object.keys(actualizaciones).length > 0) {
                         await actualizarCliente(id, actualizaciones);

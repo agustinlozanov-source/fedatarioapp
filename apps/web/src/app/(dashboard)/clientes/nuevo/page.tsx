@@ -6,7 +6,7 @@ import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { Topbar } from '@/components/layout/Shell';
 import { crearCliente } from '@/lib/db/clientes';
 import { storage, auth } from '@/lib/firebase';
-import { normalizarDomicilio, normalizarEstado } from '@/lib/utils/format';
+import { normalizarDomicilio, normalizarLugar } from '@/lib/utils/format';
 import type { TipoDocumento } from '@fedatario/shared';
 
 const TIPOS_DOCUMENTO: { id: TipoDocumento; label: string; esencial: boolean }[] = [
@@ -151,7 +151,7 @@ export default function NuevoClientePage() {
                 nombre_completo: form.nombre_completo,
                 rfc: form.rfc,
                 fecha_nacimiento: form.fecha_nacimiento,
-                lugar_nacimiento: normalizarDomicilio(form.lugar_nacimiento),
+                lugar_nacimiento: normalizarLugar(form.lugar_nacimiento),
                 ocupacion: form.ocupacion,
                 estado_civil: form.estado_civil,
                 genero: form.genero,
@@ -213,7 +213,7 @@ export default function NuevoClientePage() {
                             <label className="text-[11px] font-bold text-[#86868B] uppercase tracking-[0.06em] block mb-1.5">
                                 Nombre completo <span style={{ color: 'var(--red)' }}>*</span>
                             </label>
-                            <input value={form.nombre_completo} onChange={e => set('nombre_completo', e.target.value)}
+                            <input value={form.nombre_completo} onChange={e => set('nombre_completo', e.target.value.toUpperCase())}
                                 placeholder="Nombre(s) Apellido Paterno Apellido Materno"
                                 className="w-full px-3 py-2.5 rounded-xl text-[13px] outline-none"
                                 style={{ border: '1px solid var(--border)', background: 'white' }} />
@@ -290,8 +290,8 @@ export default function NuevoClientePage() {
                             <label className="text-[11px] font-bold text-[#86868B] uppercase tracking-[0.06em] block mb-1.5">
                                 Lugar de nacimiento
                             </label>
-                            <input value={form.lugar_nacimiento} onChange={e => set('lugar_nacimiento', e.target.value)}
-                                onBlur={e => set('lugar_nacimiento', normalizarDomicilio(e.target.value))}
+                            <input value={form.lugar_nacimiento} onChange={e => set('lugar_nacimiento', e.target.value.toUpperCase())}
+                                onBlur={e => set('lugar_nacimiento', normalizarLugar(e.target.value))}
                                 placeholder="Ej: Tampico, Tamaulipas, México"
                                 className="w-full px-3 py-2.5 rounded-xl text-[13px] outline-none"
                                 style={{ border: '1px solid var(--border)', background: 'white' }} />
@@ -302,7 +302,7 @@ export default function NuevoClientePage() {
                                 <label className="text-[11px] font-bold text-[#86868B] uppercase tracking-[0.06em] block mb-1.5">
                                     Ocupación
                                 </label>
-                                <input value={form.ocupacion} onChange={e => set('ocupacion', e.target.value)}
+                                <input value={form.ocupacion} onChange={e => set('ocupacion', e.target.value.toUpperCase())}
                                     placeholder="Empresario, Abogado, etc."
                                     className="w-full px-3 py-2.5 rounded-xl text-[13px] outline-none"
                                     style={{ border: '1px solid var(--border)', background: 'white' }} />
@@ -328,7 +328,7 @@ export default function NuevoClientePage() {
                             <label className="text-[11px] font-bold text-[#86868B] uppercase tracking-[0.06em] block mb-1.5">
                                 Domicilio
                             </label>
-                            <input value={form.domicilio} onChange={e => set('domicilio', e.target.value)}
+                            <input value={form.domicilio} onChange={e => set('domicilio', e.target.value.toUpperCase())}
                                 onBlur={e => set('domicilio', normalizarDomicilio(e.target.value))}
                                 placeholder="Calle y número, CP, Ciudad, Estado, País"
                                 className="w-full px-3 py-2.5 rounded-xl text-[13px] outline-none"
