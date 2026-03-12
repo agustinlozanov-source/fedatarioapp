@@ -420,7 +420,6 @@ def secciones_clausulas_sa(d) -> List[Seccion]:
     den    = d.denominacion_social
     cap_l  = pesos_letra(d.capital_fijo)
     cap_fmt= f"${d.capital_fijo:,.2f}"
-    dom    = d.domicilio_social
 
     return [
         _p(_b("TERCERA. DENOMINACIÓN.- "),
@@ -443,7 +442,7 @@ def secciones_clausulas_sa(d) -> List[Seccion]:
            _r("La Duración de la sociedad mercantil será por tiempo indefinido."),
            _g("tiempo indefinido.")),
         _p(_b("SEXTA. DOMICILIO.- "),
-           _r(f"El domicilio de la sociedad será en la ciudad de {dom}. Con la libertad de "
+           _r(f"El domicilio de la sociedad será en la ciudad de {d.ciudad_fedatario}, TAMAULIPAS. Con la libertad de "
               "establecer oficinas de representación, despacho, recepción, de archivo o "
               "albergue, agencias o franquicias en cualquier lugar de la República Mexicana "
               "y el Extranjero, así mismo señalar los domicilios convencionales para la "
@@ -652,7 +651,6 @@ def secciones_clausulas_srl(d) -> List[Seccion]:
     den    = d.denominacion_social
     cap_fmt = f"${d.capital_fijo:,.2f}"
     cap_l  = pesos_letra(d.capital_fijo)
-    dom    = d.domicilio_social
 
     return [
         _p(_b("TERCERA. DENOMINACIÓN.- "),
@@ -668,7 +666,7 @@ def secciones_clausulas_srl(d) -> List[Seccion]:
            _g("uración de la sociedad mercantil será por tiempo indefinido.")),
 
         _p(_b("SEXTA. DOMICILIO.- "),
-           _r(f"El domicilio de la sociedad será en la ciudad de {dom}. Con la libertad de establecer oficinas de representación, despacho, recepción, de archivo o albergue, agencias o franquicias en cualquier lugar de la República Mexicana y el Extranjero, así mismo señalar los domicilios convencionales para la ejecución de determinados actos."),
+           _r(f"El domicilio de la sociedad será en la ciudad de {d.ciudad_fedatario}, TAMAULIPAS. Con la libertad de establecer oficinas de representación, despacho, recepción, de archivo o albergue, agencias o franquicias en cualquier lugar de la República Mexicana y el Extranjero, así mismo señalar los domicilios convencionales para la ejecución de determinados actos."),
            _g("lios convencionales para la ejecución de determinados actos.")),
 
         _p(_b("SÉPTIMA.- CAPITAL SOCIAL.- "),
