@@ -9,12 +9,11 @@ Dependencias:
 
 Variables de entorno requeridas:
     GOOGLE_OAUTH_CREDENTIALS  — JSON con client_id, client_secret, refresh_token
-                                En local: ruta al archivo refresh_token.txt
-                                En Railway: contenido JSON completo
     GOOGLE_DRIVE_FOLDER_ID    — ID de la carpeta destino en Drive
 """
 
 import os
+import re
 import json
 import logging
 
@@ -32,8 +31,6 @@ FONT_SIZE_HEADER = 13.0
 LINE_SPACING     = 1.5
 COLOR_INK        = {"red": 0.05, "green": 0.05, "blue": 0.05}
 COLOR_SOFT       = {"red": 0.35, "green": 0.35, "blue": 0.35}
-COLOR_TABLE_HDR  = {"red": 0.15, "green": 0.15, "blue": 0.15}
-COLOR_WHITE      = {"red": 1.0,  "green": 1.0,  "blue": 1.0}
 
 MARGIN_TOP    = int(3.0 * 28.35)
 MARGIN_BOTTOM = int(3.0 * 28.35)
@@ -45,7 +42,19 @@ SCOPES = [
     "https://www.googleapis.com/auth/drive",
 ]
 
-# ─── Detección de runs especiales ───────────────────────────────────────────
+# ─── Helpers de texto ────────────────────────────────────────────────────────
+
+def _comprimir_espaciado(texto: str) -> str:
+    """'I N S T R U M E N T O' → 'INSTRUMENTO'"""
+    t = texto.strip()
+    if '  ' in t:
+        return texto  # doble espacio = no es espaciado entre letras
+    chars = list(t)
+    espacios = sum(1 for c in chars if c == ' ')
+    no_espacios = len(chars) - espacios
+    if espacios > 0 and abs(espacios - (no_espacios - 1)) <= 2 and no_espacios > 3:
+        return t.replace(' ', '')
+    return texto
 
 def _es_relleno(texto: str) -> bool:
     t = texto.strip()
@@ -56,7 +65,8 @@ def _es_enc(texto: str) -> bool:
     return t.startswith("=") and t.endswith("=")
 
 def _extraer_enc(texto: str) -> str:
-    return texto.strip().strip("=").strip()
+    limpio = texto.strip().strip("=").strip()
+    return _comprimir_espaciado(limpio)
 
 def _runs_son_encabezado(runs: list) -> bool:
     no_relleno = [(t, b) for t, b in runs if not _es_relleno(t)]
@@ -87,7 +97,7 @@ def _get_services():
     drive = build("drive", "v3", credentials=creds)
     return docs, drive
 
-# ─── Helpers ────────────────────────────────────────────────────────────────
+# ─── Helpers de API ─────────────────────────────────────────────────────────
 
 def _idx(i):
     return {"index": i}
@@ -111,11 +121,20 @@ def _border(width=0.75):
         "dashStyle": "SOLID",
     }
 
+def _no_border():
+    return {
+        "color": {"color": {"rgbColor": {"red": 1.0, "green": 1.0, "blue": 1.0}}},
+        "width": {"magnitude": 0, "unit": "PT"},
+        "padding": {"magnitude": 0, "unit": "PT"},
+        "dashStyle": "SOLID",
+    }
+
 # ─── Constructor ────────────────────────────────────────────────────────────
 
 class DocsBuilder:
-    def __init__(self, doc_id):
+    def __init__(self, doc_id, docs_service):
         self.doc_id = doc_id
+        self.svc    = docs_service
         self.reqs   = []
         self.cursor = 1
 
@@ -135,7 +154,16 @@ class DocsBuilder:
             "paragraphStyle": style, "fields": fields,
         }})
 
-    # ── Párrafo vacío ────────────────────────────────────────────────────────
+    def flush(self):
+        if not self.reqs:
+            return
+        self.svc.documents().batchUpdate(
+            documentId=self.doc_id,
+            body={"requests": self.reqs},
+        ).execute()
+        self.reqs = []
+
+    # ── Primitivos ───────────────────────────────────────────────────────────
 
     def vacio(self):
         s = self.cursor
@@ -146,6 +174,17 @@ class DocsBuilder:
             "spaceAbove": {"magnitude": 0, "unit": "PT"},
             "spaceBelow": {"magnitude": 0, "unit": "PT"},
         }, "alignment,lineSpacing,spaceAbove,spaceBelow")
+
+    def _linea(self, width=0.75):
+        ps = self.cursor
+        self._insert("\n")
+        self._fmt_para(ps, self.cursor, {
+            "alignment": "CENTER",
+            "lineSpacing": 50,
+            "spaceAbove": {"magnitude": 0, "unit": "PT"},
+            "spaceBelow": {"magnitude": 0, "unit": "PT"},
+            "borderBottom": _border(width),
+        }, "alignment,lineSpacing,spaceAbove,spaceBelow,borderBottom")
 
     # ── Párrafo de cuerpo ────────────────────────────────────────────────────
 
@@ -167,88 +206,161 @@ class DocsBuilder:
             "spaceBelow": {"magnitude": 0, "unit": "PT"},
         }, "alignment,lineSpacing,spaceAbove,spaceBelow")
 
-    # ── Encabezado del documento (LIBRO / INSTRUMENTO / PÓLIZA) ─────────────
+    # ── Encabezado del documento ─────────────────────────────────────────────
+    # Orden visual: LIBRO + PÓLIZA | línea | INSTRUMENTO PÚBLICO
+    # (igual que el acta original)
 
     def header_documento(self, libro, instrumento, poliza):
-        # Línea horizontal gruesa superior
         self._linea(1.5)
 
-        # LIBRO DE REGISTRO
         ps = self.cursor
-        rs = self.cursor
         self._insert(libro + "\n")
-        self._fmt_text(rs, self.cursor, _ts(bold=False, italic=True, size=9.5), TSF)
+        self._fmt_text(ps, self.cursor, _ts(bold=True, size=10.0), TSF)
         self._fmt_para(ps, self.cursor, {
-            "alignment": "CENTER",
-            "lineSpacing": 130,
+            "alignment": "CENTER", "lineSpacing": 130,
             "spaceAbove": {"magnitude": 4, "unit": "PT"},
             "spaceBelow": {"magnitude": 0, "unit": "PT"},
         }, "alignment,lineSpacing,spaceAbove,spaceBelow")
 
-        # INSTRUMENTO PÚBLICO
         ps = self.cursor
-        rs = self.cursor
-        self._insert(instrumento + "\n")
-        self._fmt_text(rs, self.cursor, _ts(bold=True, size=FONT_SIZE_HEADER), TSF)
+        self._insert(poliza + "\n")
+        self._fmt_text(ps, self.cursor, _ts(bold=True, size=10.0), TSF)
         self._fmt_para(ps, self.cursor, {
-            "alignment": "CENTER",
-            "lineSpacing": 140,
-            "spaceAbove": {"magnitude": 2, "unit": "PT"},
-            "spaceBelow": {"magnitude": 2, "unit": "PT"},
+            "alignment": "CENTER", "lineSpacing": 130,
+            "spaceAbove": {"magnitude": 0, "unit": "PT"},
+            "spaceBelow": {"magnitude": 0, "unit": "PT"},
         }, "alignment,lineSpacing,spaceAbove,spaceBelow")
 
-        # PÓLIZA NÚMERO
+        self._linea(0.75)
+        self.vacio()
+
         ps = self.cursor
-        rs = self.cursor
-        self._insert(poliza + "\n")
-        self._fmt_text(rs, self.cursor, _ts(bold=True, size=FONT_SIZE_BODY), TSF)
+        self._insert(instrumento + "\n")
+        self._fmt_text(ps, self.cursor, _ts(bold=True, size=FONT_SIZE_HEADER), TSF)
         self._fmt_para(ps, self.cursor, {
-            "alignment": "CENTER",
-            "lineSpacing": 130,
-            "spaceAbove": {"magnitude": 0, "unit": "PT"},
+            "alignment": "CENTER", "lineSpacing": 140,
+            "spaceAbove": {"magnitude": 4, "unit": "PT"},
             "spaceBelow": {"magnitude": 4, "unit": "PT"},
         }, "alignment,lineSpacing,spaceAbove,spaceBelow")
 
-        # Línea horizontal gruesa inferior
         self._linea(1.5)
         self.vacio()
 
-    def _linea(self, width=0.75):
-        """Línea horizontal usando borderBottom de un párrafo vacío."""
-        ps = self.cursor
-        self._insert("\n")
-        self._fmt_para(ps, self.cursor, {
-            "alignment": "CENTER",
-            "lineSpacing": 50,
-            "spaceAbove": {"magnitude": 0, "unit": "PT"},
-            "spaceBelow": {"magnitude": 0, "unit": "PT"},
-            "borderBottom": _border(width),
-        }, "alignment,lineSpacing,spaceAbove,spaceBelow,borderBottom")
-
-    # ── Encabezado de sección (DATOS GENERALES, CAPÍTULOS, etc.) ────────────
+    # ── Encabezado de sección ────────────────────────────────────────────────
 
     def encabezado_seccion(self, titulo):
         self.vacio()
         self._linea(0.75)
         ps = self.cursor
-        rs = self.cursor
         self._insert(titulo + "\n")
-        self._fmt_text(rs, self.cursor, _ts(bold=True, size=FONT_SIZE_ENC), TSF)
+        self._fmt_text(ps, self.cursor, _ts(bold=True, size=FONT_SIZE_ENC), TSF)
         self._fmt_para(ps, self.cursor, {
-            "alignment": "CENTER",
-            "lineSpacing": LINE_SPACING * 100,
-            "spaceAbove": {"magnitude": 6, "unit": "PT"},
-            "spaceBelow": {"magnitude": 6, "unit": "PT"},
+            "alignment": "CENTER", "lineSpacing": LINE_SPACING * 100,
+            "spaceAbove": {"magnitude": 5, "unit": "PT"},
+            "spaceBelow": {"magnitude": 5, "unit": "PT"},
         }, "alignment,lineSpacing,spaceAbove,spaceBelow")
         self._linea(0.75)
         self.vacio()
 
-    # ── Tabla accionaria estilo B (líneas horizontales, sin bordes laterales) ─
+    # ── Tabla real via Docs API ──────────────────────────────────────────────
+
+    def _insertar_tabla_real(self, num_filas, num_cols):
+        """
+        Hace flush, inserta la tabla vacía, lee el doc para obtener índices
+        de celdas y devuelve (tabla_elem, celdas).
+        celdas[row][col] = (para_start, para_end)
+        """
+        self.flush()
+        tabla_pos = self.cursor
+
+        self.svc.documents().batchUpdate(
+            documentId=self.doc_id,
+            body={"requests": [{"insertTable": {
+                "rows": num_filas,
+                "columns": num_cols,
+                "location": _idx(tabla_pos),
+            }}]},
+        ).execute()
+
+        doc = self.svc.documents().get(documentId=self.doc_id).execute()
+        body = doc.get("body", {}).get("content", [])
+
+        tabla_elem = None
+        for elem in reversed(body):
+            if "table" in elem:
+                tabla_elem = elem["table"]
+                break
+
+        if not tabla_elem:
+            self.cursor = body[-1].get("endIndex", tabla_pos + 10)
+            return None, []
+
+        celdas = []
+        for row in tabla_elem.get("tableRows", []):
+            fila = []
+            for cell in row.get("tableCells", []):
+                content = cell.get("content", [])
+                if content:
+                    ps = content[0].get("startIndex", cell["startIndex"] + 1)
+                    pe = content[0].get("endIndex", ps + 1)
+                else:
+                    ps = cell["startIndex"] + 1
+                    pe = ps + 1
+                fila.append((ps, pe))
+            celdas.append(fila)
+
+        return tabla_elem, celdas
+
+    def _estilo_tabla_b(self, tabla_elem, num_filas, num_cols):
+        """Borde solo horizontal — estilo B."""
+        return [{
+            "updateTableCellStyle": {
+                "tableRange": {
+                    "tableCellLocation": {
+                        "tableStartLocation": {"index": tabla_elem["startIndex"]},
+                        "rowIndex": 0,
+                        "columnIndex": 0,
+                    },
+                    "rowSpan": num_filas,
+                    "columnSpan": num_cols,
+                },
+                "tableCellStyle": {
+                    "borderLeft":    _no_border(),
+                    "borderRight":   _no_border(),
+                    "borderTop":     _border(0.5),
+                    "borderBottom":  _border(0.5),
+                    "paddingTop":    {"magnitude": 4, "unit": "PT"},
+                    "paddingBottom": {"magnitude": 4, "unit": "PT"},
+                    "paddingLeft":   {"magnitude": 6, "unit": "PT"},
+                    "paddingRight":  {"magnitude": 6, "unit": "PT"},
+                },
+                "fields": "borderLeft,borderRight,borderTop,borderBottom,paddingTop,paddingBottom,paddingLeft,paddingRight",
+            }
+        }]
+
+    def _cell_req(self, para_s, para_e, texto, bold=False, centered=False):
+        return [
+            {"insertText": {"location": {"index": para_s}, "text": texto}},
+            {"updateTextStyle": {
+                "range": {"startIndex": para_s, "endIndex": para_s + len(texto)},
+                "textStyle": _ts(bold=bold, size=9.5 if bold else 9.0),
+                "fields": TSF,
+            }},
+            {"updateParagraphStyle": {
+                "range": {"startIndex": para_s, "endIndex": para_e + len(texto)},
+                "paragraphStyle": {
+                    "alignment": "CENTER" if centered else "START",
+                    "lineSpacing": 120,
+                    "spaceAbove": {"magnitude": 2, "unit": "PT"},
+                    "spaceBelow": {"magnitude": 2, "unit": "PT"},
+                },
+                "fields": "alignment,lineSpacing,spaceAbove,spaceBelow",
+            }},
+        ]
+
+    # ── Tabla accionaria ─────────────────────────────────────────────────────
 
     def tabla_accionaria(self, socios, capital_fijo=0):
-        self.vacio()
-
-        # Calcular columnas
         filas = []
         total_acc = 0
         total_val = 0.0
@@ -274,98 +386,49 @@ class DocsBuilder:
                     acc = acc_a or 0
                     val = val_a or 0
             try:
-                val_f = float(str(val).replace("$","").replace(",",""))
+                val_f = float(str(val).replace("$", "").replace(",", ""))
                 acc_i = int(acc)
-            except:
+            except Exception:
                 val_f = 0.0
                 acc_i = 0
             total_acc += acc_i
             total_val += val_f
             filas.append((nombre, nac, acc_i, val_f, pct))
 
-        # Insertar tabla via API — 4 columnas: Accionista+RFC | Acciones | Valor Nominal | %
-        num_filas = len(filas) + 2  # header + datos + total
-        self.reqs.append({"insertTable": {
-            "rows": num_filas,
-            "columns": 4,
-            "location": _idx(self.cursor),
-        }})
-        # La tabla insertada mueve el cursor — necesitamos hacer flush parcial
-        # En su lugar, usamos texto plano estilo B (líneas horizontales)
-        # La Docs API requiere conocer los índices post-inserción para formatear celdas
-        # Por ahora usamos el método probado de texto con separadores visuales
+        num_filas = 1 + len(filas) + 1  # header + datos + total
+        tabla_elem, celdas = self._insertar_tabla_real(num_filas, 4)
+        if not tabla_elem:
+            return
 
-        # Cancelar el insertTable y usar texto estilo B
-        self.reqs.pop()
+        reqs = []
+        headers = ["ACCIONISTA Y RFC", "ACCIONES", "VALOR NOMINAL", "%"]
+        for col, (ps, pe) in enumerate(celdas[0]):
+            reqs += self._cell_req(ps, pe, headers[col], bold=True, centered=True)
 
-        # Encabezado de tabla — línea + texto + línea
-        self._linea(1.0)
-        headers = [
-            ("ACCIONISTA", 0.45),
-            ("NACION.", 0.12),
-            ("ACCIONES", 0.15),
-            ("VALOR NOMINAL", 0.18),
-            ("%", 0.10),
-        ]
-        ps = self.cursor
-        header_txt = "  ".join(f"{h}" for h, _ in headers)
-        rs = self.cursor
-        self._insert(header_txt + "\n")
-        self._fmt_text(rs, self.cursor, _ts(bold=True, size=9.5), TSF)
-        self._fmt_para(ps, self.cursor, {
-            "alignment": "JUSTIFIED",
-            "lineSpacing": 130,
-            "spaceAbove": {"magnitude": 3, "unit": "PT"},
-            "spaceBelow": {"magnitude": 3, "unit": "PT"},
-        }, "alignment,lineSpacing,spaceAbove,spaceBelow")
-        self._linea(0.75)
+        for ri, (nombre, nac, acc, val, pct) in enumerate(filas):
+            row = celdas[1 + ri]
+            vals = [f"{nombre}\n{nac}", str(acc), f"${val:,.2f}", f"{pct}%"]
+            for col, (ps, pe) in enumerate(row):
+                reqs += self._cell_req(ps, pe, vals[col], bold=False, centered=(col > 0))
 
-        # Filas
-        for nombre, nac, acc, val, pct in filas:
-            ps = self.cursor
-            rs = self.cursor
-            fila_txt = f"{nombre}   {nac}   {acc}   ${val:,.2f}   {pct}%"
-            self._insert(fila_txt + "\n")
-            self._fmt_text(rs, self.cursor, _ts(bold=False, size=10.0), TSF)
-            self._fmt_para(ps, self.cursor, {
-                "alignment": "JUSTIFIED",
-                "lineSpacing": 130,
-                "spaceAbove": {"magnitude": 2, "unit": "PT"},
-                "spaceBelow": {"magnitude": 2, "unit": "PT"},
-            }, "alignment,lineSpacing,spaceAbove,spaceBelow")
+        total_row = celdas[-1]
+        totals = ["TOTAL", str(total_acc), f"${total_val:,.2f}", "100%"]
+        for col, (ps, pe) in enumerate(total_row):
+            reqs += self._cell_req(ps, pe, totals[col], bold=True, centered=(col > 0))
 
-        # Línea de total
-        self._linea(0.75)
-        ps = self.cursor
-        rs = self.cursor
-        total_txt = f"TOTAL   —   {total_acc}   ${total_val:,.2f}   100%"
-        self._insert(total_txt + "\n")
-        self._fmt_text(rs, self.cursor, _ts(bold=True, size=10.0), TSF)
-        self._fmt_para(ps, self.cursor, {
-            "alignment": "JUSTIFIED",
-            "lineSpacing": 130,
-            "spaceAbove": {"magnitude": 3, "unit": "PT"},
-            "spaceBelow": {"magnitude": 3, "unit": "PT"},
-        }, "alignment,lineSpacing,spaceAbove,spaceBelow")
-        self._linea(1.0)
+        reqs += self._estilo_tabla_b(tabla_elem, num_filas, 4)
+
+        self.svc.documents().batchUpdate(
+            documentId=self.doc_id, body={"requests": reqs}
+        ).execute()
+
+        self.cursor = tabla_elem["endIndex"]
         self.vacio()
 
-    # ── Tabla de capital SRL ─────────────────────────────────────────────────
+    # ── Tabla capital SRL ────────────────────────────────────────────────────
 
     def tabla_capital_srl(self, socios):
-        self.vacio()
-        self._linea(1.0)
-        ps = self.cursor
-        rs = self.cursor
-        self._insert("SOCIO   PARTE SOCIAL   VALOR   CON LETRA\n")
-        self._fmt_text(rs, self.cursor, _ts(bold=True, size=9.5), TSF)
-        self._fmt_para(ps, self.cursor, {
-            "alignment": "JUSTIFIED",
-            "lineSpacing": 130,
-            "spaceAbove": {"magnitude": 3, "unit": "PT"},
-            "spaceBelow": {"magnitude": 3, "unit": "PT"},
-        }, "alignment,lineSpacing,spaceAbove,spaceBelow")
-        self._linea(0.75)
+        filas = []
         for s in socios:
             if isinstance(s, dict):
                 nombre = s.get("nombre", "")
@@ -377,84 +440,77 @@ class DocsBuilder:
                 monto  = getattr(s, "monto_parte_social", "")
                 val    = getattr(s, "valor", "")
                 letra  = getattr(s, "con_letra", "")
-            ps = self.cursor
-            rs = self.cursor
-            self._insert(f"{nombre}   {monto}   {val}   {letra}\n")
-            self._fmt_text(rs, self.cursor, _ts(bold=False, size=10.0), TSF)
-            self._fmt_para(ps, self.cursor, {
-                "alignment": "JUSTIFIED",
-                "lineSpacing": 130,
-                "spaceAbove": {"magnitude": 2, "unit": "PT"},
-                "spaceBelow": {"magnitude": 2, "unit": "PT"},
-            }, "alignment,lineSpacing,spaceAbove,spaceBelow")
-        self._linea(1.0)
+            filas.append((nombre, str(monto), str(val), str(letra)))
+
+        num_filas = 1 + len(filas)
+        tabla_elem, celdas = self._insertar_tabla_real(num_filas, 4)
+        if not tabla_elem:
+            return
+
+        reqs = []
+        headers = ["SOCIO", "PARTE SOCIAL", "VALOR", "CON LETRA"]
+        for col, (ps, pe) in enumerate(celdas[0]):
+            reqs += self._cell_req(ps, pe, headers[col], bold=True, centered=True)
+
+        for ri, (nombre, monto, val, letra) in enumerate(filas):
+            row = celdas[1 + ri]
+            vals = [nombre, monto, val, letra]
+            for col, (ps, pe) in enumerate(row):
+                reqs += self._cell_req(ps, pe, vals[col], bold=False, centered=(col > 0))
+
+        reqs += self._estilo_tabla_b(tabla_elem, num_filas, 4)
+
+        self.svc.documents().batchUpdate(
+            documentId=self.doc_id, body={"requests": reqs}
+        ).execute()
+
+        self.cursor = tabla_elem["endIndex"]
         self.vacio()
 
-    # ── Firma de socio (estilo acta original: tabla 4 celdas) ───────────────
-    # Simulada con texto estructurado ya que tabla inline requiere flush
+    # ── Firmas ───────────────────────────────────────────────────────────────
 
     def firma_socio(self, nombre):
         self.vacio()
-        # Línea de firma
         self._linea(0.75)
-        # Nombre
         ps = self.cursor
-        rs = self.cursor
         self._insert(nombre.upper() + "\n")
-        self._fmt_text(rs, self.cursor, _ts(bold=True, size=10.5), TSF)
+        self._fmt_text(ps, self.cursor, _ts(bold=True, size=10.5), TSF)
         self._fmt_para(ps, self.cursor, {
-            "alignment": "CENTER",
-            "lineSpacing": 130,
+            "alignment": "CENTER", "lineSpacing": 130,
             "spaceAbove": {"magnitude": 4, "unit": "PT"},
             "spaceBelow": {"magnitude": 0, "unit": "PT"},
         }, "alignment,lineSpacing,spaceAbove,spaceBelow")
-        # Etiqueta
+
         ps = self.cursor
-        rs = self.cursor
         self._insert("Nombre completo.   Firma.   Huellas Índices Izquierdo y Derecho.\n")
-        self._fmt_text(rs, self.cursor, _ts(italic=True, size=8.5, color=COLOR_SOFT), TSF)
+        self._fmt_text(ps, self.cursor, _ts(italic=True, size=8.5, color=COLOR_SOFT), TSF)
         self._fmt_para(ps, self.cursor, {
-            "alignment": "CENTER",
-            "lineSpacing": 120,
+            "alignment": "CENTER", "lineSpacing": 120,
             "spaceAbove": {"magnitude": 0, "unit": "PT"},
             "spaceBelow": {"magnitude": 8, "unit": "PT"},
         }, "alignment,lineSpacing,spaceAbove,spaceBelow")
-
-    # ── Firma del Corredor ───────────────────────────────────────────────────
 
     def firma_corredor(self, nombre, cargo):
         for _ in range(2):
             self.vacio()
         self._linea(0.75)
         ps = self.cursor
-        rs = self.cursor
         self._insert(nombre.upper() + "\n")
-        self._fmt_text(rs, self.cursor, _ts(bold=True, size=10.5), TSF)
+        self._fmt_text(ps, self.cursor, _ts(bold=True, size=10.5), TSF)
         self._fmt_para(ps, self.cursor, {
-            "alignment": "CENTER",
-            "lineSpacing": 130,
+            "alignment": "CENTER", "lineSpacing": 130,
             "spaceAbove": {"magnitude": 4, "unit": "PT"},
             "spaceBelow": {"magnitude": 0, "unit": "PT"},
         }, "alignment,lineSpacing,spaceAbove,spaceBelow")
+
         ps = self.cursor
-        rs = self.cursor
         self._insert(cargo + "\n")
-        self._fmt_text(rs, self.cursor, _ts(italic=True, size=9.0, color=COLOR_SOFT), TSF)
+        self._fmt_text(ps, self.cursor, _ts(italic=True, size=9.0, color=COLOR_SOFT), TSF)
         self._fmt_para(ps, self.cursor, {
-            "alignment": "CENTER",
-            "lineSpacing": 120,
+            "alignment": "CENTER", "lineSpacing": 120,
             "spaceAbove": {"magnitude": 0, "unit": "PT"},
             "spaceBelow": {"magnitude": 0, "unit": "PT"},
         }, "alignment,lineSpacing,spaceAbove,spaceBelow")
-
-    def flush(self, docs_service):
-        if not self.reqs:
-            return
-        docs_service.documents().batchUpdate(
-            documentId=self.doc_id,
-            body={"requests": self.reqs},
-        ).execute()
-        self.reqs = []
 
 
 # ─── Función principal ──────────────────────────────────────────────────────
@@ -463,12 +519,10 @@ def exportar_a_docs(secciones: list, nombre_doc: str = "Instrumento Público") -
     docs_svc, drive_svc = _get_services()
     folder_id = os.environ.get("GOOGLE_DRIVE_FOLDER_ID")
 
-    # Crear documento
     created_doc = docs_svc.documents().create(body={"title": nombre_doc}).execute()
     doc_id = created_doc["documentId"]
     logger.info(f"AGT-07: Documento creado — {doc_id}")
 
-    # Mover a carpeta
     if folder_id:
         file = drive_svc.files().get(fileId=doc_id, fields="parents", supportsAllDrives=True).execute()
         prev = ",".join(file.get("parents", []))
@@ -477,7 +531,6 @@ def exportar_a_docs(secciones: list, nombre_doc: str = "Instrumento Público") -
             fields="id,parents", supportsAllDrives=True,
         ).execute()
 
-    # Configurar página
     docs_svc.documents().batchUpdate(
         documentId=doc_id,
         body={"requests": [{"updateDocumentStyle": {
@@ -495,35 +548,42 @@ def exportar_a_docs(secciones: list, nombre_doc: str = "Instrumento Público") -
         }}]},
     ).execute()
 
-    b = DocsBuilder(doc_id)
+    b = DocsBuilder(doc_id, docs_svc)
 
     FIRMA_NOMBRE = "WILFREDO EMMANUEL RAMÍREZ NÚÑEZ"
     FIRMA_CARGO  = "Corredor Público Número 3 · Plaza del Estado de Tamaulipas"
 
-    # Detectar las 3 primeras secciones de encabezado (libro, instrumento, póliza)
-    header_indices = []
+    # ── Detectar y agrupar encabezado principal ───────────────────────────────
+    header_map  = {}
+    header_skip = set()
+
     for i, sec in enumerate(secciones):
-        if sec.tipo == "parrafo" and sec.runs and _runs_son_encabezado(sec.runs):
-            limpio = _extraer_enc(sec.runs[0][0])
-            if "LIBRO" in limpio or "INSTRUMENTO" in limpio or "PÓLIZA" in limpio or "POLIZA" in limpio:
-                header_indices.append((i, limpio))
-                if len(header_indices) == 3:
-                    break
+        if sec.tipo != "parrafo" or not sec.runs:
+            continue
+        if not _runs_son_encabezado(sec.runs):
+            continue
+        limpio = _extraer_enc(sec.runs[0][0])
+        if "LIBRO" in limpio and "libro" not in header_map:
+            header_map["libro"] = limpio
+            header_skip.add(i)
+        elif ("INSTRUMENTO" in limpio or "PÚBLICO" in limpio or "PUBLICO" in limpio) and "instrumento" not in header_map:
+            header_map["instrumento"] = limpio
+            header_skip.add(i)
+        elif ("PÓLIZA" in limpio or "POLIZA" in limpio) and "poliza" not in header_map:
+            header_map["poliza"] = limpio
+            header_skip.add(i)
+        if len(header_map) == 3:
+            break
 
-    skip = {i for i, _ in header_indices}
-
-    if len(header_indices) == 3:
-        libro      = header_indices[0][1]
-        instrumento = header_indices[1][1]
-        poliza     = header_indices[2][1]
-        b.header_documento(libro, instrumento, poliza)
-    elif len(header_indices) > 0:
-        # Fallback: renderizar lo que haya
-        for _, txt in header_indices:
+    if len(header_map) == 3:
+        b.header_documento(header_map["libro"], header_map["instrumento"], header_map["poliza"])
+    else:
+        for txt in header_map.values():
             b.parrafo([(txt, True)], centered=True)
 
+    # ── Loop principal ────────────────────────────────────────────────────────
     for i, sec in enumerate(secciones):
-        if i in skip:
+        if i in header_skip:
             continue
 
         if sec.tipo == "vacio":
@@ -543,23 +603,29 @@ def exportar_a_docs(secciones: list, nombre_doc: str = "Instrumento Público") -
                 b.parrafo(sec.runs)
 
         elif sec.tipo == "tabla_accionaria":
+            b.flush()
             socios       = sec.data.get("socios", []) if isinstance(sec.data, dict) else []
             capital_fijo = sec.data.get("capital_fijo", 0) if isinstance(sec.data, dict) else 0
             b.tabla_accionaria(socios, capital_fijo)
 
         elif sec.tipo == "tabla_capital_srl":
+            b.flush()
             socios = sec.data.get("socios", []) if isinstance(sec.data, dict) else []
             b.tabla_capital_srl(socios)
 
         elif sec.tipo == "firma":
-            nombre = sec.data.get("nombre", "") if isinstance(sec.data, dict) else getattr(sec.data, "nombre", "")
+            nombre = (
+                sec.data.get("nombre", "")
+                if isinstance(sec.data, dict)
+                else getattr(sec.data, "nombre", "")
+            )
             if nombre:
                 b.firma_socio(nombre)
 
         elif sec.tipo == "corredor":
             b.firma_corredor(FIRMA_NOMBRE, FIRMA_CARGO)
 
-    b.flush(docs_svc)
+    b.flush()
     logger.info("AGT-07: Documento listo")
 
     url = f"https://docs.google.com/document/d/{doc_id}/edit"
