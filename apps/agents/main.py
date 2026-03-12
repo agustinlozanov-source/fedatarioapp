@@ -15,7 +15,7 @@ from typing import Optional
 
 import firebase_admin
 from dotenv import load_dotenv
-from fastapi import FastAPI, File, Form, HTTPException, UploadFile
+from fastapi import FastAPI, File, Form, HTTPException, Request, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from firebase_admin import credentials, firestore
@@ -31,6 +31,7 @@ from agentes.agt02_extractor import extraer_documento, extraer_desde_url
 from agentes.agt04_redactor import InstrumentoRedactorInput, generar_acta
 from agentes.agt05_auditor import auditar_acta
 from agentes.agt06_docx import generar_docx
+from agentes.agt07_exportador_docs import exportar_a_docs
 from agentes.firestore_mapper import firestore_to_redactor_input
 from agentes.extractor_cud import ExtractorCUD
 from agentes.validador_roles import ValidadorRoles
@@ -340,6 +341,52 @@ async def docx_generar(body: DocxInput):
     except Exception as e:
         logger.error(traceback.format_exc())
         raise HTTPException(status_code=500, detail=str(e))
+
+# ── AGT-07 EXPORTADOR GOOGLE DOCS ────────────────────────────────────────────
+
+def obtener_secciones_de_firestore(instrumento_id: str) -> dict:
+    """Obtiene y genera las secciones estructuradas de un instrumento desde Firestore."""
+    if not db:
+        raise HTTPException(status_code=500, detail="Firebase no disponible")
+    snap = db.collection("instrumentos").document(instrumento_id).get()
+    if not snap.exists:
+        raise HTTPException(status_code=404, detail="Instrumento no encontrado")
+    data = snap.to_dict()
+    redactor_input = firestore_to_redactor_input(data)
+    resultado = generar_acta(redactor_input)
+    secciones = resultado.get("secciones") or []
+    if not secciones:
+        try:
+            from agentes.agt04_secciones import generar_secciones
+            secciones = generar_secciones(redactor_input)
+        except Exception as e:
+            logger.warning(f"generar_secciones falló: {e}")
+    return {
+        **resultado,
+        "secciones": secciones,
+        "denominacion": data.get("denominacion", "SOCIEDAD"),
+        "numero_poliza": str(data.get("numero_poliza", "0000")),
+        "libro": data.get("libro", "LIBRO DE REGISTRO"),
+    }
+
+
+@app.post("/docx/exportar-docs")
+async def exportar_docs(request: Request):
+    """AGT-07 — Exporta el instrumento a Google Docs y regresa la URL."""
+    try:
+        body = await request.json()
+        instrumento_id = body.get("instrumento_id")
+        if not instrumento_id:
+            raise HTTPException(status_code=400, detail="instrumento_id es requerido")
+        secciones_obj = obtener_secciones_de_firestore(instrumento_id)
+        resultado = exportar_a_docs(secciones_obj)
+        return resultado
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(traceback.format_exc())
+        raise HTTPException(status_code=500, detail=str(e))
+
 
 # ── ROLES Y VALIDACIÓN ────────────────────────────────────────────────────────
 
