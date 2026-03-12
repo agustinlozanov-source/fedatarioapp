@@ -65,7 +65,7 @@ function CampoEditable({ label, value, onSave, tipo = 'text', opciones }: {
     label: string;
     value?: string;
     onSave: ((val: string) => Promise<void>) | null;
-    tipo?: 'text' | 'date' | 'select';
+    tipo?: 'text' | 'date' | 'select' | 'number';
     opciones?: string[];
 }) {
     const [editing, setEditing] = useState(false);
