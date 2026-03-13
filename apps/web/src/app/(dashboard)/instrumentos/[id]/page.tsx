@@ -578,34 +578,33 @@ export default function InstrumentoDetallePage() {
                                     <FileUp size={13} className="text-gray-400" />
                                     <span className="text-xs text-gray-500 font-semibold">PDF del CUD</span>
                                 </div>
-                                <input
-                                    id="cud-pdf-input"
-                                    type="file"
-                                    accept=".pdf"
-                                    disabled={subiendoCud}
-                                    className="hidden"
-                                    onChange={e => {
-                                        const file = e.target.files?.[0]
-                                        if (file) subirPdfCud(file)
-                                        e.target.value = ''
-                                    }}
-                                />
+
                                 {instrumento.cudPdfUrl ? (
                                     <div className="flex items-center gap-2">
                                         <a href={instrumento.cudPdfUrl} target="_blank" rel="noopener noreferrer"
                                             className="text-sm text-blue-600 hover:underline font-medium">Ver PDF</a>
-                                        <label htmlFor="cud-pdf-input"
-                                            className={`text-sm text-gray-500 hover:text-gray-700 cursor-pointer ${subiendoCud ? 'opacity-40 pointer-events-none' : ''}`}>
-                                            {subiendoCud ? 'Subiendo...' : 'Cambiar'}
-                                        </label>
+                                        <div className="relative inline-block">
+                                            <span className={`text-sm text-gray-500 hover:text-gray-700 cursor-pointer ${subiendoCud ? 'opacity-40' : ''}`}>
+                                                {subiendoCud ? 'Subiendo...' : 'Cambiar'}
+                                            </span>
+                                            {!subiendoCud && (
+                                                <input type="file" accept=".pdf"
+                                                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                                                    onChange={e => { const f = e.target.files?.[0]; if (f) subirPdfCud(f); e.target.value = '' }} />
+                                            )}
+                                        </div>
                                     </div>
                                 ) : (
-                                    <label htmlFor="cud-pdf-input"
-                                        className={`inline-flex items-center gap-2 px-4 py-2 bg-blue-50 text-blue-600 rounded-lg text-sm font-medium hover:bg-blue-100 cursor-pointer transition-colors ${subiendoCud ? 'opacity-40 pointer-events-none' : ''}`}>
+                                    <div className="relative inline-flex items-center gap-2 px-4 py-2 bg-blue-50 text-blue-600 rounded-lg text-sm font-medium hover:bg-blue-100 transition-colors">
                                         {subiendoCud
                                             ? <><Loader2 size={14} className="animate-spin" />Subiendo...</>
                                             : <><FileUp size={14} />Subir PDF</>}
-                                    </label>
+                                        {!subiendoCud && (
+                                            <input type="file" accept=".pdf"
+                                                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                                                onChange={e => { const f = e.target.files?.[0]; if (f) subirPdfCud(f); e.target.value = '' }} />
+                                        )}
+                                    </div>
                                 )}
                                 {cudOk && (
                                     <div className="flex items-center gap-2 text-sm px-3 py-2 mt-3 rounded-lg bg-green-50 text-green-700">
