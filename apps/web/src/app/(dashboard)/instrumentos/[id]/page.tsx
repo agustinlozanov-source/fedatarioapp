@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { doc, getDoc, updateDoc, collection, query, where, getDocs, onSnapshot } from 'firebase/firestore'
 import { storage } from '@/lib/firebase'
@@ -198,6 +198,7 @@ export default function InstrumentoDetallePage() {
     const [cudOk, setCudOk] = useState<string | null>(null)
     const [tabActiva, setTabActiva] = useState<string>('compendio')
     const [subiendoCud, setSubiendoCud] = useState(false)
+    const cudInputRef = useRef<HTMLInputElement>(null)
 
     // ── Cargar instrumento + perfiles de clientes ─────────────────────────────
     useEffect(() => {
@@ -434,12 +435,10 @@ export default function InstrumentoDetallePage() {
             console.log('Respuesta del backend:', respuesta.status)
             
             if (!respuesta.ok) {
-                try {
-                    const error = await respuesta.json()
-                    throw new Error(error.detail || `Error HTTP ${respuesta.status}`)
-                } catch (e) {
-                    throw new Error(`Error al procesar CUD: ${respuesta.status}`)
-                }
+                const txt = await respuesta.text().catch(() => '')
+                let msg = `Error ${respuesta.status}`
+                try { msg = JSON.parse(txt).detail || msg } catch {}
+                throw new Error(msg)
             }
             
             const datosprocesados = await respuesta.json()
@@ -579,44 +578,34 @@ export default function InstrumentoDetallePage() {
                                     <FileUp size={13} className="text-gray-400" />
                                     <span className="text-xs text-gray-500 font-semibold">PDF del CUD</span>
                                 </div>
+                                <input
+                                    id="cud-pdf-input"
+                                    type="file"
+                                    accept=".pdf"
+                                    disabled={subiendoCud}
+                                    className="hidden"
+                                    onChange={e => {
+                                        const file = e.target.files?.[0]
+                                        if (file) subirPdfCud(file)
+                                        e.target.value = ''
+                                    }}
+                                />
                                 {instrumento.cudPdfUrl ? (
                                     <div className="flex items-center gap-2">
-                                        <a href={instrumento.cudPdfUrl} target="_blank" rel="noopener noreferrer" 
+                                        <a href={instrumento.cudPdfUrl} target="_blank" rel="noopener noreferrer"
                                             className="text-sm text-blue-600 hover:underline font-medium">Ver PDF</a>
-                                        <button onClick={() => {
-                                            const input = document.createElement('input')
-                                            input.type = 'file'
-                                            input.accept = '.pdf'
-                                            input.style.display = 'none'
-                                            input.onchange = (e: any) => {
-                                                const file = e.target.files?.[0]
-                                                document.body.removeChild(input)
-                                                if (file) subirPdfCud(file)
-                                            }
-                                            document.body.appendChild(input)
-                                            input.click()
-                                        }} disabled={subiendoCud}
-                                            className="text-sm text-gray-500 hover:text-gray-700 disabled:opacity-40">
+                                        <label htmlFor="cud-pdf-input"
+                                            className={`text-sm text-gray-500 hover:text-gray-700 cursor-pointer ${subiendoCud ? 'opacity-40 pointer-events-none' : ''}`}>
                                             {subiendoCud ? 'Subiendo...' : 'Cambiar'}
-                                        </button>
+                                        </label>
                                     </div>
                                 ) : (
-                                    <button onClick={() => {
-                                        const input = document.createElement('input')
-                                        input.type = 'file'
-                                        input.accept = '.pdf'
-                                        input.style.display = 'none'
-                                        input.onchange = (e: any) => {
-                                            const file = e.target.files?.[0]
-                                            document.body.removeChild(input)
-                                            if (file) subirPdfCud(file)
-                                        }
-                                        document.body.appendChild(input)
-                                        input.click()
-                                    }} disabled={subiendoCud}
-                                        className="px-4 py-2 bg-blue-50 text-blue-600 rounded-lg text-sm font-medium hover:bg-blue-100 disabled:opacity-40 transition-colors">
-                                        {subiendoCud ? <><Loader2 size={14} className="inline animate-spin mr-2" />Subiendo...</> : <><FileUp size={14} className="inline mr-2" />Subir PDF</> }
-                                    </button>
+                                    <label htmlFor="cud-pdf-input"
+                                        className={`inline-flex items-center gap-2 px-4 py-2 bg-blue-50 text-blue-600 rounded-lg text-sm font-medium hover:bg-blue-100 cursor-pointer transition-colors ${subiendoCud ? 'opacity-40 pointer-events-none' : ''}`}>
+                                        {subiendoCud
+                                            ? <><Loader2 size={14} className="animate-spin" />Subiendo...</>
+                                            : <><FileUp size={14} />Subir PDF</>}
+                                    </label>
                                 )}
                                 {cudOk && (
                                     <div className="flex items-center gap-2 text-sm px-3 py-2 mt-3 rounded-lg bg-green-50 text-green-700">
