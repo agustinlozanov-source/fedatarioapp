@@ -497,6 +497,18 @@ export default function InstrumentoDetallePage() {
 
     return (
         <div className="max-w-5xl mx-auto px-6 py-8">
+            {/* Input CUD — siempre en el DOM para que el ref nunca se rompa */}
+            <input
+                ref={cudInputRef}
+                type="file"
+                accept=".pdf"
+                style={{ display: 'none' }}
+                onChange={e => {
+                    const f = e.target.files?.[0]
+                    if (f) subirPdfCud(f)
+                    e.target.value = ''
+                }}
+            />
             {/* HEADER */}
             <div className="mb-8">
                 <button onClick={() => router.push('/instrumentos')} className="flex items-center gap-2 text-sm text-gray-500 hover:text-gray-800 mb-4 transition-colors">
@@ -583,20 +595,22 @@ export default function InstrumentoDetallePage() {
                                     <div className="flex items-center gap-2">
                                         <a href={instrumento.cudPdfUrl} target="_blank" rel="noopener noreferrer"
                                             className="text-sm text-blue-600 hover:underline font-medium">Ver PDF</a>
-                                        <label style={{cursor:'pointer', fontSize:'14px', color:'#6b7280', opacity: subiendoCud ? 0.4 : 1}}>
+                                        <button
+                                            disabled={subiendoCud}
+                                            onClick={() => cudInputRef.current?.click()}
+                                            className="text-sm text-gray-500 hover:text-gray-700 disabled:opacity-40 cursor-pointer">
                                             {subiendoCud ? 'Subiendo...' : 'Cambiar'}
-                                            <input type="file" accept=".pdf" style={{display:'none'}}
-                                                onChange={e => { const f = e.target.files?.[0]; if (f) subirPdfCud(f); e.target.value = '' }} />
-                                        </label>
+                                        </button>
                                     </div>
                                 ) : (
-                                    <label style={{cursor:'pointer', display:'inline-flex', alignItems:'center', gap:'6px', padding:'8px 16px', background:'#EFF6FF', color:'#2563EB', borderRadius:'8px', fontSize:'14px', fontWeight:500, opacity: subiendoCud ? 0.4 : 1}}>
+                                    <button
+                                        disabled={subiendoCud}
+                                        onClick={() => cudInputRef.current?.click()}
+                                        className="inline-flex items-center gap-2 px-4 py-2 bg-blue-50 text-blue-600 rounded-lg text-sm font-medium hover:bg-blue-100 disabled:opacity-40 transition-colors cursor-pointer">
                                         {subiendoCud
                                             ? <><Loader2 size={14} className="animate-spin" />Subiendo...</>
                                             : <><FileUp size={14} />Subir PDF</>}
-                                        <input type="file" accept=".pdf" style={{display:'none'}}
-                                            onChange={e => { const f = e.target.files?.[0]; if (f) subirPdfCud(f); e.target.value = '' }} />
-                                    </label>
+                                    </button>
                                 )}
                                 {cudOk && (
                                     <div className="flex items-center gap-2 text-sm px-3 py-2 mt-3 rounded-lg bg-green-50 text-green-700">
