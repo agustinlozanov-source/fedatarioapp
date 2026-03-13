@@ -583,28 +583,20 @@ export default function InstrumentoDetallePage() {
                                     <div className="flex items-center gap-2">
                                         <a href={instrumento.cudPdfUrl} target="_blank" rel="noopener noreferrer"
                                             className="text-sm text-blue-600 hover:underline font-medium">Ver PDF</a>
-                                        <div className="relative inline-block">
-                                            <span className={`text-sm text-gray-500 hover:text-gray-700 cursor-pointer ${subiendoCud ? 'opacity-40' : ''}`}>
-                                                {subiendoCud ? 'Subiendo...' : 'Cambiar'}
-                                            </span>
-                                            {!subiendoCud && (
-                                                <input type="file" accept=".pdf"
-                                                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                                                    onChange={e => { const f = e.target.files?.[0]; if (f) subirPdfCud(f); e.target.value = '' }} />
-                                            )}
-                                        </div>
+                                        <label style={{cursor:'pointer', fontSize:'14px', color:'#6b7280', opacity: subiendoCud ? 0.4 : 1}}>
+                                            {subiendoCud ? 'Subiendo...' : 'Cambiar'}
+                                            <input type="file" accept=".pdf" style={{display:'none'}}
+                                                onChange={e => { const f = e.target.files?.[0]; if (f) subirPdfCud(f); e.target.value = '' }} />
+                                        </label>
                                     </div>
                                 ) : (
-                                    <div className="relative inline-flex items-center gap-2 px-4 py-2 bg-blue-50 text-blue-600 rounded-lg text-sm font-medium hover:bg-blue-100 transition-colors">
+                                    <label style={{cursor:'pointer', display:'inline-flex', alignItems:'center', gap:'6px', padding:'8px 16px', background:'#EFF6FF', color:'#2563EB', borderRadius:'8px', fontSize:'14px', fontWeight:500, opacity: subiendoCud ? 0.4 : 1}}>
                                         {subiendoCud
                                             ? <><Loader2 size={14} className="animate-spin" />Subiendo...</>
                                             : <><FileUp size={14} />Subir PDF</>}
-                                        {!subiendoCud && (
-                                            <input type="file" accept=".pdf"
-                                                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                                                onChange={e => { const f = e.target.files?.[0]; if (f) subirPdfCud(f); e.target.value = '' }} />
-                                        )}
-                                    </div>
+                                        <input type="file" accept=".pdf" style={{display:'none'}}
+                                            onChange={e => { const f = e.target.files?.[0]; if (f) subirPdfCud(f); e.target.value = '' }} />
+                                    </label>
                                 )}
                                 {cudOk && (
                                     <div className="flex items-center gap-2 text-sm px-3 py-2 mt-3 rounded-lg bg-green-50 text-green-700">
