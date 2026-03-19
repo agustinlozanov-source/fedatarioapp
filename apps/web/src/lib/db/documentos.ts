@@ -156,19 +156,6 @@ export async function guardarDatosExtraidos(
     });
 }
 
-
-export async function getDocumentosInstrumento(
-    instrumentoId: string
-): Promise<Documento[]> {
-    const q = query(
-        collection(db, "documentos"),
-        where("instrumentoId", "==", instrumentoId),
-        orderBy("creadoEn", "desc")
-    );
-    const snap = await getDocs(q);
-    return snap.docs.map(d => ({ id: d.id, ...d.data() } as Documento));
-}
-
 export async function getDocumentosCliente(
     clienteId: string
 ): Promise<Documento[]> {
