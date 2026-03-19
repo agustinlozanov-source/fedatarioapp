@@ -354,13 +354,6 @@ export default function InstrumentosPage() {
   );
 }
 
-
-const TIPO_LABEL: Record<string, string> = {
-  sa_de_cv: 'SA de CV',
-  s_de_rl: 'S de RL',
-};
-
-const ESTADO_LABEL: Record<string, { label: string; color: string; bg: string }> = {
   paso_01_identificacion: { label: 'Identificación', color: 'var(--blue)', bg: 'var(--blue-bg)' },
   paso_02_tipo: { label: 'Tipo definido', color: 'var(--blue)', bg: 'var(--blue-bg)' },
   paso_03_datos_basicos: { label: 'Datos capturados', color: 'var(--orange)', bg: 'var(--orange-bg)' },
