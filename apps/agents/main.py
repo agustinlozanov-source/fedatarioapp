@@ -93,6 +93,7 @@ def health():
             "AGT-04 Redactor",
             "AGT-05 Auditor",
             "AGT-06 Generador DOCX",
+            "AGT-07 Exportador Google Docs",
         ],
     }
 
