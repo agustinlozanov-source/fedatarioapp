@@ -308,6 +308,7 @@ export default function InstrumentoDetallePage() {
         if (!instrumento.fecha_instrumento) faltantes.push('Instrumento: Fecha del instrumento')
         if (!instrumento.tipo) faltantes.push('Instrumento: Tipo de sociedad')
         if (!getDenominacion(instrumento)) faltantes.push('Instrumento: Denominación social')
+        if (!getDomicilio(instrumento)) faltantes.push('Instrumento: Domicilio social')
         if (!getCapital(instrumento)) faltantes.push('Instrumento: Capital fijo')
         if (!getObjeto(instrumento)) faltantes.push('Instrumento: Objeto social')
 
@@ -332,7 +333,7 @@ export default function InstrumentoDetallePage() {
         })
 
         // ─ CÁLCULO DE PORCENTAJE ─
-        const totalCampos = 6 + Math.max(socios.length, 1) * 10
+        const totalCampos = 7 + Math.max(socios.length, 1) * 10
         const completados = totalCampos - faltantes.length
         const porcentaje = Math.max(0, Math.round((completados / totalCampos) * 100))
         
@@ -576,6 +577,7 @@ export default function InstrumentoDetallePage() {
                         <div className="bg-white border border-gray-100 rounded-2xl divide-y divide-gray-50">
                             <CampoEditable label="Denominación social" value={denominacion} onSave={v => guardarCampo('denominacion_social', v)} />
                             <CampoEditable label="Tipo de sociedad" value={tipoLabel[instrumento.tipo] ?? instrumento.tipo} onSave={null} />
+                            <CampoEditable label="Domicilio social" value={getDomicilio(instrumento)} onSave={v => guardarCampo('domicilio_social', v)} />
                             <CampoEditable label="Capital social" value={capital} tipo="number" onSave={v => guardarCampo('capital_social', Number(v))} />
                         </div>
                     </section>

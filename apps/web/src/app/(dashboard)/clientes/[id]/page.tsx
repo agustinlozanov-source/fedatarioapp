@@ -62,12 +62,13 @@ function calcularEdad(fecha?: string): number | undefined {
     } catch { return undefined; }
 }
 
-function CampoEditable({ label, value, onSave, tipo = 'text', opciones }: {
+function CampoEditable({ label, value, onSave, tipo = 'text', opciones, soloNumeros }: {
     label: string;
     value?: string;
     onSave: ((val: string) => Promise<void>) | null;
     tipo?: 'text' | 'date' | 'select' | 'number';
     opciones?: string[];
+    soloNumeros?: boolean;
 }) {
     const [editing, setEditing] = useState(false);
     const [draft, setDraft] = useState(String(value ?? ''));
@@ -102,7 +103,12 @@ function CampoEditable({ label, value, onSave, tipo = 'text', opciones }: {
                             {opciones.map(o => <option key={o} value={o}>{o}</option>)}
                         </select>
                     ) : (
-                        <input type={tipo} value={draft} onChange={e => setDraft(tipo === 'text' ? e.target.value.toUpperCase() : e.target.value)}
+                        <input type={tipo} value={draft} onChange={e => {
+                            let v = e.target.value;
+                            if (soloNumeros) v = v.replace(/\D/g, '');
+                            else if (tipo === 'text') v = v.toUpperCase();
+                            setDraft(v);
+                        }}
                             className="flex-1 text-[13px] text-[#1D1D1F] font-semibold border border-gray-200 rounded-lg px-2 py-1 focus:outline-none focus:border-black" autoFocus />
                     )}
                     <button onClick={save} disabled={saving} className="p-1 rounded-md hover:bg-green-50 text-green-600 disabled:opacity-40">
@@ -162,13 +168,22 @@ export default function ClientePage() {
     }, [id]);
 
     const CAMPOS_DIRECCION = new Set(['domicilio', 'lugar_nacimiento']);
+    const CAMPOS_MAYUSCULAS = new Set([
+        'nombre_completo', 'rfc', 'curp', 'genero', 'lugar_nacimiento', 'nacionalidad',
+        'estado_civil', 'ocupacion', 'regimen_fiscal', 'clave_elector', 'seccion_ine',
+        'idmex', 'numero_pasaporte', 'numero_fm', 'tipo_migratorio',
+    ]);
 
     const actualizarCampo = async (campo: string, valor: string) => {
-        const valorFinal = campo === 'lugar_nacimiento' ? normalizarLugar(valor)
+        let valorFinal = campo === 'lugar_nacimiento' ? normalizarLugar(valor)
             : CAMPOS_DIRECCION.has(campo) ? expandirAbreviaturas(valor)
             : valor;
-        await actualizarCliente(id, { [campo]: valorFinal } as any);
-        setCliente(prev => prev ? { ...prev, [campo]: valorFinal } as any : prev);
+        if (CAMPOS_MAYUSCULAS.has(campo)) valorFinal = valorFinal.toUpperCase();
+        const updates: Record<string, any> = { [campo]: valorFinal };
+        // Sincronizar nombre visible cuando se actualiza nombre_completo
+        if (campo === 'nombre_completo') updates['nombre'] = valorFinal;
+        await actualizarCliente(id, updates as any);
+        setCliente(prev => prev ? { ...prev, ...updates } as any : prev);
     };
 
     const actualizarDomicilio = async (subcampo: string, valor: string) => {
@@ -236,6 +251,9 @@ export default function ClientePage() {
                     }
                     if (actualizaciones.lugar_nacimiento) {
                         actualizaciones.lugar_nacimiento = normalizarLugar(actualizaciones.lugar_nacimiento);
+                    }
+                    if (actualizaciones.nombre_completo) {
+                        actualizaciones.nombre = actualizaciones.nombre_completo;
                     }
                     if (Object.keys(actualizaciones).length > 0) {
                         await actualizarCliente(id, actualizaciones);
@@ -349,12 +367,11 @@ export default function ClientePage() {
                             <CampoEditable label="Fecha de nacimiento" value={(cliente as any).fecha_nacimiento} onSave={v => actualizarCampo('fecha_nacimiento', v)} tipo="date" />
                             <CampoEditable
                                 label="Edad"
-                                value={(cliente as any).edad
-                                    ? (String((cliente as any).edad).includes('años') ? (cliente as any).edad : `${(cliente as any).edad} años`)
-                                    : (calcularEdad((cliente as any).fecha_nacimiento) !== undefined ? `${calcularEdad((cliente as any).fecha_nacimiento)} años` : undefined)
+                                value={calcularEdad((cliente as any).fecha_nacimiento) !== undefined
+                                    ? `${calcularEdad((cliente as any).fecha_nacimiento)} años`
+                                    : undefined
                                 }
-                                onSave={v => actualizarCampo('edad', v)}
-                                tipo="number"
+                                onSave={null}
                             />
                             <CampoEditable label="Lugar de nacimiento" value={(cliente as any).lugar_nacimiento} onSave={v => actualizarCampo('lugar_nacimiento', v)} />
                             <CampoEditable label="Nacionalidad" value={(cliente as any).nacionalidad} onSave={v => actualizarCampo('nacionalidad', v)} />
@@ -381,7 +398,7 @@ export default function ClientePage() {
                                 <div className="text-[11px] font-bold text-[#86868B] uppercase tracking-[0.06em] mb-1">Documentos de identidad</div>
                                 <CampoEditable label="Clave de elector" value={(cliente as any).clave_elector} onSave={v => actualizarCampo('clave_elector', v)} />
                                 <CampoEditable label="Sección INE" value={(cliente as any).seccion_ine} onSave={v => actualizarCampo('seccion_ine', v)} />
-                                <CampoEditable label="IDMEX" value={(cliente as any).idmex} onSave={v => actualizarCampo('idmex', v)} />
+                                <CampoEditable label="IDMEX" value={(cliente as any).idmex} onSave={v => actualizarCampo('idmex', v)} soloNumeros />
                                 <CampoEditable label="Vigencia INE" value={(cliente as any).vigencia_ine} onSave={v => actualizarCampo('vigencia_ine', v)} tipo="date" />
                             </div>
                         ) : (

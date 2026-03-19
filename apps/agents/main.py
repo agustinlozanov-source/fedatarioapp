@@ -81,6 +81,50 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# ── HELPERS ──────────────────────────────────────────────────────────────────
+
+def _enriquecer_socios_desde_clientes(data: dict) -> dict:
+    """
+    Para cada socio en instrumento.socios[] que tenga clienteId,
+    cruza la colección 'clientes' y fusiona el domicilio estructurado
+    (dict con calle/numero/colonia/cp/ciudad/estado) antes de pasar
+    el dict al firestore_mapper.
+    Sin esto, el mapper recibe el domicilio como string y lo ignora.
+    """
+    if not db:
+        return data
+    socios = data.get("socios", [])
+    if not socios:
+        return data
+
+    data = dict(data)  # copia superficial para no mutar el original
+    socios_enriquecidos = []
+    for socio in socios:
+        socio = dict(socio)
+        cliente_id = socio.get("clienteId") or socio.get("cliente_id")
+        if cliente_id:
+            try:
+                cliente_snap = db.collection("clientes").document(cliente_id).get()
+                if cliente_snap.exists:
+                    cliente_data = cliente_snap.to_dict() or {}
+                    dom = cliente_data.get("domicilio")
+                    # Si el cliente tiene domicilio estructurado (dict), lo usamos
+                    if isinstance(dom, dict) and dom:
+                        socio["domicilio"] = dom
+                    # También rellenar campos vacíos del socio desde el cliente
+                    for campo in ("nombre_completo", "rfc", "curp", "fecha_nacimiento",
+                                  "lugar_nacimiento", "genero", "estado_civil", "ocupacion",
+                                  "clave_elector", "seccion_ine", "idmex", "nacionalidad_pais"):
+                        if not socio.get(campo) and cliente_data.get(campo):
+                            socio[campo] = cliente_data[campo]
+            except Exception as e:
+                logger.warning(f"No se pudo enriquecer socio {cliente_id}: {e}")
+        socios_enriquecidos.append(socio)
+
+    data["socios"] = socios_enriquecidos
+    return data
+
+
 # ── HEALTH ────────────────────────────────────────────────────────────────────
 
 @app.get("/")
@@ -309,7 +353,7 @@ async def docx_generar(body: DocxInput):
             snap = db.collection("instrumentos").document(body.instrumento_id).get()
             if not snap.exists:
                 raise HTTPException(status_code=404, detail="Instrumento no encontrado")
-            redactor_input = firestore_to_redactor_input(snap.to_dict())
+            redactor_input = firestore_to_redactor_input(_enriquecer_socios_desde_clientes(snap.to_dict()))
             resultado = generar_acta(redactor_input)
             texto_acta = resultado["texto_acta"]
             nombres_socios = [s.nombre_completo for s in redactor_input.socios]
@@ -353,7 +397,7 @@ def obtener_secciones_de_firestore(instrumento_id: str) -> dict:
     if not snap.exists:
         raise HTTPException(status_code=404, detail="Instrumento no encontrado")
     data = snap.to_dict()
-    redactor_input = firestore_to_redactor_input(data)
+    redactor_input = firestore_to_redactor_input(_enriquecer_socios_desde_clientes(data))
     resultado = generar_acta(redactor_input)
     secciones = resultado.get("secciones") or []
     if not secciones:

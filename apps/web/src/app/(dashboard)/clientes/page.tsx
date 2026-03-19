@@ -130,33 +130,31 @@ export default function ClientesPage() {
             )}
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filtrados.map(cliente => (
-              <div key={cliente.id} className="relative bg-white dark:bg-gray-800 rounded-3xl shadow-sm hover:shadow-md transition-all hover:-translate-y-1 group">
-                <Link href={`/clientes/${cliente.id}`} className="block p-6">
-                  <div className="flex items-center gap-4 mb-4">
-                    <div className="w-12 h-12 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center text-blue-600 dark:text-blue-400 text-lg font-bold group-hover:bg-blue-200 dark:group-hover:bg-blue-800 transition-colors">
-                      {cliente.tipoPersona === 'moral'
-                        ? <Building2 size={24} />
-                        : cliente.nombre.charAt(0).toUpperCase()
-                      }
-                    </div>
-                    <div className="flex-1 min-w-0 pr-6">
-                      <p className="font-bold text-gray-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors truncate">{cliente.nombre}</p>
-                      <span className="text-xs px-3 py-1 rounded-full bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400">
-                        {cliente.tipoPersona === 'fisica' ? 'Física' : 'Moral'}
-                      </span>
-                    </div>
+          <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-sm overflow-hidden">
+            {filtrados.map((cliente, i) => (
+              <div key={cliente.id} className={`relative group flex items-center gap-4 px-5 py-3.5 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors ${i > 0 ? 'border-t border-gray-50 dark:border-gray-700' : ''}`}>
+                <Link href={`/clientes/${cliente.id}`} className="flex items-center gap-4 flex-1 min-w-0">
+                  <div className="w-9 h-9 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center text-blue-600 dark:text-blue-400 text-sm font-bold shrink-0">
+                    {cliente.tipoPersona === 'moral'
+                      ? <Building2 size={16} />
+                      : cliente.nombre.charAt(0).toUpperCase()
+                    }
                   </div>
-                  {cliente.rfc && (
-                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">RFC: <span className="font-mono text-gray-900 dark:text-white">{cliente.rfc}</span></p>
-                  )}
+                  <div className="flex-1 min-w-0">
+                    <p className="font-semibold text-sm text-gray-900 dark:text-white truncate group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">{cliente.nombre}</p>
+                    <p className="text-xs text-gray-400 font-mono truncate">
+                      {[cliente.rfc, cliente.curp].filter(Boolean).join(' · ') || '—'}
+                    </p>
+                  </div>
+                  <span className="text-[11px] font-semibold px-2.5 py-1 rounded-full bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 shrink-0">
+                    {cliente.tipoPersona === 'fisica' ? 'Física' : 'Moral'}
+                  </span>
                   {cliente.email && (
-                    <p className="text-sm text-gray-600 dark:text-gray-400">Email: <span className="font-medium text-gray-900 dark:text-white">{cliente.email}</span></p>
+                    <p className="hidden lg:block text-xs text-gray-400 truncate max-w-[180px] shrink-0">{cliente.email}</p>
                   )}
                 </Link>
                 {/* Botón eliminar */}
-                <div className="absolute top-4 right-4">
+                <div className="shrink-0">
                   {confirmandoId === cliente.id ? (
                     <div className="flex items-center gap-1.5 bg-white dark:bg-gray-800 rounded-xl shadow px-2 py-1 border border-gray-200 dark:border-gray-600">
                       <span className="text-[11px] text-gray-500">¿Eliminar?</span>
@@ -175,7 +173,7 @@ export default function ClientesPage() {
                   ) : (
                     <button
                       onClick={() => setConfirmandoId(cliente.id!)}
-                      className="p-1.5 rounded-xl bg-white dark:bg-gray-700 shadow-sm border border-gray-200 dark:border-gray-600 hover:bg-red-50 transition-colors opacity-0 group-hover:opacity-100"
+                      className="p-1.5 rounded-xl hover:bg-red-50 transition-colors opacity-0 group-hover:opacity-100"
                       title="Eliminar cliente">
                       <Trash2 size={13} className="text-gray-400 hover:text-red-500" />
                     </button>
