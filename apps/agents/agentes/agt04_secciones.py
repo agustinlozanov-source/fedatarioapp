@@ -40,21 +40,39 @@ def _calle_txt(calle: str) -> str:
         return c          # ya contiene el tipo, usar directo
     return f'CALLE {c}'  # no tiene tipo, agregar CALLE por defecto
 
-def _g(previo=0) -> Seg:
+def _g(previo="") -> Seg:
     """Genera guiones de relleno hasta LINE_WIDTH.
 
     Args:
-        previo: texto acumulado del párrafo (str) o longitud ya calculada (int).
-                Con Courier New monoespaciada len(str) == ancho tipográfico real,
-                por lo que len() es suficiente y exacto.
+        previo: texto COMPLETO del párrafo hasta este punto (str) o
+                longitud del último renglón ya calculada (int).
 
-    Acepta string por compatibilidad con todas las llamadas existentes.
-    El cálculo es correcto porque Courier New es monoespaciada.
+    Con Courier New monoespaciada podemos calcular exactamente cuántos
+    chars ocupa el último renglón via módulo:
+        ultimo_renglon = len(texto_total) % LINE_WIDTH
+
+    Si el texto previo termina en punto, omite el punto del separador
+    para evitar doble punto (..- - -) → (.- - -).
     """
-    usado = len(previo.rstrip()) if isinstance(previo, str) else int(previo)
-    faltantes = max(LINE_WIDTH - usado - 3, 4)  # -3 por '.- '
-    relleno = ("- " * (faltantes // 2 + 2))[:faltantes].rstrip()
-    return (f".- {relleno}", False)
+    if isinstance(previo, str):
+        texto = previo.rstrip()
+        n = len(texto)
+        ultimo = n % LINE_WIDTH
+        termina_en_punto = texto.endswith('.')
+    else:
+        ultimo = int(previo)
+        termina_en_punto = False
+
+    if termina_en_punto:
+        # El texto ya tiene punto — solo agregamos el guión y relleno
+        # Ajustar: '- relleno' en lugar de '.- relleno' (ahorramos 1 char)
+        faltantes = max(LINE_WIDTH - ultimo - 2, 4)  # -2 por '- '
+        relleno = ("- " * (faltantes // 2 + 2))[:faltantes].rstrip()
+        return (f"- {relleno}", False)
+    else:
+        faltantes = max(LINE_WIDTH - ultimo - 3, 4)  # -3 por '.- '
+        relleno = ("- " * (faltantes // 2 + 2))[:faltantes].rstrip()
+        return (f".- {relleno}", False)
 
 def _enc(titulo: str) -> Seg:
     t = titulo.strip()
@@ -99,7 +117,7 @@ def secciones_encabezado(d) -> List[Seccion]:
 
     # Línea 1 — tres encabezados juntos en el mismo párrafo del original
     lib_txt  = f"LIBRO DE REGISTRO {d.libro_registro} ({libro_l})"
-    inst_txt = "I N S T R U M E N T O  P Ú B L I C O"
+    inst_txt = "INSTRUMENTO PÚBLICO"
     pol_txt  = f"PÓLIZA NÚMERO {d.numero_poliza:,} ({poliza_l})"
 
     return [
@@ -168,7 +186,7 @@ def secciones_datos_socio(socio, letras: dict, ref_date) -> List[Seccion]:
     letra_rfc  = letras["rfc"]
 
     return [
-        _e(f"D A T O S  G E N E R A L E S"),
+        _e(f"DATOS GENERALES"),
         _p(
             _b("Nombre completo: "),
             _b(socio.nombre_completo),
@@ -318,7 +336,7 @@ def secciones_antecedentes(d) -> List[Seccion]:
                f"acto que consignan al tenor de los siguientes:"),
             _g("siguientes:"),
         ),
-        _e("A N T E C E D E N T E S"),
+        _e("ANTECEDENTES"),
         _p(
             _b("ÚNICA.- "),
             _r(f"Declaran los comparecientes que para la celebración del presente acto "
@@ -364,7 +382,7 @@ def secciones_antecedentes(d) -> List[Seccion]:
     resolucion = getattr(d, 'texto_resolucion', '') or ''
     if resolucion.strip():
         resolucion_limpia = ' '.join(resolucion.split())
-        secs_ant.append(_p(_r(resolucion_limpia), _g(resolucion_limpia[-50:])))
+        secs_ant.append(_p(_r(resolucion_limpia), _g(resolucion_limpia)))
 
     secs_ant.append(_p(_b("=== Fin de la transcripción ==="), _g("===")))
     return secs_ant
@@ -372,7 +390,7 @@ def secciones_antecedentes(d) -> List[Seccion]:
 
 def secciones_declaraciones() -> List[Seccion]:
     return [
-        _e("D E C L A R A C I O N E S"),
+        _e("DECLARACIONES"),
         _p(
             _b("PRIMERA.- "),
             _r("Declaran los comparecientes que es su libre consentimiento otorgar el presente "
@@ -412,8 +430,8 @@ def secciones_declaraciones() -> List[Seccion]:
 
 def secciones_accionistas_sa(d) -> List[Seccion]:
     secs = [
-        _e("C L Á U S U L A S  D E  L O S  E S T A T U T O S  S O C I A L E S"),
-        _e("C A P Í T U L O  P R I M E R O  D E  L O S  A T R I B U T O S"),
+        _e("CLÁUSULAS DE LOS ESTATUTOS SOCIALES"),
+        _e("CAPÍTULO PRIMERO — DE LOS ATRIBUTOS"),
         _p(_b("PRIMERA. DE LOS ACCIONISTAS."), _g("PRIMERA. DE LOS ACCIONISTAS.")),
     ]
     for s in d.socios:
@@ -501,7 +519,7 @@ def secciones_clausulas_sa_cap2_7(d) -> List[Seccion]:
 
     return [
         _e("C A P I T U L O  S E G U N D O"),
-        _e("D E  L A S  A C C I O N E S"),
+        _e("DE LAS ACCIONES"),
 
         _p(_b("OCTAVA. VALOR DE CADA ACCIÓN.- "),
            _r(f"Las Acciones del Capital Fijo serán nominativas y cada una con valor indivisible. Cada Acción tipo de Serie \"A\" representa un Valor Nominal de $1,000.00 (Un mil pesos 00/100 en Moneda Nacional). Resultando {n_acc} ({n_acc_l}) acciones nominativas. El Capital mínimo fijo no estará sujeto a retiro."),
@@ -536,8 +554,8 @@ def secciones_clausulas_sa_cap2_7(d) -> List[Seccion]:
            _g("o consecuencia reducir a menos del mínimo el Capital Social.")),
 
         _e("C A P I T U L O  T E R C E R O"),
-        _e("M A N E R A  E N  Q U E  S E  A D M I N I S T R A R Á  L A  S O C I E D A D"),
-        _e("Y  F A C U L T A D E S  D E  A D M I N I S T R A D O R E S  Y  F U N C I O N A R I O S"),
+        _e("MANERA EN QUE SE ADMINISTRARÁ LA SOCIEDAD"),
+        _e("Y FACULTADES DE ADMINISTRADORES Y FUNCIONARIOS"),
 
         _p(_b("DECIMA SEXTA. EL ÓRGANO SUPREMO DE LA SOCIEDAD.- "),
            _r("El Órgano Supremo de la Sociedad es la Asamblea General de Accionistas, las cuales podrán ser Ordinarias y Extraordinarias. En ambos casos se celebrarán en el Domicilio Social, salvo caso fortuito o causa de fuerza mayor. Las Asambleas Generales Ordinarias serán las que tengan por objeto tratar cualquier asunto enumerado en el Artículo 181 (Ciento ochenta y uno) de la Ley General de Sociedades Mercantiles, o para cualquier otro que no se encuentre en los enumerados en el artículo 182 (Ciento ochenta y dos), de dicho ordenamiento, las cuales podrán celebrarse en cualquier tiempo, pero por lo menos una vez al año. Y para que esta se considere legalmente reunida, será necesario que esté representado, por lo menos, el 75% (Setenta y cinco por ciento), de las acciones emitidas, y para que las resoluciones de dichas Asambleas Ordinarias se consideren válidas se necesitará el voto afirmativo de Acciones que representen cuando menos el 51% (Cincuenta y uno por ciento), del capital social. Las Asambleas Generales Extraordinarias serán las que tengan por objeto tratar cualquiera de los asuntos enumerados en el Artículo 182 (Ciento ochenta y dos) de la Ley General de Sociedades Mercantiles. A fin de que una Asamblea General Extraordinaria se considere legalmente reunida, será necesario que estén representadas por lo menos, la mitad más una de las acciones emitidas, y para que las resoluciones se consideren válidas se necesitará el voto afirmativo de la mayoría de las acciones representadas."),
@@ -584,7 +602,7 @@ def secciones_clausulas_sa_cap2_7(d) -> List[Seccion]:
            _g("r la firma social ante toda clase de personas y autoridades.")),
 
         _e("C A P I T U L O  C U A R T O"),
-        _e("F U N C I O N A R I O S"),
+        _e("FUNCIONARIOS"),
 
         _p(_b("VIGÉSIMA SÉPTIMA.- FUNCIONARIOS.- "),
            _r("La Asamblea General de Accionistas o el Consejo de Administración en su caso, podrá designar Directores para las diversas áreas de la empresa, Gerentes, Apoderados, Factores o cualquier otro funcionario que consideren necesario para la representación de la firma social, ejecución de la administración y/o representación de la sociedad. A estos funcionarios se les podrá otorgar facultades de representación, generales o especiales, bastando para ello hacer referencia a los diversos incisos de la Cláusula Vigésima Sexta de estos Estatutos Sociales cuando se trate de facultades generales, o cuando se trate de facultades especiales, se deberán relacionar expresamente las facultades con sus subincisos e indicación de ser una facultad especial. En ambos casos podrán limitarse dichas facultades y en caso de no indicar expresión, se entenderá sin limitación. Para que surtan efectos las facultades que se otorguen a los funcionarios anteriores, se deberá protocolizar ante Fedatario Público el acta en que conste el acuerdo relativo. En el caso de nombramientos hechos por el Consejo de Administración se protocolizará el acta del nombramiento mediante la ratificación de la firma del Presidente del Consejo. Todos los cargos conferidos al amparo de los dos primeros párrafos de esta cláusula, podrán ser renunciados por las personas que las ostenten, pero su responsabilidad frente a la sociedad se extinguirá únicamente por las formas y en los plazos previstos en la ley, y comprenderá desde el momento de su aceptación al cargo y hasta el momento de su renuncia, que surtirá efectos a los 10 (Diez) días naturales posteriores de haberla presentado a cualquiera de los administradores o miembros del consejo de administración."),
@@ -603,7 +621,7 @@ def secciones_clausulas_sa_cap2_7(d) -> List[Seccion]:
            _g("a de Accionistas o el Consejo de Administración le otorguen.")),
 
         _e("C A P I T U L O  Q U I N T O"),
-        _e("C O N S E J O  D E  A D M I N I S T R A C I Ó N ,  V I G I L A N C I A  Y  C A U C I Ó N"),
+        _e("CONSEJO DE ADMINISTRACIÓN, VIGILANCIA Y CAUCIÓN"),
 
         _p(_b("TRIGÉSIMA PRIMERA. SESIONES DEL CONSEJO DE ADMINISTRACIÓN.- "),
            _r("Las Sesiones del Consejo de Administración o las Asambleas Generales de Accionistas, se celebrarán en los términos generales que indica el apartado respectivo a las Asambleas Generales de Accionistas en este instrumento. Para el caso de las Sesiones del Consejo de Administración para constituir Quórum será necesario la mayoría de los miembros del Consejo, y las resoluciones se tomarán por el voto afirmativo de la mayoría de los miembros presentes; en caso de empate o discordancia, el Presidente del Consejo, tendrá Voto de Calidad. Si el número de consejeros presentes no constituyen Quórum, deberá aplazarse la sesión hasta que lo haya. De toda sesión del Consejo de Administración o de las Asambleas, se levantará un Acta la cual deberá asentarse en el Libro de Actas respectivo y firmado por el Presidente, quien haya fungido como Secretario de la Asamblea, o el Administrador Único y Secretario."),
@@ -626,7 +644,7 @@ def secciones_clausulas_sa_cap2_7(d) -> List[Seccion]:
            _g("funcionarios salientes le señalen que contiene dicho sobre.")),
 
         _e("C A P I T U L O  S E X T O"),
-        _e("D E L  E J E R C I C I O  S O C I A L  E  I N F O R M A C I Ó N  F I N A N C I E R A"),
+        _e("DEL EJERCICIO SOCIAL E INFORMACIÓN FINANCIERA"),
 
         _p(_b("TRIGÉSIMA SEXTA. DURACIÓN DEL EJERCICIO SOCIAL.- "),
            _r("Los Ejercicios Sociales serán de Doce meses, que se computarán del Primero de Enero al Treinta y uno de Diciembre de cada año; con excepción del primer año de ejercicio que será a partir de la fecha de este instrumento, al Treinta y uno de Diciembre del mismo año."),
@@ -637,7 +655,7 @@ def secciones_clausulas_sa_cap2_7(d) -> List[Seccion]:
            _g("éste alcance un 20% (Veinte por ciento) del Capital Social.")),
 
         _e("C A P I T U L O  S É P T I M O"),
-        _e("D I S O L U C I Ó N ,  L I Q U I D A C I Ó N ,  R E S P O N S A B I L I D A D E S  Y  C L Á U S U L A  A R B I T R A L"),
+        _e("DISOLUCIÓN, LIQUIDACIÓN, RESPONSABILIDADES Y CLÁUSULA ARBITRAL"),
 
         _p(_b("TRIGÉSIMA OCTAVA. CAUSAS DE DISOLUCIÓN.- "),
            _r("La Sociedad se Disolverá por las siguientes causas: a).- Al Concluir el plazo de Duración fijado en el presente instrumento. b).- Por la Pérdida de las dos terceras partes del Capital Social. c).- Por la Imposibilidad de realizar y llevar a cabo el Objeto Social. d).- Por Quiebra voluntaria o involuntaria legalmente declarada; y, e).- Por Acuerdo Unánime de la Asamblea General de Accionistas."),
@@ -665,7 +683,7 @@ def secciones_clausulas_sa_cap2_7(d) -> List[Seccion]:
 def secciones_socios_srl(d) -> List[Seccion]:
     """PRIMERA. DE LOS SOCIOS para S de RL de CV (tabla solo nombre+RFC)."""
     secs = [
-        _e("C L Á U S U L A S  D E  L O S  E S T A T U T O S  S O C I A L E S"),
+        _e("CLÁUSULAS DE LOS ESTATUTOS SOCIALES"),
         _p(_b("PRIMERA. DE LOS SOCIOS.- "), _g("PRIMERA. DE LOS SOCIOS.-")),
     ]
     for s in d.socios:
@@ -782,7 +800,7 @@ def secciones_transitorias_sa(d) -> List[Seccion]:
     total_acc_l= numero_letra(total_acc).capitalize()
 
     secs = [
-        _e("C L Á U S U L A S  T R A N S I T O R I A S"),
+        _e("CLÁUSULAS TRANSITORIAS"),
         _p(
             _b("PRIMERA.- "),
             _r("Los comparecientes suscriben y pagan en efectivo la totalidad de las "
@@ -864,7 +882,7 @@ def secciones_transitorias_sa(d) -> List[Seccion]:
 def secciones_transitorias_srl(d) -> List[Seccion]:
     """Cláusulas transitorias para S de RL de CV con sus dos tablas de capital."""
     secs = [
-        _e("C L Á U S U L A S  T R A N S I T O R I A S"),
+        _e("CLÁUSULAS TRANSITORIAS"),
         _p(
             _b("PRIMERA.- "),
             _r("Los comparecientes suscriben y pagan en efectivo la totalidad de las "
@@ -924,8 +942,8 @@ def secciones_documentos_cotejados(d) -> List[Seccion]:
     las   = letras_archivo(len(d.socios))
     l_mua = letra_mua(len(d.socios))
     secs  = [
-        _e("D O C U M E N T O S  E N  C O P I A  C O T E J A D A"),
-        _e("A G R E G A D O S  A L  A R C H I V O  D E L  P R E S E N T E  I N S T R U M E N T O"),
+        _e("DOCUMENTOS EN COPIA COTEJADA"),
+        _e("AGREGADOS AL ARCHIVO DEL PRESENTE INSTRUMENTO"),
     ]
     for s, l in zip(d.socios, las):
         secs.append(_p(_b(f'Bajo la Letra "{l["ine"]}".- '), _r(f"Identificación con fotografía y Confirmación de Validación Electrónica a favor de {s.nombre_completo}."), _g(s.nombre_completo)))
@@ -958,8 +976,8 @@ def secciones_certificaciones(d) -> List[Seccion]:
     ]
 
     secs = [
-        _e("C E R T I F I C A C I O N E S"),
-        _e("Y O  E L  C O R R E D O R  P Ú B L I C O ,  D O Y  F E ,  C E R T I F I C O  Y :"),
+        _e("CERTIFICACIONES"),
+        _e("YO EL CORREDOR PÚBLICO, DOY FE, CERTIFICO Y:"),
     ]
     for letra, texto in certs_raw:
         secs.append(_p(_b(letra), _r(texto), _g(texto)))

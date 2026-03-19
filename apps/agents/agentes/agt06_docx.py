@@ -106,39 +106,49 @@ def _make_run(texto: str, bold=False, sz=None):
     r.append(t)
     return r
 
-def _fill_dashes(previo_len: int) -> str:
+def _fill_dashes(texto_previo: str) -> str:
     """Genera guiones de relleno hasta LINE_CHARS.
-    
-    Con Courier New monoespaciada, previo_len (len del texto) == ancho real.
-    Lógica idéntica a _g() en agt04_secciones para resultados consistentes.
+
+    Con Courier New monoespaciada calcula el último renglón via módulo.
+    Si el texto termina en punto, evita el doble punto (..- - -).
+    Lógica idéntica a _g() en agt04_secciones.
     """
-    usado = max(previo_len, 0)
-    faltantes = max(LINE_CHARS - usado - 3, 4)  # -3 por '.- '
-    relleno = ("- " * (faltantes // 2 + 2))[:faltantes].rstrip()
-    return f".- {relleno}"
+    texto = texto_previo.rstrip() if isinstance(texto_previo, str) else ""
+    n = len(texto) if texto else max(int(texto_previo), 0)
+    ultimo = n % LINE_CHARS
+    termina_en_punto = texto.endswith('.')
+
+    if termina_en_punto:
+        faltantes = max(LINE_CHARS - ultimo - 2, 4)  # -2 por '- '
+        relleno = ("- " * (faltantes // 2 + 2))[:faltantes].rstrip()
+        return f"- {relleno}"
+    else:
+        faltantes = max(LINE_CHARS - ultimo - 3, 4)  # -3 por '.- '
+        relleno = ("- " * (faltantes // 2 + 2))[:faltantes].rstrip()
+        return f".- {relleno}"
 
 
 def _make_parrafo(runs: List[Seg], centered=False, borde=False):
     """Construye un elemento <w:p> con todos los runs.
     
-    Los runs que vienen de _g() en secciones tienen texto que empieza con '.- '
+    Los runs que vienen de _g() en secciones tienen texto que empieza con '.- ' o '- '
     y son el relleno de guiones. Los recalculamos aquí con LINE_CHARS real
-    para que lleguen al margen independientemente de la fuente proporcional.
+    pasando el texto acumulado completo para word-wrap correcto.
     """
     p = OxmlElement('w:p')
     p.append(_pPr(centered, borde=borde))
 
-    # Calcular longitud acumulada del texto anterior al primer run de relleno
-    texto_acumulado = 0
+    # Acumular todo el texto previo al run de relleno
+    texto_acumulado = ""
     runs_procesados = []
     for texto, bold in runs:
-        if texto and texto.startswith('.- '):
-            # Es un run de relleno _g() — recalcular con ancho real
+        if texto and (texto.startswith('.- ') or texto.startswith('- - ')):
+            # Es un run de relleno _g() — recalcular con texto acumulado real
             nuevo_relleno = _fill_dashes(texto_acumulado)
             runs_procesados.append((nuevo_relleno, bold))
         else:
             runs_procesados.append((texto, bold))
-            texto_acumulado += len(texto or '')
+            texto_acumulado += (texto or '')
 
     for texto, bold in runs_procesados:
         if texto:
