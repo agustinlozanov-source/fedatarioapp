@@ -25,11 +25,11 @@ logger = logging.getLogger(__name__)
 # ─── Constantes de diseño ───────────────────────────────────────────────────
 
 FONT             = "Courier New"
-FONT_SIZE_BODY   = 10.0              # Courier New 10pt — monoespaciada
-FONT_SIZE_ENC    = 10.0
-FONT_SIZE_HEADER = 11.0
+FONT_SIZE_BODY   = 11.0              # Courier New 11pt — monoespaciada
+FONT_SIZE_ENC    = 11.0
+FONT_SIZE_HEADER = 12.0
 LINE_SPACING     = 1.5
-LINE_CHARS       = 68                # Courier New 10pt: 412.4pt / 6pt/char = 68
+LINE_CHARS       = 62                # Courier New 11pt: 412.4pt / 6.6pt/char = 62
 COLOR_INK        = {"red": 0.05, "green": 0.05, "blue": 0.05}
 COLOR_SOFT       = {"red": 0.35, "green": 0.35, "blue": 0.35}
 

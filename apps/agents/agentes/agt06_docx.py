@@ -30,8 +30,8 @@ from agentes.agt04_secciones import Seccion, Seg
 # ─────────────────────────────────────────────
 FUENTE        = "Courier New"
 FUENTE_EAST   = "Courier New"        # monoespaciada — mismo en eastAsia
-SZ            = 20                   # 10pt — en celdas (XML real: sz=20)
-SZ_BODY       = 20                   # 10pt — en párrafos de cuerpo
+SZ            = 22                   # 11pt — en celdas (XML real: sz=22)
+SZ_BODY       = 22                   # 11pt — en párrafos de cuerpo
 INTERLINEA   = 360
 FONDO_GRIS   = "C9C9C9"
 
@@ -48,10 +48,10 @@ COL_IZQ_DXA, COL_DER_DXA = 4373, 3875
 COLS_SRL_PARTES = [1691, 2552, 3969]   # PARTE SOCIAL | VALOR | CON LETRA
 COLS_SRL_SOCIOS = [4243, 1417, 2562]   # NOMBRE+RFC   | VALOR | CON LETRA
 
-# Courier New 10pt monoespaciada: 1 char = 6pt exacto
-# Ancho texto = 12240 - 2410 - 1582 = 8248 twips = 412.4pt / 6pt = 68 chars
+# Courier New 11pt monoespaciada: 1 char = 6.6pt exacto
+# Ancho texto = 12240 - 2410 - 1582 = 8248 twips = 412.4pt / 6.6pt = 62 chars
 # Debe coincidir exactamente con LINE_WIDTH en agt04_secciones.py
-LINE_CHARS = 68
+LINE_CHARS = 62
 
 
 # ─────────────────────────────────────────────
@@ -106,26 +106,31 @@ def _make_run(texto: str, bold=False, sz=None):
     r.append(t)
     return r
 
-def _fill_dashes(texto_previo: str) -> str:
+_MIN_DASHES = 6  # mínimo de guiones útiles — si no caben, saltar al siguiente renglón
+
+def _fill_dashes(texto_previo) -> str:
     """Genera guiones de relleno hasta LINE_CHARS.
 
-    Con Courier New monoespaciada calcula el último renglón via módulo.
-    Si el texto termina en punto, evita el doble punto (..- - -).
-    Lógica idéntica a _g() en agt04_secciones.
+    Lógica idéntica a _g() en agt04_secciones:
+    - Usa módulo para word-wrap awareness con Courier New monoespaciada
+    - Evita doble punto cuando el texto termina en '.\'
+    - Si no caben _MIN_DASHES guiones, salta al siguiente renglón completo
     """
-    texto = texto_previo.rstrip() if isinstance(texto_previo, str) else ""
-    n = len(texto) if texto else max(int(texto_previo), 0)
+    t = texto_previo.rstrip() if isinstance(texto_previo, str) else ""
+    n = len(t) if t else max(int(texto_previo), 0)
     ultimo = n % LINE_CHARS
-    termina_en_punto = texto.endswith('.')
+    termina_punto = t.endswith('.')
 
-    if termina_en_punto:
-        faltantes = max(LINE_CHARS - ultimo - 2, 4)  # -2 por '- '
-        relleno = ("- " * (faltantes // 2 + 2))[:faltantes].rstrip()
-        return f"- {relleno}"
-    else:
-        faltantes = max(LINE_CHARS - ultimo - 3, 4)  # -3 por '.- '
-        relleno = ("- " * (faltantes // 2 + 2))[:faltantes].rstrip()
-        return f".- {relleno}"
+    offset = 2 if termina_punto else 3
+    faltantes = LINE_CHARS - ultimo - offset
+
+    if faltantes < _MIN_DASHES:
+        ultimo = 0
+        faltantes = LINE_CHARS - offset
+
+    relleno = ("- " * (faltantes // 2 + 2))[:faltantes].rstrip()
+    sep = "- " if termina_punto else ".- "
+    return f"{sep}{relleno}"
 
 
 def _make_parrafo(runs: List[Seg], centered=False, borde=False):

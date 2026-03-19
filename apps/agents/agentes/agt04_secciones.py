@@ -15,9 +15,9 @@ from agentes.agt04_redactor import (
 
 Seg = Tuple[str, bool]
 
-# Courier New 10pt, monoespaciada — 1 char = 6pt exacto
-# Ancho texto = 12240 - 2410 - 1582 = 8248 twips = 412.4pt / 6pt = 68 chars
-LINE_WIDTH = 68
+# Courier New 11pt, monoespaciada — 1 char = 6.6pt exacto
+# Ancho texto = 12240 - 2410 - 1582 = 8248 twips = 412.4pt / 6.6pt = 62 chars
+LINE_WIDTH = 62
 
 def _r(t: str) -> Seg: return (t, False)
 def _b(t: str) -> Seg: return (t, True)
@@ -40,19 +40,20 @@ def _calle_txt(calle: str) -> str:
         return c          # ya contiene el tipo, usar directo
     return f'CALLE {c}'  # no tiene tipo, agregar CALLE por defecto
 
+_MIN_DASHES = 6  # mínimo de guiones útiles en el renglón actual
+
 def _g(previo="") -> Seg:
     """Genera guiones de relleno hasta LINE_WIDTH.
 
     Args:
         previo: texto COMPLETO del párrafo hasta este punto (str) o
-                longitud del último renglón ya calculada (int).
+                posición en el renglón actual (int).
 
-    Con Courier New monoespaciada podemos calcular exactamente cuántos
-    chars ocupa el último renglón via módulo:
-        ultimo_renglon = len(texto_total) % LINE_WIDTH
-
-    Si el texto previo termina en punto, omite el punto del separador
-    para evitar doble punto (..- - -) → (.- - -).
+    Lógica:
+    - Calcula el último renglón via módulo (word-wrap awareness)
+    - Evita doble punto cuando el texto termina en '.'
+    - Si no caben _MIN_DASHES guiones en el renglón actual, salta al
+      siguiente renglón completo (evita overflow)
     """
     if isinstance(previo, str):
         texto = previo.rstrip()
@@ -63,16 +64,17 @@ def _g(previo="") -> Seg:
         ultimo = int(previo)
         termina_en_punto = False
 
-    if termina_en_punto:
-        # El texto ya tiene punto — solo agregamos el guión y relleno
-        # Ajustar: '- relleno' en lugar de '.- relleno' (ahorramos 1 char)
-        faltantes = max(LINE_WIDTH - ultimo - 2, 4)  # -2 por '- '
-        relleno = ("- " * (faltantes // 2 + 2))[:faltantes].rstrip()
-        return (f"- {relleno}", False)
-    else:
-        faltantes = max(LINE_WIDTH - ultimo - 3, 4)  # -3 por '.- '
-        relleno = ("- " * (faltantes // 2 + 2))[:faltantes].rstrip()
-        return (f".- {relleno}", False)
+    offset = 2 if termina_en_punto else 3  # '- ' o '.- '
+    faltantes = LINE_WIDTH - ultimo - offset
+
+    if faltantes < _MIN_DASHES:
+        # No caben suficientes guiones — saltar al renglón siguiente
+        ultimo = 0
+        faltantes = LINE_WIDTH - offset
+
+    relleno = ("- " * (faltantes // 2 + 2))[:faltantes].rstrip()
+    sep = "- " if termina_en_punto else ".- "
+    return (f"{sep}{relleno}", False)
 
 def _enc(titulo: str) -> Seg:
     t = titulo.strip()
