@@ -24,11 +24,12 @@ logger = logging.getLogger(__name__)
 
 # ─── Constantes de diseño ───────────────────────────────────────────────────
 
-FONT             = "Times New Roman"
-FONT_SIZE_BODY   = 11.0
-FONT_SIZE_ENC    = 11.0
-FONT_SIZE_HEADER = 13.0
+FONT             = "Courier New"
+FONT_SIZE_BODY   = 10.0              # Courier New 10pt — monoespaciada
+FONT_SIZE_ENC    = 10.0
+FONT_SIZE_HEADER = 11.0
 LINE_SPACING     = 1.5
+LINE_CHARS       = 68                # Courier New 10pt: 412.4pt / 6pt/char = 68
 COLOR_INK        = {"red": 0.05, "green": 0.05, "blue": 0.05}
 COLOR_SOFT       = {"red": 0.35, "green": 0.35, "blue": 0.35}
 
@@ -258,19 +259,22 @@ class DocsBuilder:
     # ── Encabezado de sección ────────────────────────────────────────────────
 
     def encabezado_seccion(self, titulo):
-        self.vacio()
-        self._linea(0.75)
+        # Formato fedatario: === TITULO === con jc=JUSTIFIED (llena hasta margen)
+        # Sin líneas horizontales — los = cumplen la misma función visual y legal
+        espacio = LINE_CHARS - len(titulo) - 2
+        izq = max(espacio // 2, 2)
+        der = max(espacio - izq, 2)
+        enc_txt = f"{'=' * izq} {titulo} {'=' * der}"
+
         ps = self.cursor
-        self._insert(titulo + "\n")
+        self._insert(enc_txt + "\n")
         self._fmt_text(ps, self.cursor, _ts(bold=True, size=FONT_SIZE_ENC), TSF)
         self._fmt_para(ps, self.cursor, {
-            "alignment": "CENTER", "lineSpacing": LINE_SPACING * 100,
-            "spaceAbove": {"magnitude": 5, "unit": "PT"},
-            "spaceBelow": {"magnitude": 5, "unit": "PT"},
+            "alignment": "JUSTIFIED",
+            "lineSpacing": LINE_SPACING * 100,
+            "spaceAbove": {"magnitude": 0, "unit": "PT"},
+            "spaceBelow": {"magnitude": 0, "unit": "PT"},
         }, "alignment,lineSpacing,spaceAbove,spaceBelow")
-        self._linea(0.75)
-        self.vacio()
-
     # ── Tabla real via Docs API ──────────────────────────────────────────────
 
     def _insertar_tabla_real(self, num_filas, num_cols):

@@ -28,8 +28,8 @@ from agentes.agt04_secciones import Seccion, Seg
 # ─────────────────────────────────────────────
 # CONSTANTES
 # ─────────────────────────────────────────────
-FUENTE        = "Hadassah Friedlaender"
-FUENTE_EAST   = "Times New Roman"   # eastAsia exacto del original
+FUENTE        = "Courier New"
+FUENTE_EAST   = "Courier New"        # monoespaciada — mismo en eastAsia
 SZ            = 20                   # 10pt — en celdas (XML real: sz=20)
 SZ_BODY       = 20                   # 10pt — en párrafos de cuerpo
 INTERLINEA   = 360
@@ -48,9 +48,10 @@ COL_IZQ_DXA, COL_DER_DXA = 4373, 3875
 COLS_SRL_PARTES = [1691, 2552, 3969]   # PARTE SOCIAL | VALOR | CON LETRA
 COLS_SRL_SOCIOS = [4243, 1417, 2562]   # NOMBRE+RFC   | VALOR | CON LETRA
 
-# Ancho de línea real en caracteres (Hadassah Friedlaender 10pt, página oficio)
-# Ancho texto = 12240 - 2410 - 1582 = 8248 twips ≈ 14.55cm → ~72 caracteres
-LINE_CHARS = 72
+# Courier New 10pt monoespaciada: 1 char = 6pt exacto
+# Ancho texto = 12240 - 2410 - 1582 = 8248 twips = 412.4pt / 6pt = 68 chars
+# Debe coincidir exactamente con LINE_WIDTH en agt04_secciones.py
+LINE_CHARS = 68
 
 
 # ─────────────────────────────────────────────
@@ -106,10 +107,13 @@ def _make_run(texto: str, bold=False, sz=None):
     return r
 
 def _fill_dashes(previo_len: int) -> str:
-    """Genera guiones de relleno hasta LINE_CHARS basándose en el texto previo."""
+    """Genera guiones de relleno hasta LINE_CHARS.
+    
+    Con Courier New monoespaciada, previo_len (len del texto) == ancho real.
+    Lógica idéntica a _g() en agt04_secciones para resultados consistentes.
+    """
     usado = max(previo_len, 0)
-    faltantes = max(LINE_CHARS - usado - 2, 4)  # -2 por ".- "
-    # Pares "- " hasta llenar, truncar al largo exacto
+    faltantes = max(LINE_CHARS - usado - 3, 4)  # -3 por '.- '
     relleno = ("- " * (faltantes // 2 + 2))[:faltantes].rstrip()
     return f".- {relleno}"
 
@@ -528,11 +532,16 @@ def _procesar_secciones(body, secciones: List[Seccion]):
         elif sec.tipo == "encabezado":
             # Extraer texto limpio quitando los = del _enc() de secciones
             texto_raw = ''.join(t for t, _ in sec.runs)
-            # _enc produce "==== TITULO ====" — extraer solo el título
             import re as _re
             m = _re.match(r'^=+\s*(.*?)\s*=+$', texto_raw.strip())
             titulo = m.group(1) if m else texto_raw.strip()
-            body.append(_make_parrafo([(titulo, True)], centered=True, borde=True))
+            # Formato correcto: === centrado con jc=both, SIN bordes horizontales
+            # Los = llenan hasta el margen igual que los guiones — norma fedataria
+            espacio = LINE_CHARS - len(titulo) - 2
+            izq = max(espacio // 2, 2)
+            der = max(espacio - izq, 2)
+            enc_txt = f"{'=' * izq} {titulo} {'=' * der}"
+            body.append(_make_parrafo([(enc_txt, True)], centered=False, borde=False))
 
         elif sec.tipo == "parrafo":
             body.append(_make_parrafo(sec.runs))

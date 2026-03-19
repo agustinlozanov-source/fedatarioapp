@@ -14,7 +14,10 @@ from agentes.agt04_redactor import (
 )
 
 Seg = Tuple[str, bool]
-LINE_WIDTH = 79
+
+# Courier New 10pt, monoespaciada — 1 char = 6pt exacto
+# Ancho texto = 12240 - 2410 - 1582 = 8248 twips = 412.4pt / 6pt = 68 chars
+LINE_WIDTH = 68
 
 def _r(t: str) -> Seg: return (t, False)
 def _b(t: str) -> Seg: return (t, True)
@@ -37,9 +40,19 @@ def _calle_txt(calle: str) -> str:
         return c          # ya contiene el tipo, usar directo
     return f'CALLE {c}'  # no tiene tipo, agregar CALLE por defecto
 
-def _g(previo: str = "") -> Seg:
-    usado = len(previo.rstrip())
-    faltantes = max(LINE_WIDTH - usado - 3, 4)
+def _g(previo=0) -> Seg:
+    """Genera guiones de relleno hasta LINE_WIDTH.
+
+    Args:
+        previo: texto acumulado del párrafo (str) o longitud ya calculada (int).
+                Con Courier New monoespaciada len(str) == ancho tipográfico real,
+                por lo que len() es suficiente y exacto.
+
+    Acepta string por compatibilidad con todas las llamadas existentes.
+    El cálculo es correcto porque Courier New es monoespaciada.
+    """
+    usado = len(previo.rstrip()) if isinstance(previo, str) else int(previo)
+    faltantes = max(LINE_WIDTH - usado - 3, 4)  # -3 por '.- '
     relleno = ("- " * (faltantes // 2 + 2))[:faltantes].rstrip()
     return (f".- {relleno}", False)
 
