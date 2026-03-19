@@ -229,6 +229,19 @@ export interface Documento {
   revisadoPor?: string;
   revisadoEn?: string;
   creadoEn: string;
+  // ─ CARPETA DE INTEGRACIÓN ─────────────────
+  // El documento puede ser incluido en la carpeta de integración de un instrumento
+  // para su impresión y anexo en el acta.
+  carpetaInstrumentoId?: string;  // ID del instrumento al que pertenece la carpeta
+  carpetaOrden?: number;          // Orden de impresión dentro de la carpeta
+}
+
+// ── CARPETA DE INTEGRACIÓN ────────────────────
+// Agrupación lógica de documentos por instrumento para impresión y anexo al acta.
+export interface CarpetaIntegracion {
+  instrumentoId: string;
+  denominacion: string;
+  documentos: Documento[];  // Ordenados por carpetaOrden
 }
 
 // ── PLANTILLA ─────────────────────────────────
