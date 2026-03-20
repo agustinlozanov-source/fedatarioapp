@@ -101,7 +101,7 @@ export default function PreviewPage() {
 
   return (
     <InstrumentViewer
-      secciones={secciones ?? []}
+      secciones={(secciones ?? []) as any}
       instrumentoId={id as string}
       readOnly={false}
       font="Courier New"

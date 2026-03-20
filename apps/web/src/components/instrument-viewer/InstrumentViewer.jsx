@@ -31,6 +31,13 @@ const FUENTES_MONO = [
   'Roboto Mono',
 ]
 
+/**
+ * @typedef {{ tipo: string, runs: Array<[string, boolean]>, data: Record<string, any> }} Seccion
+ */
+
+/**
+ * @param {{ secciones?: Seccion[], instrumentoId: string, readOnly?: boolean, font?: string, fontSize?: number }} props
+ */
 export function InstrumentViewer({
   secciones: seccionesIniciales = [],
   instrumentoId,
