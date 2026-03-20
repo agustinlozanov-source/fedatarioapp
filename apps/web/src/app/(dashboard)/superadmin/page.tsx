@@ -127,8 +127,8 @@ export default function SuperadminPage() {
                         <Building2 size={16} />
                     </div>
                     <div>
-                        <h1 className="text-[22px] font-extrabold text-[#1D1D1F] tracking-tight">Superadmin</h1>
-                        <p className="text-[12px] text-[#86868B]">Gestión de organizaciones · Acceso exclusivo</p>
+                        <h1 className="text-[22px] font-extrabold text-[#1D1D1F] dark:text-white tracking-tight">Superadmin</h1>
+                        <p className="text-[12px] text-[#86868B] dark:text-gray-400">Gestión de organizaciones · Acceso exclusivo</p>
                     </div>
                 </div>
 
@@ -141,7 +141,7 @@ export default function SuperadminPage() {
                         className="w-full flex items-center justify-between px-5 py-4 text-left">
                         <div className="flex items-center gap-2.5">
                             <Plus size={15} style={{ color: 'var(--blue)' }} />
-                            <span className="text-[14px] font-bold text-[#1D1D1F]">Nueva organización</span>
+                            <span className="text-[14px] font-bold text-[#1D1D1F] dark:text-white">Nueva organización</span>
                         </div>
                         {formAbierto ? <ChevronUp size={16} style={{ color: 'var(--ink4)' }} /> : <ChevronDown size={16} style={{ color: 'var(--ink4)' }} />}
                     </button>
@@ -150,7 +150,7 @@ export default function SuperadminPage() {
                         <div className="border-t border-black/[0.06] px-5 pb-5 pt-4 space-y-4">
                             {/* Nombre org */}
                             <div>
-                                <label className="text-[11px] font-bold text-[#86868B] uppercase tracking-[0.06em] block mb-1.5">
+                                <label className="text-[11px] font-bold text-[#86868B] dark:text-gray-400 uppercase tracking-[0.06em] block mb-1.5">
                                     Nombre de la organización *
                                 </label>
                                 <input
@@ -165,7 +165,7 @@ export default function SuperadminPage() {
                             {/* Usuarios */}
                             <div>
                                 <div className="flex items-center justify-between mb-2">
-                                    <label className="text-[11px] font-bold text-[#86868B] uppercase tracking-[0.06em]">
+                                    <label className="text-[11px] font-bold text-[#86868B] dark:text-gray-400 uppercase tracking-[0.06em]">
                                         Usuarios · El primero será el owner (tenantId)
                                     </label>
                                     <button onClick={agregarUsuario}
@@ -238,7 +238,7 @@ export default function SuperadminPage() {
 
                 {/* Lista de organizaciones */}
                 <div>
-                    <div className="text-[11px] font-bold text-[#86868B] uppercase tracking-[0.06em] mb-3 flex items-center gap-2">
+                    <div className="text-[11px] font-bold text-[#86868B] dark:text-gray-400 uppercase tracking-[0.06em] mb-3 flex items-center gap-2">
                         <Building2 size={12} /> {orgs.length} organización{orgs.length !== 1 ? 'es' : ''} registradas
                     </div>
                     {cargando ? (
@@ -246,7 +246,7 @@ export default function SuperadminPage() {
                             <Loader2 size={20} className="animate-spin" style={{ color: 'var(--ink4)' }} />
                         </div>
                     ) : orgs.length === 0 ? (
-                        <div className="text-center py-10 text-[13px] text-[#86868B] border border-dashed border-black/[0.1] rounded-2xl">
+                        <div className="text-center py-10 text-[13px] text-[#86868B] dark:text-gray-400 border border-dashed border-black/[0.1] rounded-2xl">
                             No hay organizaciones todavía
                         </div>
                     ) : (
@@ -258,10 +258,10 @@ export default function SuperadminPage() {
                                         <Building2 size={14} style={{ color: org.activo ? 'var(--green)' : 'var(--ink4)' }} />
                                     </div>
                                     <div className="flex-1 min-w-0">
-                                        <div className="text-[13px] font-bold text-[#1D1D1F]">{org.nombre}</div>
-                                        <div className="text-[11px] text-[#86868B] font-mono">tenant: {org.ownerUid}</div>
+                                        <div className="text-[13px] font-bold text-[#1D1D1F] dark:text-white">{org.nombre}</div>
+                                        <div className="text-[11px] text-[#86868B] dark:text-gray-400 font-mono">tenant: {org.ownerUid}</div>
                                     </div>
-                                    <div className="text-[11px] text-[#86868B]">
+                                    <div className="text-[11px] text-[#86868B] dark:text-gray-400">
                                         {new Date(org.creadoEn).toLocaleDateString('es-MX')}
                                     </div>
                                     <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full"

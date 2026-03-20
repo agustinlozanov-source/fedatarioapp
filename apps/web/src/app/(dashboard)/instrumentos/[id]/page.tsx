@@ -142,10 +142,10 @@ function CampoEditable({ label, value, onSave, tipo = 'text', fuente }: {
                 <div className="flex gap-2 flex-1">
                     {tipo === 'textarea' ? (
                         <textarea value={draft} onChange={e => setDraft(e.target.value)} rows={5}
-                            className="flex-1 text-sm text-gray-800 font-medium border border-gray-200 rounded-lg px-2 py-1.5 focus:outline-none focus:border-black resize-y" autoFocus />
+                            className="flex-1 text-sm text-gray-800 font-medium border border-gray-200 dark:border-gray-700 rounded-lg px-2 py-1.5 focus:outline-none focus:border-black resize-y" autoFocus />
                     ) : (
                         <input type={tipo} value={draft} onChange={e => setDraft(e.target.value)}
-                            className="flex-1 text-sm text-gray-800 font-medium border border-gray-200 rounded-lg px-2 py-0.5 focus:outline-none focus:border-black" autoFocus />
+                            className="flex-1 text-sm text-gray-800 font-medium border border-gray-200 dark:border-gray-700 rounded-lg px-2 py-0.5 focus:outline-none focus:border-black" autoFocus />
                     )}
                     <div className="flex flex-col gap-1">
                         <button onClick={save} disabled={saving} className="p-1 rounded-md hover:bg-green-50 text-green-600 disabled:opacity-40">
@@ -163,13 +163,13 @@ function CampoEditable({ label, value, onSave, tipo = 'text', fuente }: {
                     </span>
                     <div className="flex items-center gap-1 flex-shrink-0">
                         {value && (
-                            <button onClick={copiar} className="p-1 rounded-md hover:bg-gray-100 text-gray-500 hover:text-gray-700 transition-colors" title="Copiar">
+                            <button onClick={copiar} className="p-1 rounded-md hover:bg-gray-100 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:text-gray-300 transition-colors" title="Copiar">
                                 {copied ? <Check size={11} className="text-green-600" /> : <Copy size={11} />}
                             </button>
                         )}
                         {onSave && (
                             <button onClick={() => { setDraft(String(value ?? '')); setEditing(true) }}
-                                className="p-1 rounded-md hover:bg-gray-100 text-gray-500 hover:text-gray-700 transition-colors">
+                                className="p-1 rounded-md hover:bg-gray-100 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:text-gray-300 transition-colors">
                                 <Pencil size={11} />
                             </button>
                         )}
@@ -543,20 +543,20 @@ export default function InstrumentoDetallePage() {
             />
             {/* HEADER */}
             <div className="mb-8">
-                <button onClick={() => router.push('/instrumentos')} className="flex items-center gap-2 text-sm text-gray-500 hover:text-gray-800 mb-4 transition-colors">
+                <button onClick={() => router.push('/instrumentos')} className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400 hover:text-gray-800 mb-4 transition-colors">
                     <ChevronLeft size={16} /> Instrumentos
                 </button>
                 <div className="flex items-start justify-between">
                     <div>
                         <p className="text-xs font-mono text-gray-400 uppercase tracking-widest mb-1">{instrumento.tipo?.replace(/_/g, ' ')}</p>
-                        <h1 className="text-2xl font-bold text-gray-900">{denominacion || '—'}</h1>
-                        {numPoliza && <p className="text-sm text-gray-500 mt-1">Póliza #{numPoliza}</p>}
+                        <h1 className="text-2xl font-bold text-gray-900 dark:text-white dark:text-white">{denominacion || '—'}</h1>
+                        {numPoliza && <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Póliza #{numPoliza}</p>}
                     </div>
                     <div className="flex gap-3">
-                        <button onClick={descargarDocx} disabled={descargando} className="flex items-center gap-2 px-4 py-2 border border-gray-200 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-40 transition-colors">
+                        <button onClick={descargarDocx} disabled={descargando} className="flex items-center gap-2 px-4 py-2 border border-gray-200 dark:border-gray-700 rounded-xl text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 disabled:opacity-40 transition-colors">
                             {descargando ? <><Loader2 size={15} className="animate-spin" /> Generando...</> : <><Download size={15} /> Descargar .docx</>}
                         </button>
-                        <button onClick={exportarADocs} disabled={exportandoDocs} className="flex items-center gap-2 px-4 py-2 border border-gray-200 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-40 transition-colors">
+                        <button onClick={exportarADocs} disabled={exportandoDocs} className="flex items-center gap-2 px-4 py-2 border border-gray-200 dark:border-gray-700 rounded-xl text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 disabled:opacity-40 transition-colors">
                             {exportandoDocs ? <><Loader2 size={15} className="animate-spin" /> Exportando...</> : <><FileText size={15} /> Abrir en Google Docs</>}
                         </button>
                         <button onClick={generarBorrador} disabled={generando || !compendioListo}
@@ -570,7 +570,7 @@ export default function InstrumentoDetallePage() {
                 {/* BARRA DE PROGRESO */}
                 <div className="mt-4 bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-2xl px-5 py-4">
                     <div className="flex items-center justify-between mb-2">
-                        <span className="text-xs font-semibold text-gray-500">Compendio</span>
+                        <span className="text-xs font-semibold text-gray-500 dark:text-gray-400 dark:text-gray-400">Compendio</span>
                         <span className="text-xs font-bold" style={{ color: porcentaje >= 80 ? '#1A9640' : '#E65100' }}>{porcentaje}%{porcentaje >= 80 ? ' · Listo para borrador' : ''}</span>
                     </div>
                     <div className="w-full bg-gray-100 rounded-full h-1.5 mb-3">
@@ -621,7 +621,7 @@ export default function InstrumentoDetallePage() {
                             <div className="px-5 py-4">
                                 <div className="flex items-center gap-2 mb-3">
                                     <FileUp size={13} className="text-gray-400" />
-                                    <span className="text-xs text-gray-500 font-semibold">PDF del CUD</span>
+                                    <span className="text-xs text-gray-500 dark:text-gray-400 font-semibold">PDF del CUD</span>
                                 </div>
 
                                 {instrumento.cudPdfUrl ? (
@@ -631,7 +631,7 @@ export default function InstrumentoDetallePage() {
                                         <button
                                             disabled={subiendoCud}
                                             onClick={() => cudInputRef.current?.click()}
-                                            className="text-sm text-gray-500 hover:text-gray-700 disabled:opacity-40 cursor-pointer">
+                                            className="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:text-gray-300 disabled:opacity-40 cursor-pointer">
                                             {subiendoCud ? 'Subiendo...' : 'Cambiar'}
                                         </button>
                                     </div>
@@ -673,9 +673,9 @@ export default function InstrumentoDetallePage() {
                                 return (
                                     <div key={i} className="bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-2xl overflow-hidden">
                                         {/* Cabecera del socio */}
-                                        <div className="flex items-center justify-between px-5 py-3 bg-gray-50 border-b border-gray-100">
+                                        <div className="flex items-center justify-between px-5 py-3 bg-gray-50 border-b border-gray-100 dark:border-gray-700">
                                             <div className="flex items-center gap-3">
-                                                <div className="w-7 h-7 rounded-full bg-gray-200 flex items-center justify-center text-xs font-bold text-gray-500">
+                                                <div className="w-7 h-7 rounded-full bg-gray-200 flex items-center justify-center text-xs font-bold text-gray-500 dark:text-gray-400 dark:text-gray-400">
                                                     {(perfil.nombre_completo || '?').charAt(0)}
                                                 </div>
                                                 <div>
@@ -732,7 +732,7 @@ export default function InstrumentoDetallePage() {
 
                                         {/* Documentos */}
                                         {cid && (
-                                            <div className="px-5 py-3 border-t border-gray-50 bg-gray-50/50">
+                                            <div className="px-5 py-3 border-t border-gray-50 dark:border-gray-700 bg-gray-50/50">
                                                 <p className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-2">Documentos</p>
                                                 <div className="flex gap-2 flex-wrap">
                                                     {docsReq.map(tipo => {
@@ -791,8 +791,8 @@ export default function InstrumentoDetallePage() {
                                 return (
                                     <div key={i} className="bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-2xl p-5">
                                         <div className="flex items-center justify-between mb-3">
-                                            <p className="font-semibold text-gray-900">{perfil.nombre_completo || '—'}</p>
-                                            <span className="text-xs font-mono bg-gray-50 border border-gray-100 px-2 py-1 rounded-lg text-gray-500">{rolLabel[socio.rol || ''] || socio.rol || '—'}</span>
+                                            <p className="font-semibold text-gray-900 dark:text-white dark:text-white">{perfil.nombre_completo || '—'}</p>
+                                            <span className="text-xs font-mono bg-gray-50 border border-gray-100 px-2 py-1 rounded-lg text-gray-500 dark:text-gray-400 dark:text-gray-400">{rolLabel[socio.rol || ''] || socio.rol || '—'}</span>
                                         </div>
                                         <div className="grid grid-cols-2 gap-x-8 gap-y-2">
                                             {([
@@ -803,7 +803,7 @@ export default function InstrumentoDetallePage() {
                                             ] as [string, any][]).map(([label, value]) => (
                                                 <div key={label} className="flex gap-2">
                                                     <span className="text-xs text-gray-400 w-24 flex-shrink-0">{label}</span>
-                                                    <span className="text-xs text-gray-700 font-mono">{value ?? '—'}</span>
+                                                    <span className="text-xs text-gray-700 dark:text-gray-300 font-mono">{value ?? '—'}</span>
                                                 </div>
                                             ))}
                                         </div>
@@ -816,7 +816,7 @@ export default function InstrumentoDetallePage() {
                         <section>
                             <h2 className="flex items-center gap-2 text-xs font-semibold text-gray-400 uppercase tracking-widest mb-3"><FileText size={13} /> Objeto Social</h2>
                             <div className="bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-2xl px-5 py-4">
-                                <p className="text-sm text-gray-700 whitespace-pre-line leading-relaxed">{objeto}</p>
+                                <p className="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-line leading-relaxed">{objeto}</p>
                             </div>
                         </section>
                     )}
@@ -830,13 +830,13 @@ export default function InstrumentoDetallePage() {
                         <section>
                             <h2 className="flex items-center gap-2 text-xs font-semibold text-gray-400 uppercase tracking-widest mb-3"><Link2 size={13} /> Enlace del Portal</h2>
                             <div className="bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-2xl px-5 py-4">
-                                <p className="text-xs text-gray-500 mb-3">Comparte este enlace con los socios para que suban sus documentos:</p>
+                                <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">Comparte este enlace con los socios para que suban sus documentos:</p>
                                 <div className="flex items-center gap-2">
                                     <input
                                         type="text"
                                         readOnly
                                         value={`${typeof window !== 'undefined' ? window.location.origin : ''}/portal/${instrumento.linkPortalToken}`}
-                                        className="flex-1 text-sm text-gray-700 font-mono border border-gray-200 rounded-lg px-3 py-2 bg-gray-50"
+                                        className="flex-1 text-sm text-gray-700 dark:text-gray-300 font-mono border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 bg-gray-50 dark:bg-gray-900"
                                     />
                                     <button
                                         onClick={() => {
@@ -896,12 +896,12 @@ export default function InstrumentoDetallePage() {
                                         {descargando ? <><Loader2 size={13} className="animate-spin" /> Generando...</> : <><Download size={13} /> Descargar .docx</>}
                                     </button>
                                     <button onClick={exportarADocs} disabled={exportandoDocs}
-                                        className="flex items-center gap-2 px-4 py-2 border border-gray-200 rounded-xl text-xs font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-40 transition-colors">
+                                        className="flex items-center gap-2 px-4 py-2 border border-gray-200 dark:border-gray-700 rounded-xl text-xs font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 disabled:opacity-40 transition-colors">
                                         {exportandoDocs ? <><Loader2 size={13} className="animate-spin" /> Exportando...</> : <><FileText size={13} /> Abrir en Google Docs</>}
                                     </button>
                                 </div>
                                 </div>
-                                <pre className="text-xs text-gray-700 whitespace-pre-wrap font-mono leading-relaxed max-h-[600px] overflow-y-auto">{borrador.textoActa}</pre>
+                                <pre className="text-xs text-gray-700 dark:text-gray-300 whitespace-pre-wrap font-mono leading-relaxed max-h-[600px] overflow-y-auto">{borrador.textoActa}</pre>
                             </div>
                         </>
                     )}

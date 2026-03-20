@@ -71,10 +71,10 @@ function CampoRow({ campo, onUpdate, onDelete }: {
   const [abierto, setAbierto] = useState(false);
   return (
     <div className="border border-black/[0.06] rounded-xl overflow-hidden mb-2">
-      <div className="flex items-center gap-3 px-3 py-2.5 cursor-pointer hover:bg-[#F5F5F7] transition-colors" onClick={() => setAbierto(!abierto)}>
+      <div className="flex items-center gap-3 px-3 py-2.5 cursor-pointer hover:bg-[#F5F5F7] dark:bg-gray-700 transition-colors" onClick={() => setAbierto(!abierto)}>
         <GripVertical size={14} style={{ color: 'var(--ink5)', flexShrink: 0 }} />
         <div className="flex-1 flex items-center gap-2 min-w-0">
-          <span className="text-[13px] font-semibold text-[#1D1D1F] truncate">{campo.etiqueta || 'Campo sin nombre'}</span>
+          <span className="text-[13px] font-semibold text-[#1D1D1F] dark:text-white truncate">{campo.etiqueta || 'Campo sin nombre'}</span>
           <span className="badge badge-gray text-[10px] shrink-0">{TIPOS_CAMPO.find(t => t.id === campo.tipo)?.label}</span>
           <span className="badge badge-blue text-[10px] shrink-0">{FUENTES.find(f => f.id === campo.fuenteDocumento)?.label}</span>
           {campo.requerido && <span className="badge badge-red text-[10px] shrink-0">Requerido</span>}
@@ -86,38 +86,38 @@ function CampoRow({ campo, onUpdate, onDelete }: {
         <div className="px-4 pb-4 pt-3 border-t border-black/[0.06]" style={{ background: 'var(--bg2)' }}>
           <div className="grid grid-cols-2 gap-3 mb-3">
             <div>
-              <label className="text-[10px] font-bold text-[#86868B] uppercase tracking-[0.06em] block mb-1">Etiqueta visible</label>
+              <label className="text-[10px] font-bold text-[#86868B] dark:text-gray-400 uppercase tracking-[0.06em] block mb-1">Etiqueta visible</label>
               <input value={campo.etiqueta} onChange={e => onUpdate({ ...campo, etiqueta: e.target.value })} className="w-full px-3 py-2 rounded-lg text-[13px] outline-none" style={{ border: '1px solid var(--border)', background: 'white' }} />
             </div>
             <div>
-              <label className="text-[10px] font-bold text-[#86868B] uppercase tracking-[0.06em] block mb-1">Nombre interno</label>
+              <label className="text-[10px] font-bold text-[#86868B] dark:text-gray-400 uppercase tracking-[0.06em] block mb-1">Nombre interno</label>
               <input value={campo.nombre} onChange={e => onUpdate({ ...campo, nombre: e.target.value })} className="w-full px-3 py-2 rounded-lg text-[13px] font-mono outline-none" style={{ border: '1px solid var(--border)', background: 'white' }} />
             </div>
             <div>
-              <label className="text-[10px] font-bold text-[#86868B] uppercase tracking-[0.06em] block mb-1">Tipo de campo</label>
+              <label className="text-[10px] font-bold text-[#86868B] dark:text-gray-400 uppercase tracking-[0.06em] block mb-1">Tipo de campo</label>
               <select value={campo.tipo} onChange={e => onUpdate({ ...campo, tipo: e.target.value as TipoCampo })} className="w-full px-3 py-2 rounded-lg text-[13px] outline-none" style={{ border: '1px solid var(--border)', background: 'white' }}>
                 {TIPOS_CAMPO.map(t => <option key={t.id} value={t.id}>{t.label}</option>)}
               </select>
             </div>
             <div>
-              <label className="text-[10px] font-bold text-[#86868B] uppercase tracking-[0.06em] block mb-1">Fuente principal</label>
+              <label className="text-[10px] font-bold text-[#86868B] dark:text-gray-400 uppercase tracking-[0.06em] block mb-1">Fuente principal</label>
               <select value={campo.fuenteDocumento} onChange={e => onUpdate({ ...campo, fuenteDocumento: e.target.value as any })} className="w-full px-3 py-2 rounded-lg text-[13px] outline-none" style={{ border: '1px solid var(--border)', background: 'white' }}>
                 {FUENTES.map(f => <option key={f.id} value={f.id}>{f.label}</option>)}
               </select>
             </div>
           </div>
           <div className="mb-3">
-            <label className="text-[10px] font-bold text-[#86868B] uppercase tracking-[0.06em] block mb-1">Valor por defecto (opcional)</label>
+            <label className="text-[10px] font-bold text-[#86868B] dark:text-gray-400 uppercase tracking-[0.06em] block mb-1">Valor por defecto (opcional)</label>
             <input value={campo.valorDefault || ''} onChange={e => onUpdate({ ...campo, valorDefault: e.target.value })} placeholder="Dejar vacío si no aplica" className="w-full px-3 py-2 rounded-lg text-[13px] outline-none" style={{ border: '1px solid var(--border)', background: 'white' }} />
           </div>
           <div className="flex items-center gap-4">
             <label className="flex items-center gap-2 cursor-pointer">
               <input type="checkbox" checked={campo.requerido} onChange={e => onUpdate({ ...campo, requerido: e.target.checked })} className="w-4 h-4 rounded" style={{ accentColor: 'var(--red)' }} />
-              <span className="text-[12px] font-semibold text-[#3A3A3C]">Requerido</span>
+              <span className="text-[12px] font-semibold text-[#3A3A3C] dark:text-gray-200">Requerido</span>
             </label>
             <label className="flex items-center gap-2 cursor-pointer">
               <input type="checkbox" checked={campo.enCompendio} onChange={e => onUpdate({ ...campo, enCompendio: e.target.checked })} className="w-4 h-4 rounded" style={{ accentColor: 'var(--purple)' }} />
-              <span className="text-[12px] font-semibold text-[#3A3A3C]">Aparece en compendio</span>
+              <span className="text-[12px] font-semibold text-[#3A3A3C] dark:text-gray-200">Aparece en compendio</span>
             </label>
             <button onClick={onDelete} className="ml-auto flex items-center gap-1.5 text-[12px] font-semibold px-2.5 py-1.5 rounded-lg" style={{ color: 'var(--red)', background: 'var(--red-bg)' }}>
               <Trash2 size={12} /> Eliminar
@@ -189,7 +189,7 @@ export default function ConfigPage() {
   if (cargando) return (
     <div className="flex items-center justify-center h-screen gap-3">
       <Loader2 size={20} style={{ color: 'var(--blue)', animation: 'spin 1s linear infinite' }} />
-      <span className="text-[14px] text-[#86868B]">Cargando configuración...</span>
+      <span className="text-[14px] text-[#86868B] dark:text-gray-400">Cargando configuración...</span>
     </div>
   );
 
@@ -199,8 +199,8 @@ export default function ConfigPage() {
 
       <main className="flex-1 p-8 overflow-y-auto bg-gray-50 dark:bg-gray-900">
         <div className="mb-8">
-          <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-2">Configuración</h1>
-          <p className="text-gray-600 dark:text-gray-400">Personaliza tu experiencia y preferencias</p>
+          <h1 className="text-4xl font-bold text-gray-900 dark:text-white dark:text-white mb-2">Configuración</h1>
+          <p className="text-gray-600 dark:text-gray-400 dark:text-gray-400">Personaliza tu experiencia y preferencias</p>
         </div>
 
         {/* Settings Grid */}
@@ -213,11 +213,11 @@ export default function ConfigPage() {
                   <Sun size={24} />
                 </div>
                 <div>
-                  <h3 className="font-bold text-gray-900 dark:text-white">Tema</h3>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">Elige entre modo claro y oscuro</p>
+                  <h3 className="font-bold text-gray-900 dark:text-white dark:text-white">Tema</h3>
+                  <p className="text-sm text-gray-600 dark:text-gray-400 dark:text-gray-400">Elige entre modo claro y oscuro</p>
                 </div>
               </div>
-              <select className="px-4 py-2 rounded-full border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-700 text-gray-900 dark:text-white font-semibold text-sm outline-none">
+              <select className="px-4 py-2 rounded-full border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-700 text-gray-900 dark:text-white dark:text-white font-semibold text-sm outline-none">
                 <option>Claro</option>
                 <option>Oscuro</option>
                 <option>Automático</option>
@@ -233,8 +233,8 @@ export default function ConfigPage() {
                   <Bell size={24} />
                 </div>
                 <div>
-                  <h3 className="font-bold text-gray-900">Notificaciones</h3>
-                  <p className="text-sm text-gray-600">Recibe alertas de documentos pendientes</p>
+                  <h3 className="font-bold text-gray-900 dark:text-white dark:text-white">Notificaciones</h3>
+                  <p className="text-sm text-gray-600 dark:text-gray-400 dark:text-gray-400">Recibe alertas de documentos pendientes</p>
                 </div>
               </div>
               <label className="flex items-center gap-2 cursor-pointer">
@@ -251,11 +251,11 @@ export default function ConfigPage() {
                   <Shield size={24} />
                 </div>
                 <div>
-                  <h3 className="font-bold text-gray-900">Privacidad</h3>
-                  <p className="text-sm text-gray-600">Controla quién puede ver tus documentos</p>
+                  <h3 className="font-bold text-gray-900 dark:text-white dark:text-white">Privacidad</h3>
+                  <p className="text-sm text-gray-600 dark:text-gray-400 dark:text-gray-400">Controla quién puede ver tus documentos</p>
                 </div>
               </div>
-              <button className="px-4 py-2 bg-gray-200 text-gray-700 rounded-full hover:bg-gray-300 transition-colors font-semibold text-sm">
+              <button className="px-4 py-2 bg-gray-200 text-gray-700 dark:text-gray-300 rounded-full hover:bg-gray-300 transition-colors font-semibold text-sm">
                 Editar
               </button>
             </div>
@@ -269,8 +269,8 @@ export default function ConfigPage() {
                   <Lock size={24} />
                 </div>
                 <div>
-                  <h3 className="font-bold text-gray-900">Seguridad</h3>
-                  <p className="text-sm text-gray-600">Cambia tu contraseña regularmente</p>
+                  <h3 className="font-bold text-gray-900 dark:text-white dark:text-white">Seguridad</h3>
+                  <p className="text-sm text-gray-600 dark:text-gray-400 dark:text-gray-400">Cambia tu contraseña regularmente</p>
                 </div>
               </div>
               <button className="px-4 py-2 bg-blue-600 text-white rounded-full hover:bg-blue-700 transition-colors font-semibold text-sm">
@@ -285,23 +285,23 @@ export default function ConfigPage() {
               className="flex items-center justify-between px-6 py-6 cursor-pointer hover:bg-gray-50 transition-colors"
               onClick={() => setMostrarNuevaSeccion(!mostrarNuevaSeccion)}>
               <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-gray-100 rounded-2xl flex items-center justify-center text-gray-600">
+                <div className="w-12 h-12 bg-gray-100 rounded-2xl flex items-center justify-center text-gray-600 dark:text-gray-400 dark:text-gray-400">
                   <Settings2 size={24} />
                 </div>
                 <div>
-                  <h3 className="font-bold text-gray-900">Estructura del acta</h3>
-                  <p className="text-sm text-gray-600">{secciones.length} secciones · {totalCampos} campos</p>
+                  <h3 className="font-bold text-gray-900 dark:text-white dark:text-white">Estructura del acta</h3>
+                  <p className="text-sm text-gray-600 dark:text-gray-400 dark:text-gray-400">{secciones.length} secciones · {totalCampos} campos</p>
                 </div>
               </div>
               <ChevronDown size={20} className={`text-gray-400 transition-transform ${mostrarNuevaSeccion ? 'rotate-180' : ''}`} />
             </div>
 
             {mostrarNuevaSeccion && (
-              <div className="px-6 pb-6 border-t border-gray-200 space-y-3">
+              <div className="px-6 pb-6 border-t border-gray-200 dark:border-gray-700 space-y-3">
                 {secciones.map(sec => (
                   <div key={sec.id} className="p-4 bg-gray-50 rounded-2xl">
                     <div className="flex items-center justify-between mb-3">
-                      <h4 className="font-semibold text-gray-900">{sec.nombre}</h4>
+                      <h4 className="font-semibold text-gray-900 dark:text-white dark:text-white">{sec.nombre}</h4>
                       <span className="text-xs px-2 py-1 bg-blue-100 text-blue-700 rounded-full">{sec.campos.length} campos</span>
                     </div>
                     <button onClick={() => eliminarSeccion(sec.id)} className="text-xs px-3 py-1.5 bg-red-100 text-red-600 rounded-full hover:bg-red-200 transition-colors font-semibold">
@@ -309,7 +309,7 @@ export default function ConfigPage() {
                     </button>
                   </div>
                 ))}
-                <button onClick={() => {}} className="w-full py-3 px-4 border-2 border-dashed border-gray-300 rounded-2xl text-gray-600 hover:text-blue-600 hover:border-blue-600 transition-colors font-semibold text-sm flex items-center justify-center gap-2">
+                <button onClick={() => {}} className="w-full py-3 px-4 border-2 border-dashed border-gray-300 rounded-2xl text-gray-600 dark:text-gray-400 hover:text-blue-600 hover:border-blue-600 transition-colors font-semibold text-sm flex items-center justify-center gap-2">
                   <Plus size={16} /> Agregar sección
                 </button>
               </div>

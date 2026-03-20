@@ -108,7 +108,7 @@ export default function InstrumentosPage() {
 
       <div className="p-6">
         <h1 className="text-[24px] font-extrabold text-[#1D1D1F] dark:text-white tracking-tight mb-1">Instrumentos</h1>
-        <p className="text-[14px] text-[#6E6E73] mb-6">Actas constitutivas y expedientes</p>
+        <p className="text-[14px] text-[#6E6E73] dark:text-gray-400 mb-6">Actas constitutivas y expedientes</p>
 
         {/* KPIs */}
         <div className="grid grid-cols-3 gap-3 mb-6">
@@ -128,7 +128,7 @@ export default function InstrumentosPage() {
             style={{ color: 'var(--ink)' }}
           />
           {busqueda && (
-            <button onClick={() => setBusqueda('')} className="text-[11px] text-[#86868B] hover:text-[#1D1D1F]">✕</button>
+            <button onClick={() => setBusqueda('')} className="text-[11px] text-[#86868B] dark:text-gray-400 hover:text-[#1D1D1F] dark:text-white">✕</button>
           )}
         </div>
 
@@ -145,7 +145,7 @@ export default function InstrumentosPage() {
             <div className="text-[15px] font-bold text-[#1D1D1F] dark:text-white mb-1">
               {busqueda ? 'Sin resultados' : 'Sin instrumentos aún'}
             </div>
-            <div className="text-[13px] text-[#86868B] mb-4">
+            <div className="text-[13px] text-[#86868B] dark:text-gray-400 mb-4">
               {busqueda ? `No hay coincidencias para "${busqueda}"` : 'Crea el primer instrumento para comenzar'}
             </div>
             {!busqueda && (
@@ -188,7 +188,7 @@ export default function InstrumentosPage() {
                           {TIPO_LABEL[inst.tipo] || inst.tipo}
                         </span>
                       </div>
-                      <div className="text-[12px] text-[#86868B] flex items-center gap-1.5 mt-0.5">
+                      <div className="text-[12px] text-[#86868B] dark:text-gray-400 flex items-center gap-1.5 mt-0.5">
                         {inst.numero_poliza && <span className="font-mono">Pól. {inst.numero_poliza}</span>}
                         {inst.numero_poliza && inst.socios?.length > 0 && <span>·</span>}
                         <Users size={11} />
@@ -200,7 +200,7 @@ export default function InstrumentosPage() {
                     {/* Score de integración */}
                     <div className="shrink-0 text-center w-16">
                       <div className="text-[15px] font-extrabold" style={{ color: scoreColor }}>{score}%</div>
-                      <div className="text-[10px] text-[#86868B]">Integración</div>
+                      <div className="text-[10px] text-[#86868B] dark:text-gray-400">Integración</div>
                     </div>
 
                     {/* Estado */}
@@ -256,12 +256,12 @@ export default function InstrumentosPage() {
 
                         {/* Panel izquierdo: socios */}
                         <div>
-                          <div className="text-[11px] font-bold text-[#86868B] uppercase tracking-[0.06em] mb-2 flex items-center gap-1.5">
+                          <div className="text-[11px] font-bold text-[#86868B] dark:text-gray-400 uppercase tracking-[0.06em] mb-2 flex items-center gap-1.5">
                             <Users size={11} /> Socios
                           </div>
                           <div className="space-y-1.5">
                             {(inst.socios ?? []).length === 0 ? (
-                              <div className="text-[12px] text-[#86868B]">Sin socios asignados</div>
+                              <div className="text-[12px] text-[#86868B] dark:text-gray-400">Sin socios asignados</div>
                             ) : (inst.socios ?? []).map((s, si) => (
                               <div key={si} className="flex items-center gap-2 bg-white dark:bg-gray-700 rounded-xl px-3 py-2">
                                 <div className="w-7 h-7 rounded-full bg-blue-50 flex items-center justify-center text-[11px] font-bold text-blue-600 shrink-0">
@@ -271,7 +271,7 @@ export default function InstrumentosPage() {
                                   <div className="text-[12px] font-semibold text-[#1D1D1F] dark:text-white truncate">
                                     {s.nombre_completo || `Socio ${si + 1}`}
                                   </div>
-                                  <div className="text-[10px] text-[#86868B]">{s.rol?.replace(/_/g, ' ')} · {s.porcentaje}%</div>
+                                  <div className="text-[10px] text-[#86868B] dark:text-gray-400">{s.rol?.replace(/_/g, ' ')} · {s.porcentaje}%</div>
                                 </div>
                                 <div className="flex gap-1 shrink-0">
                                   <span title="Datos" className="w-5 h-5 rounded-full flex items-center justify-center text-[10px]"
@@ -293,13 +293,13 @@ export default function InstrumentosPage() {
                           {/* Score visual */}
                           <div className="bg-white dark:bg-gray-700 rounded-xl px-4 py-3">
                             <div className="flex items-center justify-between mb-1.5">
-                              <span className="text-[11px] font-bold text-[#86868B] uppercase tracking-[0.06em]">Score de integración</span>
+                              <span className="text-[11px] font-bold text-[#86868B] dark:text-gray-400 uppercase tracking-[0.06em]">Score de integración</span>
                               <span className="text-[13px] font-extrabold" style={{ color: scoreColor }}>{score}%</span>
                             </div>
                             <div className="h-2 rounded-full bg-[#F5F5F7] dark:bg-gray-600 overflow-hidden">
                               <div className="h-full rounded-full transition-all" style={{ width: `${score}%`, background: scoreColor }} />
                             </div>
-                            <div className="flex justify-between text-[10px] text-[#86868B] mt-1">
+                            <div className="flex justify-between text-[10px] text-[#86868B] dark:text-gray-400 mt-1">
                               <span>{(inst.socios ?? []).filter(s => s.datosCompletos && s.documentosCompletos).length} / {inst.socios?.length ?? 0} socios completos</span>
                               <span>Paso {estado.paso}/11</span>
                             </div>
@@ -314,7 +314,7 @@ export default function InstrumentosPage() {
                               { label: 'Ciudad', val: inst.ciudad_fedatario },
                             ].filter(f => f.val).map(f => (
                               <div key={f.label} className="flex gap-2 items-baseline">
-                                <span className="text-[11px] text-[#86868B] w-16 shrink-0">{f.label}</span>
+                                <span className="text-[11px] text-[#86868B] dark:text-gray-400 w-16 shrink-0">{f.label}</span>
                                 <span className="text-[12px] font-semibold text-[#1D1D1F] dark:text-white truncate">{f.val}</span>
                               </div>
                             ))}

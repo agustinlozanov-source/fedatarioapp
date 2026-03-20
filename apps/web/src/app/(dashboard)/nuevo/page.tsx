@@ -131,33 +131,33 @@ function BuscadorCliente({ onSelect, onCrear, authListo }: {
     <div ref={ref} className="relative">
       <div className="flex items-center gap-2 px-3 py-2.5 rounded-xl bg-white dark:bg-gray-800"
         style={{ border: '1px solid var(--border)' }}>
-        <Search size={14} className="text-gray-600 dark:text-gray-400" />
+        <Search size={14} className="text-gray-600 dark:text-gray-400 dark:text-gray-400" />
         <input value={q} onChange={e => { setQ(e.target.value); setAbierto(true); }}
           onFocus={() => setAbierto(true)}
           placeholder="Buscar por nombre, RFC, CURP..."
-          className="flex-1 text-[13px] outline-none bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400" />
+          className="flex-1 text-[13px] outline-none bg-white dark:bg-gray-800 text-gray-900 dark:text-white dark:text-white placeholder-gray-500 dark:placeholder-gray-400" />
         {q && <button onClick={() => setQ('')}><X size={13} style={{ color: 'var(--ink4)' }} /></button>}
       </div>
       {abierto && q.length > 0 && (
         <div className="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-gray-800 rounded-xl shadow-lg z-50 overflow-hidden"
           style={{ border: '1px solid var(--border)' }}>
           {resultados.length === 0
-            ? <div className="px-4 py-3 text-[13px] text-gray-500 dark:text-gray-400">No se encontraron clientes</div>
+            ? <div className="px-4 py-3 text-[13px] text-gray-500 dark:text-gray-400 dark:text-gray-400">No se encontraron clientes</div>
             : resultados.map(c => (
               <button key={c.id} onClick={() => { onSelect(c); setQ(''); setAbierto(false); }}
                 className="w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-left">
-                <div className="w-8 h-8 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-[12px] font-bold shrink-0 text-gray-900 dark:text-white">
+                <div className="w-8 h-8 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-[12px] font-bold shrink-0 text-gray-900 dark:text-white dark:text-white">
                   {c.nombre.charAt(0).toUpperCase()}
                 </div>
                 <div>
-                  <div className="text-[13px] font-semibold text-gray-900 dark:text-white">{c.nombre}</div>
-                  <div className="text-[11px] text-gray-500 dark:text-gray-400">{c.rfc || c.curp || 'Sin RFC/CURP'}</div>
+                  <div className="text-[13px] font-semibold text-gray-900 dark:text-white dark:text-white">{c.nombre}</div>
+                  <div className="text-[11px] text-gray-500 dark:text-gray-400 dark:text-gray-400">{c.rfc || c.curp || 'Sin RFC/CURP'}</div>
                 </div>
               </button>
             ))
           }
           <button onClick={() => { onCrear(); setAbierto(false); setQ(''); }}
-            className="w-full flex items-center gap-2 px-4 py-3 border-t border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-blue-600 dark:text-blue-400">
+            className="w-full flex items-center gap-2 px-4 py-3 border-t border-gray-200 dark:border-gray-700 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-blue-600 dark:text-blue-400">
             <Plus size={14} />
             <span className="text-[13px] font-semibold">Crear nuevo cliente</span>
           </button>
@@ -391,8 +391,8 @@ export default function NuevoInstrumentoPage() {
 
       <main className="flex-1 overflow-y-auto p-8 max-w-2xl mx-auto">
         <div className="mb-8">
-          <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-2">Nuevo instrumento</h1>
-          <p className="text-gray-600 dark:text-gray-400">Captura de primera sesión</p>
+          <h1 className="text-4xl font-bold text-gray-900 dark:text-white dark:text-white mb-2">Nuevo instrumento</h1>
+          <p className="text-gray-600 dark:text-gray-400 dark:text-gray-400">Captura de primera sesión</p>
         </div>
 
         {/* Stepper — solo mientras no esté en paso de éxito */}
@@ -429,8 +429,8 @@ export default function NuevoInstrumentoPage() {
         {/* ── PASO 1 — TIPO ── */}
         {paso === 0 && (
           <div>
-            <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-2">Tipo de instrumento</h2>
-            <p className="text-sm text-gray-600 dark:text-gray-400 mb-6">El tipo define el formato y las reglas del acta</p>
+            <h2 className="text-lg font-bold text-gray-900 dark:text-white dark:text-white mb-2">Tipo de instrumento</h2>
+            <p className="text-sm text-gray-600 dark:text-gray-400 dark:text-gray-400 mb-6">El tipo define el formato y las reglas del acta</p>
 
             <div className="grid grid-cols-2 gap-4 mb-6">
               {[
@@ -441,11 +441,11 @@ export default function NuevoInstrumentoPage() {
                   className={`p-5 rounded-2xl text-left transition-all ${
                     tipo === t.id 
                       ? 'border-2 border-blue-600 bg-blue-50 dark:bg-blue-900/20' 
-                      : 'border-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800'
+                      : 'border-2 border-gray-200 dark:border-gray-700 dark:border-gray-700 bg-white dark:bg-gray-800'
                   }`}>
-                  <div className="text-base font-bold text-gray-900 dark:text-white mb-1">{t.label}</div>
+                  <div className="text-base font-bold text-gray-900 dark:text-white dark:text-white mb-1">{t.label}</div>
                   <div className="text-xs font-mono mb-3 text-blue-600">{t.sub}</div>
-                  <div className="text-xs text-gray-600 dark:text-gray-400">{t.desc}</div>
+                  <div className="text-xs text-gray-600 dark:text-gray-400 dark:text-gray-400">{t.desc}</div>
                   {tipo === t.id && (
                     <div className="mt-3 flex items-center gap-1 text-xs font-bold text-blue-600">
                       <CheckCircle size={11} /> Seleccionado
@@ -462,8 +462,8 @@ export default function NuevoInstrumentoPage() {
         {/* ── PASO 2 — SOCIOS ── */}
         {paso === 1 && (
           <div>
-            <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-2">Socios</h2>
-            <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">Mínimo 2 · Los porcentajes deben sumar 100%</p>
+            <h2 className="text-lg font-bold text-gray-900 dark:text-white dark:text-white mb-2">Socios</h2>
+            <p className="text-sm text-gray-600 dark:text-gray-400 dark:text-gray-400 mb-4">Mínimo 2 · Los porcentajes deben sumar 100%</p>
 
             {/* Indicador porcentaje */}
             <div className={`flex items-center justify-between px-4 py-2.5 rounded-xl mb-4 ${
@@ -475,7 +475,7 @@ export default function NuevoInstrumentoPage() {
                 {totalPorcentaje === 100 ? '✓ Porcentajes correctos' : `Total: ${totalPorcentaje}% — debe ser 100%`}
               </span>
               <button onClick={distribuir}
-                className="text-xs font-semibold px-3 py-1 rounded-lg bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600">
+                className="text-xs font-semibold px-3 py-1 rounded-lg bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600">
                 Distribuir equitativamente
               </button>
             </div>
@@ -487,7 +487,7 @@ export default function NuevoInstrumentoPage() {
                     <span className="text-[13px] font-bold text-[#1D1D1F] dark:text-white">Socio {idx + 1}</span>
                     {socios.length > 2 && (
                       <button onClick={() => eliminarSocio(socio.uid)}
-                        className="p-1.5 rounded-lg hover:bg-[#F5F5F7]">
+                        className="p-1.5 rounded-lg hover:bg-[#F5F5F7] dark:bg-gray-700">
                         <X size={14} style={{ color: 'var(--red)' }} />
                       </button>
                     )}
@@ -503,7 +503,7 @@ export default function NuevoInstrumentoPage() {
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="text-[13px] font-semibold text-[#1D1D1F] dark:text-white truncate">{socio.cliente.nombre}</div>
-                        <div className="text-[11px] text-[#86868B]">{socio.cliente.rfc || 'Sin RFC'}</div>
+                        <div className="text-[11px] text-[#86868B] dark:text-gray-400">{socio.cliente.rfc || 'Sin RFC'}</div>
                       </div>
                       <button onClick={() => actualizarSocio(socio.uid, { cliente: undefined, clienteId: undefined })}>
                         <X size={13} style={{ color: 'var(--ink4)' }} />
@@ -513,7 +513,7 @@ export default function NuevoInstrumentoPage() {
                     <div className="space-y-2 mb-3 p-3 rounded-xl"
                       style={{ background: 'var(--blue-bg)', border: '1px solid var(--blue-border, #BFDBFE)' }}>
                       <div className="flex items-center justify-between">
-                        <span className="text-[11px] font-bold text-[#86868B] uppercase tracking-[0.06em]">Nuevo cliente</span>
+                        <span className="text-[11px] font-bold text-[#86868B] dark:text-gray-400 uppercase tracking-[0.06em]">Nuevo cliente</span>
                         <button onClick={() => actualizarSocio(socio.uid, { esNuevo: false })}
                           className="text-[11px]" style={{ color: 'var(--ink4)' }}>
                           ← Buscar existente
@@ -559,7 +559,7 @@ export default function NuevoInstrumentoPage() {
                       <div className="text-[12px] font-semibold text-[#1D1D1F] dark:text-white">
                         {socio.esExtranjero ? '🌐 Extranjero' : '🇲🇽 Mexicano'}
                       </div>
-                      <div className="text-[10px] text-[#86868B] mt-0.5">
+                      <div className="text-[10px] text-[#86868B] dark:text-gray-400 mt-0.5">
                         {socio.esExtranjero ? 'Requiere pasaporte y FM2/FM3' : 'Requiere INE, CURP y RFC'}
                       </div>
                     </div>
@@ -575,11 +575,11 @@ export default function NuevoInstrumentoPage() {
                   {/* Rol y porcentaje */}
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className="text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-[0.06em] block mb-1">Rol</label>
+                      <label className="text-[10px] font-bold text-gray-500 dark:text-gray-400 dark:text-gray-400 uppercase tracking-[0.06em] block mb-1">Rol</label>
                       <button
                         onClick={() => setSocioSeleccionadoParaRoles(socio.uid)}
                         className={`w-full px-3 py-2 rounded-lg text-[13px] text-left outline-none transition-all border ${
-                          socio.rol ? 'bg-white dark:bg-gray-800 text-gray-900 dark:text-white border-gray-300 dark:border-gray-600 hover:border-blue-500 dark:hover:border-blue-400' 
+                          socio.rol ? 'bg-white dark:bg-gray-800 text-gray-900 dark:text-white dark:text-white border-gray-300 dark:border-gray-600 hover:border-blue-500 dark:hover:border-blue-400' 
                           : 'bg-amber-50 dark:bg-amber-900 text-amber-900 dark:text-amber-100 border-amber-300 dark:border-amber-700 hover:border-amber-400 dark:hover:border-amber-600 font-semibold'
                         }`}>
                         {socio.rol 
@@ -589,14 +589,14 @@ export default function NuevoInstrumentoPage() {
                       </button>
                     </div>
                     <div>
-                      <label className="text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-[0.06em] block mb-1">Participación %</label>
+                      <label className="text-[10px] font-bold text-gray-500 dark:text-gray-400 dark:text-gray-400 uppercase tracking-[0.06em] block mb-1">Participación %</label>
                       <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-white dark:bg-gray-800"
                         style={{ border: '1px solid var(--border)' }}>
                         <input type="number" min="0" max="100"
                           value={socio.porcentaje}
                           onChange={e => actualizarSocio(socio.uid, { porcentaje: parseFloat(e.target.value) || 0 })}
-                          className="flex-1 text-[13px] outline-none font-mono bg-white dark:bg-gray-800 text-gray-900 dark:text-white" />
-                        <span className="text-[13px] text-gray-500 dark:text-gray-400">%</span>
+                          className="flex-1 text-[13px] outline-none font-mono bg-white dark:bg-gray-800 text-gray-900 dark:text-white dark:text-white" />
+                        <span className="text-[13px] text-gray-500 dark:text-gray-400 dark:text-gray-400">%</span>
                       </div>
                     </div>
                   </div>
@@ -615,8 +615,8 @@ export default function NuevoInstrumentoPage() {
         {/* ── PASO 3 — OBJETO SOCIAL ── */}
         {paso === 2 && (
           <div>
-            <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-2">Objeto social</h2>
-            <p className="text-sm text-gray-600 mb-6">Puedes agregar uno o varios objetos sociales</p>
+            <h2 className="text-lg font-bold text-gray-900 dark:text-white dark:text-white mb-2">Objeto social</h2>
+            <p className="text-sm text-gray-600 dark:text-gray-400 mb-6">Puedes agregar uno o varios objetos sociales</p>
 
             {/* Objetos seleccionados */}
             {objetosSociales.length > 0 && (
@@ -624,7 +624,7 @@ export default function NuevoInstrumentoPage() {
                 {objetosSociales.map((obj, idx) => (
                   <div key={obj.uid} className="bg-white dark:bg-gray-800 border border-black/[0.07] dark:border-white/[0.07] rounded-xl p-3">
                     <div className="flex items-center justify-between mb-2">
-                      <span className="text-[11px] font-bold text-[#86868B] uppercase tracking-[0.06em]">
+                      <span className="text-[11px] font-bold text-[#86868B] dark:text-gray-400 uppercase tracking-[0.06em]">
                         Objeto {idx + 1}
                         {obj.predefinidoId && <span className="ml-2 px-1.5 py-0.5 rounded text-[10px]" style={{ background: 'var(--blue-bg)', color: 'var(--blue)' }}>Predefinido</span>}
                       </span>
@@ -657,12 +657,12 @@ export default function NuevoInstrumentoPage() {
                 <div className="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-gray-800 rounded-xl shadow-lg z-50 overflow-hidden"
                   style={{ border: '1px solid var(--border)' }}>
                   {resultadosObjeto.length === 0
-                    ? <div className="px-4 py-3 text-[13px] text-[#86868B]">No hay objetos predefinidos aún</div>
+                    ? <div className="px-4 py-3 text-[13px] text-[#86868B] dark:text-gray-400">No hay objetos predefinidos aún</div>
                     : resultadosObjeto.map(o => (
                       <button key={o.id} onClick={() => agregarObjetoPredefinido(o)}
-                        className="w-full px-4 py-3 hover:bg-[#F5F5F7] transition-colors text-left border-b border-black/[0.04] last:border-0">
+                        className="w-full px-4 py-3 hover:bg-[#F5F5F7] dark:bg-gray-700 transition-colors text-left border-b border-black/[0.04] last:border-0">
                         <div className="text-[13px] font-semibold text-[#1D1D1F] dark:text-white">{o.etiqueta}</div>
-                        <div className="text-[11px] text-[#86868B] mt-0.5 line-clamp-2">{o.texto}</div>
+                        <div className="text-[11px] text-[#86868B] dark:text-gray-400 mt-0.5 line-clamp-2">{o.texto}</div>
                       </button>
                     ))
                   }
@@ -679,7 +679,7 @@ export default function NuevoInstrumentoPage() {
               </button>
             ) : (
               <div className="border border-black/[0.07] dark:border-white/[0.07] rounded-xl p-4 bg-white dark:bg-gray-800">
-                <div className="text-[11px] font-bold text-[#86868B] uppercase tracking-[0.06em] mb-2">Nuevo objeto social</div>
+                <div className="text-[11px] font-bold text-[#86868B] dark:text-gray-400 uppercase tracking-[0.06em] mb-2">Nuevo objeto social</div>
                 <input value={nuevoObjetoEtiqueta}
                   onChange={e => setNuevoObjetoEtiqueta(e.target.value)}
                   placeholder="Nombre corto para identificarlo (ej. Comercio de tecnología)"
@@ -718,24 +718,24 @@ export default function NuevoInstrumentoPage() {
         {/* ── PASO 4 — CAPITAL ── */}
         {paso === 3 && (
           <div>
-            <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-2">Capital social</h2>
-            <p className="text-sm text-gray-600 dark:text-gray-400 mb-6">El valor inicial de la sociedad</p>
+            <h2 className="text-lg font-bold text-gray-900 dark:text-white dark:text-white mb-2">Capital social</h2>
+            <p className="text-sm text-gray-600 dark:text-gray-400 dark:text-gray-400 mb-6">El valor inicial de la sociedad</p>
 
             <div className="bg-white dark:bg-gray-800 border border-black/[0.07] dark:border-white/[0.07] rounded-2xl p-6">
-              <label className="text-[11px] font-bold text-[#86868B] uppercase tracking-[0.06em] block mb-2">
+              <label className="text-[11px] font-bold text-[#86868B] dark:text-gray-400 uppercase tracking-[0.06em] block mb-2">
                 Monto en pesos mexicanos
               </label>
               <div className="flex items-center gap-3 px-4 py-3 rounded-xl text-[20px]"
                 style={{ border: '2px solid var(--border)', background: 'var(--bg2)' }}>
-                <span className="font-bold text-[#86868B]">$</span>
+                <span className="font-bold text-[#86868B] dark:text-gray-400">$</span>
                 <input value={capitalSocial}
                   onChange={e => setCapitalSocial(e.target.value)}
                   placeholder="50,000.00"
                   className="flex-1 text-[20px] font-mono font-bold outline-none bg-transparent"
                   style={{ color: 'var(--ink)' }} />
-                <span className="text-[14px] text-[#86868B] font-semibold">MXN</span>
+                <span className="text-[14px] text-[#86868B] dark:text-gray-400 font-semibold">MXN</span>
               </div>
-              <p className="text-[12px] text-[#86868B] mt-3">
+              <p className="text-[12px] text-[#86868B] dark:text-gray-400 mt-3">
                 No es necesario exhibirlo ante el Fedatario Público ni tenerlo depositado en el banco.
                 Recomendación del despacho: $50,000 – $100,000 MXN.
               </p>
@@ -746,13 +746,13 @@ export default function NuevoInstrumentoPage() {
         {/* ── PASO 5 — CONFIRMACIÓN ── */}
         {paso === 4 && (
           <div>
-            <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-2">Confirmar</h2>
-            <p className="text-sm text-gray-600 dark:text-gray-400 mb-6">Resumen de la primera sesión</p>
+            <h2 className="text-lg font-bold text-gray-900 dark:text-white dark:text-white mb-2">Confirmar</h2>
+            <p className="text-sm text-gray-600 dark:text-gray-400 dark:text-gray-400 mb-6">Resumen de la primera sesión</p>
 
             <div className="space-y-3">
               {/* Tipo e instrumento */}
               <div className="bg-white dark:bg-gray-800 border border-black/[0.07] dark:border-white/[0.07] rounded-xl p-4">
-                <div className="text-[10px] font-bold text-[#86868B] uppercase tracking-[0.06em] mb-2">Instrumento</div>
+                <div className="text-[10px] font-bold text-[#86868B] dark:text-gray-400 uppercase tracking-[0.06em] mb-2">Instrumento</div>
                 <div className="flex items-center justify-between">
                   <div>
                     <div className="text-[14px] font-bold text-[#1D1D1F] dark:text-white">
@@ -766,18 +766,18 @@ export default function NuevoInstrumentoPage() {
 
               {/* Socios */}
               <div className="bg-white dark:bg-gray-800 border border-black/[0.07] dark:border-white/[0.07] rounded-xl p-4">
-                <div className="text-[10px] font-bold text-[#86868B] uppercase tracking-[0.06em] mb-2">Socios ({socios.length})</div>
+                <div className="text-[10px] font-bold text-[#86868B] dark:text-gray-400 uppercase tracking-[0.06em] mb-2">Socios ({socios.length})</div>
                 {socios.map((s, i) => (
                   <div key={s.uid} className="flex items-center gap-3 py-2 border-b border-black/[0.04] dark:border-white/[0.06] last:border-0">
                     <div className="w-7 h-7 rounded-full bg-[#F5F5F7] dark:bg-gray-700 flex items-center justify-center text-[11px] font-bold dark:text-white shrink-0">
                       {(s.cliente?.nombre || s.nuevoNombre || '?').charAt(0)}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <div className="text-[13px] font-semibold text-[#1D1D1F] truncate">
+                      <div className="text-[13px] font-semibold text-[#1D1D1F] dark:text-white truncate">
                         {s.cliente?.nombre || s.nuevoNombre || 'Sin nombre'}
                         {s.esNuevo && <span className="ml-1 text-[10px] px-1.5 py-0.5 rounded" style={{ background: 'var(--blue-bg)', color: 'var(--blue)' }}>Nuevo</span>}
                       </div>
-                      <div className="text-[11px] text-[#86868B]">
+                      <div className="text-[11px] text-[#86868B] dark:text-gray-400">
                         {[...ROLES_FIJOS, ...ROLES_OPCIONALES].find(r => r.id === s.rol)?.label}
                       </div>
                     </div>
@@ -789,11 +789,11 @@ export default function NuevoInstrumentoPage() {
               {/* Objeto social */}
               {objetosSociales.length > 0 && (
                 <div className="bg-white dark:bg-gray-800 border border-black/[0.07] dark:border-white/[0.07] rounded-xl p-4">
-                  <div className="text-[10px] font-bold text-[#86868B] uppercase tracking-[0.06em] mb-2">
+                  <div className="text-[10px] font-bold text-[#86868B] dark:text-gray-400 uppercase tracking-[0.06em] mb-2">
                     Objeto social ({objetosSociales.length})
                   </div>
                   {objetosSociales.map((o, i) => (
-                    <div key={o.uid} className="text-[12px] text-[#3A3A3C] leading-relaxed mb-2 last:mb-0 pb-2 last:pb-0 border-b border-black/[0.04] last:border-0">
+                    <div key={o.uid} className="text-[12px] text-[#3A3A3C] dark:text-gray-200 leading-relaxed mb-2 last:mb-0 pb-2 last:pb-0 border-b border-black/[0.04] last:border-0">
                       {o.texto.slice(0, 120)}{o.texto.length > 120 ? '...' : ''}
                     </div>
                   ))}
@@ -803,7 +803,7 @@ export default function NuevoInstrumentoPage() {
               {/* Capital */}
               {capitalSocial && (
                 <div className="bg-white dark:bg-gray-800 border border-black/[0.07] dark:border-white/[0.07] rounded-xl p-4">
-                  <div className="text-[10px] font-bold text-[#86868B] uppercase tracking-[0.06em] mb-1">Capital social</div>
+                  <div className="text-[10px] font-bold text-[#86868B] dark:text-gray-400 uppercase tracking-[0.06em] mb-1">Capital social</div>
                   <div className="text-[18px] font-bold font-mono text-[#1D1D1F] dark:text-white">
                     ${parseFloat(capitalSocial.replace(/,/g, '')).toLocaleString('es-MX')} MXN
                   </div>
@@ -831,24 +831,24 @@ export default function NuevoInstrumentoPage() {
             <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 bg-green-100 dark:bg-green-900/40">
               <CheckCircle size={32} className="text-green-600 dark:text-green-400" />
             </div>
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Instrumento creado</h2>
-            <p className="text-base text-gray-600 dark:text-gray-400 mb-8">El expediente está abierto y listo para continuar</p>
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-white dark:text-white mb-2">Instrumento creado</h2>
+            <p className="text-base text-gray-600 dark:text-gray-400 dark:text-gray-400 mb-8">El expediente está abierto y listo para continuar</p>
 
             {/* Link del portal */}
             <div className="bg-white dark:bg-gray-800 border border-black/[0.07] dark:border-white/[0.07] rounded-2xl p-5 mb-4 text-left">
-              <div className="text-[11px] font-bold text-[#86868B] uppercase tracking-[0.06em] mb-2">
+              <div className="text-[11px] font-bold text-[#86868B] dark:text-gray-400 uppercase tracking-[0.06em] mb-2">
                 Link del portal para los socios
               </div>
               <div className="flex items-center gap-2 px-3 py-2.5 rounded-xl mb-2"
                 style={{ background: 'var(--bg2)', border: '1px solid var(--border)' }}>
-                <span className="flex-1 text-[12px] font-mono text-[#3A3A3C] truncate">{linkPortal}</span>
+                <span className="flex-1 text-[12px] font-mono text-[#3A3A3C] dark:text-gray-200 truncate">{linkPortal}</span>
                 <button onClick={copiarLink}
                   className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-semibold shrink-0 transition-all"
                   style={{ background: copiado ? 'var(--green)' : 'var(--blue)', color: 'white' }}>
                   {copiado ? <><Check size={13} /> Copiado</> : <><Copy size={13} /> Copiar</>}
                 </button>
               </div>
-              <p className="text-[11px] text-[#86868B]">
+              <p className="text-[11px] text-[#86868B] dark:text-gray-400">
                 Comparte este link con los socios para que completen sus datos y suban sus documentos.
               </p>
             </div>
@@ -859,7 +859,7 @@ export default function NuevoInstrumentoPage() {
                 Ir al expediente
               </button>
               <button onClick={() => router.push('/instrumentos')}
-                className="flex-1 py-3 rounded-xl text-base font-bold bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors">
+                className="flex-1 py-3 rounded-xl text-base font-bold bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors">
                 Ver todos
               </button>
             </div>
@@ -868,9 +868,9 @@ export default function NuevoInstrumentoPage() {
 
         {/* ── NAVEGACIÓN ── */}
         {paso < 5 && (
-          <div className="flex items-center justify-between mt-8 pt-6 border-t border-gray-200 dark:border-gray-700">
+          <div className="flex items-center justify-between mt-8 pt-6 border-t border-gray-200 dark:border-gray-700 dark:border-gray-700">
             <button onClick={() => paso === 0 ? router.push('/instrumentos') : setPaso(p => p - 1)}
-              className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-600">
+              className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-600">
               <ChevronLeft size={16} /> {paso === 0 ? 'Cancelar' : 'Anterior'}
             </button>
 
@@ -894,10 +894,10 @@ export default function NuevoInstrumentoPage() {
         {socioSeleccionadoParaRoles && tipo && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
             <div className="bg-white dark:bg-gray-800 rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-              <div className="sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 p-6 flex justify-between items-center">
+              <div className="sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 dark:border-gray-700 p-6 flex justify-between items-center">
                 <div>
-                  <h3 className="text-xl font-bold text-gray-900 dark:text-white">Seleccionar Rol</h3>
-                  <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                  <h3 className="text-xl font-bold text-gray-900 dark:text-white dark:text-white">Seleccionar Rol</h3>
+                  <p className="text-sm text-gray-600 dark:text-gray-400 dark:text-gray-400 mt-1">
                     Tipo de sociedad: {MAPEO_TIPOS_SOCIEDAD[tipo]}
                   </p>
                 </div>
@@ -914,7 +914,7 @@ export default function NuevoInstrumentoPage() {
                   )}
                   <button
                     onClick={() => setSocioSeleccionadoParaRoles(null)}
-                    className="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300">
+                    className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:text-gray-300 dark:hover:text-gray-300">
                     <X size={24} />
                   </button>
                 </div>

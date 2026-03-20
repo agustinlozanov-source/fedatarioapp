@@ -187,8 +187,8 @@ export default function NuevoClientePage() {
                     <ArrowLeft size={14} /> Clientes
                 </button>
 
-                <h1 className="text-[24px] font-extrabold text-[#1D1D1F] tracking-tight mb-1">Nuevo cliente</h1>
-                <p className="text-[14px] text-[#6E6E73] mb-6">Solo el nombre es obligatorio, el resto puedes completarlo después</p>
+                <h1 className="text-[24px] font-extrabold text-[#1D1D1F] dark:text-white tracking-tight mb-1">Nuevo cliente</h1>
+                <p className="text-[14px] text-[#6E6E73] dark:text-gray-400 mb-6">Solo el nombre es obligatorio, el resto puedes completarlo después</p>
 
                 <div className="space-y-6">
                     {/* ─ TOGGLE: ¿ES EXTRANJERO? ─ */}
@@ -207,10 +207,10 @@ export default function NuevoClientePage() {
 
                     {/* ─ DATOS OBLIGATORIOS (TODOS) ─ */}
                     <div className="space-y-4">
-                        <h2 className="text-[14px] font-bold text-[#1D1D1F]">Información básica</h2>
+                        <h2 className="text-[14px] font-bold text-[#1D1D1F] dark:text-white">Información básica</h2>
 
                         <div>
-                            <label className="text-[11px] font-bold text-[#86868B] uppercase tracking-[0.06em] block mb-1.5">
+                            <label className="text-[11px] font-bold text-[#86868B] dark:text-gray-400 uppercase tracking-[0.06em] block mb-1.5">
                                 Nombre completo <span style={{ color: 'var(--red)' }}>*</span>
                             </label>
                             <input value={form.nombre_completo} onChange={e => set('nombre_completo', e.target.value.toUpperCase())}
@@ -221,7 +221,7 @@ export default function NuevoClientePage() {
 
                         <div className="grid grid-cols-2 gap-3">
                             <div>
-                                <label className="text-[11px] font-bold text-[#86868B] uppercase tracking-[0.06em] block mb-1.5">
+                                <label className="text-[11px] font-bold text-[#86868B] dark:text-gray-400 uppercase tracking-[0.06em] block mb-1.5">
                                     RFC
                                 </label>
                                 <input value={form.rfc} onChange={e => set('rfc', e.target.value.toUpperCase())}
@@ -231,7 +231,7 @@ export default function NuevoClientePage() {
                             </div>
                             {!es_extranjero ? (
                                 <div>
-                                    <label className="text-[11px] font-bold text-[#86868B] uppercase tracking-[0.06em] block mb-1.5">
+                                    <label className="text-[11px] font-bold text-[#86868B] dark:text-gray-400 uppercase tracking-[0.06em] block mb-1.5">
                                         CURP
                                     </label>
                                     <input value={form.curp} onChange={e => set('curp', e.target.value.toUpperCase())}
@@ -242,7 +242,7 @@ export default function NuevoClientePage() {
                             ) : (
                                 <div className="flex flex-col gap-3">
                                     <div>
-                                        <label className="text-[11px] font-bold text-[#86868B] uppercase tracking-[0.06em] block mb-1.5">
+                                        <label className="text-[11px] font-bold text-[#86868B] dark:text-gray-400 uppercase tracking-[0.06em] block mb-1.5">
                                             Número de pasaporte
                                         </label>
                                         <input value={form.numero_pasaporte} onChange={e => set('numero_pasaporte', e.target.value.toUpperCase())}
@@ -251,7 +251,7 @@ export default function NuevoClientePage() {
                                             style={{ border: '1px solid var(--border)', background: 'white' }} />
                                     </div>
                                     <div>
-                                        <label className="text-[11px] font-bold text-[#86868B] uppercase tracking-[0.06em] block mb-1.5">
+                                        <label className="text-[11px] font-bold text-[#86868B] dark:text-gray-400 uppercase tracking-[0.06em] block mb-1.5">
                                             CURP <span className="text-[10px] font-normal normal-case" style={{ color: 'var(--ink4)' }}>(si cuenta con uno)</span>
                                         </label>
                                         <input value={form.curp} onChange={e => set('curp', e.target.value.toUpperCase())}
@@ -265,7 +265,7 @@ export default function NuevoClientePage() {
 
                         <div className="grid grid-cols-2 gap-3">
                             <div>
-                                <label className="text-[11px] font-bold text-[#86868B] uppercase tracking-[0.06em] block mb-1.5">
+                                <label className="text-[11px] font-bold text-[#86868B] dark:text-gray-400 uppercase tracking-[0.06em] block mb-1.5">
                                     Fecha de nacimiento
                                 </label>
                                 <input type="date" value={form.fecha_nacimiento} onChange={e => set('fecha_nacimiento', e.target.value)}
@@ -273,7 +273,7 @@ export default function NuevoClientePage() {
                                     style={{ border: '1px solid var(--border)', background: 'white' }} />
                             </div>
                             <div>
-                                <label className="text-[11px] font-bold text-[#86868B] uppercase tracking-[0.06em] block mb-1.5">
+                                <label className="text-[11px] font-bold text-[#86868B] dark:text-gray-400 uppercase tracking-[0.06em] block mb-1.5">
                                     Género
                                 </label>
                                 <select value={form.genero} onChange={e => set('genero', e.target.value)}
@@ -287,7 +287,7 @@ export default function NuevoClientePage() {
                         </div>
 
                         <div>
-                            <label className="text-[11px] font-bold text-[#86868B] uppercase tracking-[0.06em] block mb-1.5">
+                            <label className="text-[11px] font-bold text-[#86868B] dark:text-gray-400 uppercase tracking-[0.06em] block mb-1.5">
                                 Lugar de nacimiento
                             </label>
                             <input value={form.lugar_nacimiento} onChange={e => set('lugar_nacimiento', e.target.value.toUpperCase())}
@@ -299,7 +299,7 @@ export default function NuevoClientePage() {
 
                         <div className="grid grid-cols-2 gap-3">
                             <div>
-                                <label className="text-[11px] font-bold text-[#86868B] uppercase tracking-[0.06em] block mb-1.5">
+                                <label className="text-[11px] font-bold text-[#86868B] dark:text-gray-400 uppercase tracking-[0.06em] block mb-1.5">
                                     Ocupación
                                 </label>
                                 <input value={form.ocupacion} onChange={e => set('ocupacion', e.target.value.toUpperCase())}
@@ -308,7 +308,7 @@ export default function NuevoClientePage() {
                                     style={{ border: '1px solid var(--border)', background: 'white' }} />
                             </div>
                             <div>
-                                <label className="text-[11px] font-bold text-[#86868B] uppercase tracking-[0.06em] block mb-1.5">
+                                <label className="text-[11px] font-bold text-[#86868B] dark:text-gray-400 uppercase tracking-[0.06em] block mb-1.5">
                                     Estado civil
                                 </label>
                                 <select value={form.estado_civil} onChange={e => set('estado_civil', e.target.value)}
@@ -325,7 +325,7 @@ export default function NuevoClientePage() {
                         </div>
 
                         <div>
-                            <label className="text-[11px] font-bold text-[#86868B] uppercase tracking-[0.06em] block mb-1.5">
+                            <label className="text-[11px] font-bold text-[#86868B] dark:text-gray-400 uppercase tracking-[0.06em] block mb-1.5">
                                 Domicilio
                             </label>
                             <input value={form.domicilio} onChange={e => set('domicilio', e.target.value.toUpperCase())}
@@ -338,11 +338,11 @@ export default function NuevoClientePage() {
 
                     {/* ─ CAMPOS POR TIPO ─ */}
                     {!es_extranjero ? (
-                        <div className="space-y-4 p-4 rounded-xl bg-gray-50 border border-gray-200">
-                            <h2 className="text-[14px] font-bold text-[#1D1D1F]">Información de INE (Opcional)</h2>
+                        <div className="space-y-4 p-4 rounded-xl bg-gray-50 border border-gray-200 dark:border-gray-700 dark:border-gray-700">
+                            <h2 className="text-[14px] font-bold text-[#1D1D1F] dark:text-white">Información de INE (Opcional)</h2>
                             <div className="grid grid-cols-3 gap-3">
                                 <div>
-                                    <label className="text-[11px] font-bold text-[#86868B] uppercase tracking-[0.06em] block mb-1.5">
+                                    <label className="text-[11px] font-bold text-[#86868B] dark:text-gray-400 uppercase tracking-[0.06em] block mb-1.5">
                                         Clave de elector
                                     </label>
                                     <input value={form.clave_elector} onChange={e => set('clave_elector', e.target.value.toUpperCase())}
@@ -351,7 +351,7 @@ export default function NuevoClientePage() {
                                         style={{ border: '1px solid var(--border)', background: 'white' }} />
                                 </div>
                                 <div>
-                                    <label className="text-[11px] font-bold text-[#86868B] uppercase tracking-[0.06em] block mb-1.5">
+                                    <label className="text-[11px] font-bold text-[#86868B] dark:text-gray-400 uppercase tracking-[0.06em] block mb-1.5">
                                         Sección INE
                                     </label>
                                     <input value={form.seccion_ine} onChange={e => set('seccion_ine', e.target.value)}
@@ -360,7 +360,7 @@ export default function NuevoClientePage() {
                                         style={{ border: '1px solid var(--border)', background: 'white' }} />
                                 </div>
                                 <div>
-                                    <label className="text-[11px] font-bold text-[#86868B] uppercase tracking-[0.06em] block mb-1.5">
+                                    <label className="text-[11px] font-bold text-[#86868B] dark:text-gray-400 uppercase tracking-[0.06em] block mb-1.5">
                                         IDMEX
                                     </label>
                                     <input value={form.idmex} onChange={e => set('idmex', e.target.value)}
@@ -371,10 +371,10 @@ export default function NuevoClientePage() {
                             </div>
                         </div>
                     ) : (
-                        <div className="space-y-4 p-4 rounded-xl bg-gray-50 border border-gray-200">
-                            <h2 className="text-[14px] font-bold text-[#1D1D1F]">Información migratoria</h2>
+                        <div className="space-y-4 p-4 rounded-xl bg-gray-50 border border-gray-200 dark:border-gray-700 dark:border-gray-700">
+                            <h2 className="text-[14px] font-bold text-[#1D1D1F] dark:text-white">Información migratoria</h2>
                             <div>
-                                <label className="text-[11px] font-bold text-[#86868B] uppercase tracking-[0.06em] block mb-1.5">
+                                <label className="text-[11px] font-bold text-[#86868B] dark:text-gray-400 uppercase tracking-[0.06em] block mb-1.5">
                                     Número FM
                                 </label>
                                 <input value={form.numero_fm} onChange={e => set('numero_fm', e.target.value.toUpperCase())}
@@ -387,8 +387,8 @@ export default function NuevoClientePage() {
 
                     {/* ─ DOCUMENTOS ─ */}
                     <div className="border-t pt-6">
-                        <div className="text-[14px] font-bold text-[#1D1D1F] mb-4">Documentos opcionales</div>
-                        <p className="text-[12px] text-[#86868B] mb-4">Sube documentos para rellenar automáticamente los campos de información</p>
+                        <div className="text-[14px] font-bold text-[#1D1D1F] dark:text-white mb-4">Documentos opcionales</div>
+                        <p className="text-[12px] text-[#86868B] dark:text-gray-400 mb-4">Sube documentos para rellenar automáticamente los campos de información</p>
                         
                         <div className="bg-white dark:bg-gray-800 border border-black/[0.07] dark:border-white/[0.07] rounded-2xl p-5 mb-4">
                             <div className="flex items-center gap-3">
@@ -421,10 +421,10 @@ export default function NuevoClientePage() {
                                         style={{ background: 'var(--bg2)' }}>
                                         <FileText size={14} style={{ color: 'var(--ink4)' }} className="shrink-0" />
                                         <div className="flex-1 min-w-0">
-                                            <div className="text-[12px] font-semibold text-[#1D1D1F]">
+                                            <div className="text-[12px] font-semibold text-[#1D1D1F] dark:text-white">
                                                 {TIPOS_DOCUMENTO.find(t => t.id === doc.tipo)?.label}
                                             </div>
-                                            <div className="text-[11px] text-[#86868B] truncate">{doc.nombre}</div>
+                                            <div className="text-[11px] text-[#86868B] dark:text-gray-400 truncate">{doc.nombre}</div>
                                         </div>
                                         <button onClick={() => eliminarDocumento(doc.id)}
                                             className="flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] font-medium text-red-600 hover:bg-red-50 shrink-0 transition-colors">

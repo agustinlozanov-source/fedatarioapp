@@ -155,8 +155,8 @@ export default function CargaMasivaPage() {
                     style={{ background: 'var(--green-bg)' }}>
                     <CheckCircle size={32} style={{ color: 'var(--green)' }} />
                 </div>
-                <h2 className="text-[22px] font-extrabold text-[#1D1D1F] mb-1">Carga completada</h2>
-                <p className="text-[14px] text-[#86868B] mb-8">
+                <h2 className="text-[22px] font-extrabold text-[#1D1D1F] dark:text-white mb-1">Carga completada</h2>
+                <p className="text-[14px] text-[#86868B] dark:text-gray-400 mb-8">
                     Se crearon <strong>{resultado.creados}</strong> clientes correctamente
                 </p>
                 <div className="flex gap-3 justify-center">
@@ -185,8 +185,8 @@ export default function CargaMasivaPage() {
                     <ArrowLeft size={14} /> Clientes
                 </button>
 
-                <h1 className="text-[24px] font-extrabold text-[#1D1D1F] tracking-tight mb-1">Carga masiva</h1>
-                <p className="text-[14px] text-[#6E6E73] mb-6">Importa múltiples clientes a la vez</p>
+                <h1 className="text-[24px] font-extrabold text-[#1D1D1F] dark:text-white tracking-tight mb-1">Carga masiva</h1>
+                <p className="text-[14px] text-[#6E6E73] dark:text-gray-400 mb-6">Importa múltiples clientes a la vez</p>
 
                 {/* Selector de modo */}
                 <div className="flex items-center gap-1 p-1 rounded-xl mb-6 w-fit"
@@ -211,8 +211,8 @@ export default function CargaMasivaPage() {
                         <div className="bg-white dark:bg-gray-800 border border-black/[0.07] dark:border-white/[0.07] rounded-2xl p-5">
                             <div className="flex items-center justify-between">
                                 <div>
-                                    <div className="text-[13px] font-bold text-[#1D1D1F] mb-0.5">Paso 1 — Descarga la plantilla</div>
-                                    <div className="text-[12px] text-[#86868B] mb-4">Llena los datos de tus clientes en el archivo CSV</div>
+                                    <div className="text-[13px] font-bold text-[#1D1D1F] dark:text-white mb-0.5">Paso 1 — Descarga la plantilla</div>
+                                    <div className="text-[12px] text-[#86868B] dark:text-gray-400 mb-4">Llena los datos de tus clientes en el archivo CSV</div>
                                 </div>
                                 <button onClick={descargarPlantilla}
                                     className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-[13px] font-bold"
@@ -228,14 +228,14 @@ export default function CargaMasivaPage() {
 
                         {/* Paso 2 — Subir archivo */}
                         <div className="bg-white dark:bg-gray-800 border border-black/[0.07] dark:border-white/[0.07] rounded-2xl p-5">
-                            <div className="text-[13px] font-bold text-[#1D1D1F] mb-0.5">Paso 2 — Sube el archivo</div>
-                            <div className="text-[12px] text-[#86868B] mb-4">Formatos aceptados: CSV, TXT</div>
+                            <div className="text-[13px] font-bold text-[#1D1D1F] dark:text-white mb-0.5">Paso 2 — Sube el archivo</div>
+                            <div className="text-[12px] text-[#86868B] dark:text-gray-400 mb-4">Formatos aceptados: CSV, TXT</div>
                             <button onClick={() => fileRef.current?.click()}
                                 className="w-full flex flex-col items-center justify-center gap-2 py-10 rounded-xl border-2 border-dashed transition-colors hover:border-[var(--blue)]"
                                 style={{ borderColor: 'var(--border)', background: 'var(--bg2)' }}>
                                 <Upload size={24} style={{ color: 'var(--ink4)' }} />
-                                <span className="text-[13px] font-semibold text-[#86868B]">Click para seleccionar archivo</span>
-                                <span className="text-[11px] text-[#86868B]">CSV o TXT con separación por comas</span>
+                                <span className="text-[13px] font-semibold text-[#86868B] dark:text-gray-400">Click para seleccionar archivo</span>
+                                <span className="text-[11px] text-[#86868B] dark:text-gray-400">CSV o TXT con separación por comas</span>
                             </button>
                             <input ref={fileRef} type="file" accept=".csv,.txt" className="hidden"
                                 onChange={e => { if (e.target.files?.[0]) leerCSV(e.target.files[0]); }} />
@@ -246,8 +246,8 @@ export default function CargaMasivaPage() {
                 {/* ── MODO MANUAL — formulario vacío inicial ── */}
                 {modo === 'manual' && rows.length === 0 && (
                     <div className="flex flex-col items-center justify-center py-12 text-center">
-                        <div className="text-[14px] font-bold text-[#1D1D1F] mb-1">Captura en lote</div>
-                        <div className="text-[13px] text-[#86868B] mb-4">
+                        <div className="text-[14px] font-bold text-[#1D1D1F] dark:text-white mb-1">Captura en lote</div>
+                        <div className="text-[13px] text-[#86868B] dark:text-gray-400 mb-4">
                             Agrega clientes uno por uno de forma rápida
                         </div>
                         <button onClick={agregarRow}
@@ -292,7 +292,7 @@ export default function CargaMasivaPage() {
                                     <thead>
                                         <tr style={{ background: 'var(--bg2)', borderBottom: '1px solid var(--border)' }}>
                                             {['Nombre *', 'RFC', 'CURP', 'Email', 'Celular', 'Nacionalidad', 'Tipo', ''].map(h => (
-                                                <th key={h} className="px-3 py-2.5 text-left text-[10px] font-bold text-[#86868B] uppercase tracking-[0.06em] whitespace-nowrap">
+                                                <th key={h} className="px-3 py-2.5 text-left text-[10px] font-bold text-[#86868B] dark:text-gray-400 uppercase tracking-[0.06em] whitespace-nowrap">
                                                     {h}
                                                 </th>
                                             ))}

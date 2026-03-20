@@ -92,13 +92,13 @@ function CampoEditable({ label, value, onSave, tipo = 'text', opciones, soloNume
     return (
         <div className="flex items-start py-2.5 gap-4 group border-b border-black/[0.04] last:border-0">
             <div className="w-44 flex-shrink-0 pt-0.5">
-                <span className="text-[11px] font-bold text-[#86868B] uppercase tracking-[0.06em]">{label}</span>
+                <span className="text-[11px] font-bold text-[#86868B] dark:text-gray-400 uppercase tracking-[0.06em]">{label}</span>
             </div>
             {editing ? (
                 <div className="flex gap-2 flex-1">
                     {tipo === 'select' && opciones ? (
                         <select value={draft} onChange={e => setDraft(e.target.value)} autoFocus
-                            className="flex-1 text-[13px] text-[#1D1D1F] dark:text-white font-semibold border border-gray-200 dark:border-gray-600 rounded-lg px-2 py-1 focus:outline-none focus:border-black bg-white dark:bg-gray-700">
+                            className="flex-1 text-[13px] text-[#1D1D1F] dark:text-white font-semibold border border-gray-200 dark:border-gray-700 dark:border-gray-600 rounded-lg px-2 py-1 focus:outline-none focus:border-black bg-white dark:bg-gray-700">
                             <option value="">Sin datos</option>
                             {opciones.map(o => <option key={o} value={o}>{o}</option>)}
                         </select>
@@ -109,7 +109,7 @@ function CampoEditable({ label, value, onSave, tipo = 'text', opciones, soloNume
                             else if (tipo === 'text') v = v.toUpperCase();
                             setDraft(v);
                         }}
-                            className="flex-1 text-[13px] text-[#1D1D1F] font-semibold border border-gray-200 rounded-lg px-2 py-1 focus:outline-none focus:border-black" autoFocus />
+                            className="flex-1 text-[13px] text-[#1D1D1F] dark:text-white font-semibold border border-gray-200 dark:border-gray-700 rounded-lg px-2 py-1 focus:outline-none focus:border-black" autoFocus />
                     )}
                     <button onClick={save} disabled={saving} className="p-1 rounded-md hover:bg-green-50 text-green-600 disabled:opacity-40">
                         {saving ? <Loader2 size={13} className="animate-spin" /> : <Check size={13} />}
@@ -120,18 +120,18 @@ function CampoEditable({ label, value, onSave, tipo = 'text', opciones, soloNume
                 </div>
             ) : (
                 <div className="flex items-center gap-2 flex-1 min-w-0">
-                    <span className="text-[13px] font-semibold text-[#1D1D1F] flex-1 truncate">
+                    <span className="text-[13px] font-semibold text-[#1D1D1F] dark:text-white flex-1 truncate">
                         {value ? value : <span className="text-gray-300 italic text-[12px]">Sin datos</span>}
                     </span>
                     <div className="flex items-center gap-1 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
                         {value && (
-                            <button onClick={copiar} className="p-1 rounded-md hover:bg-gray-100 text-gray-500" title="Copiar">
+                            <button onClick={copiar} className="p-1 rounded-md hover:bg-gray-100 text-gray-500 dark:text-gray-400 dark:text-gray-400" title="Copiar">
                                 {copied ? <Check size={11} className="text-green-600" /> : <Copy size={11} />}
                             </button>
                         )}
                         {onSave && (
                             <button onClick={() => { setDraft(String(value ?? '')); setEditing(true); }}
-                                className="p-1 rounded-md hover:bg-gray-100 text-gray-500">
+                                className="p-1 rounded-md hover:bg-gray-100 text-gray-500 dark:text-gray-400 dark:text-gray-400">
                                 <Pencil size={11} />
                             </button>
                         )}
@@ -280,7 +280,7 @@ export default function ClientePage() {
 
     if (!cliente) return (
         <div className="h-screen flex items-center justify-center">
-            <div className="text-[14px] text-[#86868B]">Cliente no encontrado</div>
+            <div className="text-[14px] text-[#86868B] dark:text-gray-400">Cliente no encontrado</div>
         </div>
     );
 
@@ -312,13 +312,13 @@ export default function ClientePage() {
                     </div>
                     <div className="flex-1">
                         <div className="flex items-center gap-2 mb-1">
-                            <h1 className="text-[22px] font-extrabold text-[#1D1D1F] tracking-tight">{cliente.nombre}</h1>
+                            <h1 className="text-[22px] font-extrabold text-[#1D1D1F] dark:text-white tracking-tight">{cliente.nombre}</h1>
                             <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full"
                                 style={{ background: 'var(--bg3)', color: 'var(--ink4)' }}>
                                 {cliente.tipoPersona === 'fisica' ? 'Persona física' : 'Persona moral'}
                             </span>
                         </div>
-                        <div className="text-[13px] text-[#86868B]">
+                        <div className="text-[13px] text-[#86868B] dark:text-gray-400">
                             {[cliente.rfc, cliente.curp].filter(Boolean).join(' · ') || 'Sin RFC/CURP registrado'}
                         </div>
                     </div>
@@ -329,7 +329,7 @@ export default function ClientePage() {
                             style={{ color: pct === 100 ? 'var(--green)' : 'var(--orange)' }}>
                             {pct}%
                         </div>
-                        <div className="text-[11px] text-[#86868B]">Documentos esenciales</div>
+                        <div className="text-[11px] text-[#86868B] dark:text-gray-400">Documentos esenciales</div>
                     </div>
                 </div>
 
@@ -359,7 +359,7 @@ export default function ClientePage() {
 
                         {/* Identificación */}
                         <div className="bg-white dark:bg-gray-800 border border-black/[0.07] dark:border-white/[0.07] rounded-2xl p-5">
-                            <div className="text-[11px] font-bold text-[#86868B] uppercase tracking-[0.06em] mb-1">Identificación</div>
+                            <div className="text-[11px] font-bold text-[#86868B] dark:text-gray-400 uppercase tracking-[0.06em] mb-1">Identificación</div>
                             <CampoEditable label="Nombre completo" value={(cliente as any).nombre_completo || cliente.nombre} onSave={v => actualizarCampo('nombre_completo', v)} />
                             <CampoEditable label="RFC" value={cliente.rfc} onSave={v => actualizarCampo('rfc', v)} />
                             <CampoEditable label="CURP" value={cliente.curp} onSave={v => actualizarCampo('curp', v)} />
@@ -379,14 +379,14 @@ export default function ClientePage() {
 
                         {/* Datos personales */}
                         <div className="bg-white dark:bg-gray-800 border border-black/[0.07] dark:border-white/[0.07] rounded-2xl p-5">
-                            <div className="text-[11px] font-bold text-[#86868B] uppercase tracking-[0.06em] mb-1">Datos personales</div>
+                            <div className="text-[11px] font-bold text-[#86868B] dark:text-gray-400 uppercase tracking-[0.06em] mb-1">Datos personales</div>
                             <CampoEditable label="Estado civil" value={(cliente as any).estado_civil} onSave={v => actualizarCampo('estado_civil', v)} tipo="select" opciones={['Soltero/a', 'Casado/a', 'Divorciado/a', 'Viudo/a', 'Unión libre', 'Separado/a']} />
                             <CampoEditable label="Ocupación" value={(cliente as any).ocupacion} onSave={v => actualizarCampo('ocupacion', v)} />
                             <CampoEditable label="Régimen fiscal" value={(cliente as any).regimen_fiscal} onSave={v => actualizarCampo('regimen_fiscal', v)} />
                             <CampoEditable label="Domicilio" value={domicilioLineaStr((cliente as any).domicilio)} onSave={v => actualizarCampo('domicilio', v)} />
                         </div>
                         <div className="bg-white dark:bg-gray-800 border border-black/[0.07] dark:border-white/[0.07] rounded-2xl p-5">
-                            <div className="text-[11px] font-bold text-[#86868B] uppercase tracking-[0.06em] mb-1">Contacto</div>
+                            <div className="text-[11px] font-bold text-[#86868B] dark:text-gray-400 uppercase tracking-[0.06em] mb-1">Contacto</div>
                             <CampoEditable label="Correo electrónico" value={(cliente as any).email} onSave={v => actualizarCampo('email', v)} />
                             <CampoEditable label="Teléfono" value={(cliente as any).telefono} onSave={v => actualizarCampo('telefono', v)} />
                             <CampoEditable label="Celular" value={(cliente as any).celular} onSave={v => actualizarCampo('celular', v)} />
@@ -395,7 +395,7 @@ export default function ClientePage() {
                         {/* Documentos de identidad */}
                         {!(cliente as any).es_extranjero ? (
                             <div className="bg-white dark:bg-gray-800 border border-black/[0.07] dark:border-white/[0.07] rounded-2xl p-5">
-                                <div className="text-[11px] font-bold text-[#86868B] uppercase tracking-[0.06em] mb-1">Documentos de identidad</div>
+                                <div className="text-[11px] font-bold text-[#86868B] dark:text-gray-400 uppercase tracking-[0.06em] mb-1">Documentos de identidad</div>
                                 <CampoEditable label="Clave de elector" value={(cliente as any).clave_elector} onSave={v => actualizarCampo('clave_elector', v)} />
                                 <CampoEditable label="Sección INE" value={(cliente as any).seccion_ine} onSave={v => actualizarCampo('seccion_ine', v)} />
                                 <CampoEditable label="IDMEX" value={(cliente as any).idmex} onSave={v => actualizarCampo('idmex', v)} soloNumeros />
@@ -403,7 +403,7 @@ export default function ClientePage() {
                             </div>
                         ) : (
                             <div className="bg-white dark:bg-gray-800 border border-black/[0.07] dark:border-white/[0.07] rounded-2xl p-5">
-                                <div className="text-[11px] font-bold text-[#86868B] uppercase tracking-[0.06em] mb-1">Documentos de identidad (extranjero)</div>
+                                <div className="text-[11px] font-bold text-[#86868B] dark:text-gray-400 uppercase tracking-[0.06em] mb-1">Documentos de identidad (extranjero)</div>
                                 <CampoEditable label="N° Pasaporte" value={(cliente as any).numero_pasaporte} onSave={v => actualizarCampo('numero_pasaporte', v)} />
                                 <CampoEditable label="Vigencia pasaporte" value={(cliente as any).vigencia_pasaporte} onSave={v => actualizarCampo('vigencia_pasaporte', v)} tipo="date" />
                                 <CampoEditable label="N° FM (FM2/FM3)" value={(cliente as any).numero_fm} onSave={v => actualizarCampo('numero_fm', v)} />
@@ -414,7 +414,7 @@ export default function ClientePage() {
 
                         {/* Capacidades */}
                         <div className="bg-white dark:bg-gray-800 border border-black/[0.07] dark:border-white/[0.07] rounded-2xl p-5">
-                            <div className="text-[11px] font-bold text-[#86868B] uppercase tracking-[0.06em] mb-3">Capacidades</div>
+                            <div className="text-[11px] font-bold text-[#86868B] dark:text-gray-400 uppercase tracking-[0.06em] mb-3">Capacidades</div>
                             <div className="grid grid-cols-3 gap-3">
                                 {([
                                     { key: 'sabeLeer', label: 'Sabe leer' },
@@ -446,7 +446,7 @@ export default function ClientePage() {
                     <div className="space-y-4">
                         {/* Subir documento */}
                         <div className="bg-white dark:bg-gray-800 border border-black/[0.07] dark:border-white/[0.07] rounded-2xl p-5">
-                            <div className="text-[13px] font-bold text-[#1D1D1F] mb-3">Subir documento</div>
+                            <div className="text-[13px] font-bold text-[#1D1D1F] dark:text-white mb-3">Subir documento</div>
                             <div className="flex items-center gap-3">
                                 <select value={tipoSeleccionado}
                                     onChange={e => setTipoSeleccionado(e.target.value as TipoDocumento)}
@@ -468,15 +468,15 @@ export default function ClientePage() {
                                 <input ref={fileRef} type="file" accept=".pdf,.jpg,.jpeg,.png" className="hidden"
                                     onChange={e => { if (e.target.files?.[0]) subirDoc(e.target.files[0]); }} />
                             </div>
-                            <p className="text-[11px] text-[#86868B] mt-2">* Documentos esenciales para el acta</p>
+                            <p className="text-[11px] text-[#86868B] dark:text-gray-400 mt-2">* Documentos esenciales para el acta</p>
                         </div>
 
                         {/* Lista de documentos */}
                         {documentos.length === 0 ? (
                             <div className="flex flex-col items-center justify-center py-12 text-center">
                                 <FileText size={24} style={{ color: 'var(--ink4)' }} className="mb-2" />
-                                <div className="text-[14px] font-bold text-[#1D1D1F] mb-1">Sin documentos</div>
-                                <div className="text-[13px] text-[#86868B]">Sube el primer documento del cliente</div>
+                                <div className="text-[14px] font-bold text-[#1D1D1F] dark:text-white mb-1">Sin documentos</div>
+                                <div className="text-[13px] text-[#86868B] dark:text-gray-400">Sube el primer documento del cliente</div>
                             </div>
                         ) : (
                             <div className="space-y-2">
@@ -492,10 +492,10 @@ export default function ClientePage() {
                                                     <FileText size={16} style={{ color: 'var(--ink4)' }} />
                                                 </div>
                                                 <div className="flex-1 min-w-0">
-                                                    <div className="text-[13px] font-semibold text-[#1D1D1F]">
+                                                    <div className="text-[13px] font-semibold text-[#1D1D1F] dark:text-white">
                                                         {tipoInfo?.label || doc.tipo}
                                                     </div>
-                                                    <div className="text-[11px] text-[#86868B] truncate">{doc.nombre}</div>
+                                                    <div className="text-[11px] text-[#86868B] dark:text-gray-400 truncate">{doc.nombre}</div>
                                                 </div>
                                                 <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold shrink-0"
                                                     style={{ background: estado.bg, color: estado.color }}>
@@ -510,14 +510,14 @@ export default function ClientePage() {
                                             {/* Datos extraídos */}
                                             {doc.datosExtraidos && Object.keys(doc.datosExtraidos).length > 0 && (
                                                 <div className="mt-3 pt-3 border-t border-black/[0.04]">
-                                                    <div className="text-[10px] font-bold text-[#86868B] uppercase tracking-[0.06em] mb-2">
+                                                    <div className="text-[10px] font-bold text-[#86868B] dark:text-gray-400 uppercase tracking-[0.06em] mb-2">
                                                         Datos extraídos por AGT-02
                                                     </div>
                                                     <div className="grid grid-cols-2 gap-2">
                                                         {Object.entries(doc.datosExtraidos).map(([k, v]) => (
                                                             <div key={k}>
-                                                                <div className="text-[10px] text-[#86868B]">{k}</div>
-                                                                <div className="text-[12px] font-semibold text-[#1D1D1F]">{String(v)}</div>
+                                                                <div className="text-[10px] text-[#86868B] dark:text-gray-400">{k}</div>
+                                                                <div className="text-[12px] font-semibold text-[#1D1D1F] dark:text-white">{String(v)}</div>
                                                             </div>
                                                         ))}
                                                     </div>
@@ -537,8 +537,8 @@ export default function ClientePage() {
                         {instrumentos.length === 0 ? (
                             <div className="flex flex-col items-center justify-center py-12 text-center">
                                 <FileText size={24} style={{ color: 'var(--ink4)' }} className="mb-2" />
-                                <div className="text-[14px] font-bold text-[#1D1D1F] mb-1">Sin instrumentos</div>
-                                <div className="text-[13px] text-[#86868B]">Este cliente no participa en ningún instrumento aún</div>
+                                <div className="text-[14px] font-bold text-[#1D1D1F] dark:text-white mb-1">Sin instrumentos</div>
+                                <div className="text-[13px] text-[#86868B] dark:text-gray-400">Este cliente no participa en ningún instrumento aún</div>
                             </div>
                         ) : (
                             instrumentos.map(inst => {
@@ -547,10 +547,10 @@ export default function ClientePage() {
                                     <div key={inst.id} className="bg-white dark:bg-gray-800 border border-black/[0.07] dark:border-white/[0.07] rounded-xl p-4">
                                         <div className="flex items-center justify-between">
                                             <div>
-                                                <div className="text-[14px] font-bold text-[#1D1D1F]">
+                                                <div className="text-[14px] font-bold text-[#1D1D1F] dark:text-white">
                                                     {inst.denominacion_social || 'Sin nombre'}
                                                 </div>
-                                                <div className="text-[12px] text-[#86868B] mt-0.5">
+                                                <div className="text-[12px] text-[#86868B] dark:text-gray-400 mt-0.5">
                                                     {inst.tipo === 'sa_de_cv' ? 'SA de CV' : 'S de RL'}
                                                     {socio && ` · ${socio.rol.replace(/_/g, ' ')} · ${socio.porcentaje}%`}
                                                 </div>
