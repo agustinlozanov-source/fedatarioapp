@@ -366,6 +366,24 @@ async def docx_generar(body: DocxInput):
                 except Exception as e:
                     logger.warning(f"secciones fallaron, usando legacy: {e}")
 
+            # Guardar secciones en Firestore
+            if secciones_obj and db:
+                try:
+                    secciones_serializadas = [
+                        {
+                            "tipo": sec.tipo,
+                            "runs": sec.runs,
+                            "data": sec.data if isinstance(sec.data, dict) else {}
+                        }
+                        for sec in secciones_obj
+                    ]
+                    db.collection("instrumentos").document(body.instrumento_id).update({
+                        "secciones": secciones_serializadas
+                    })
+                    logger.info(f"Secciones guardadas en Firestore para {body.instrumento_id} ({len(secciones_serializadas)} secciones)")
+                except Exception as e:
+                    logger.warning(f"No se pudieron guardar secciones en Firestore: {e}")
+
         if not texto_acta and secciones_obj is None:
             raise HTTPException(status_code=400, detail="Se requiere texto_acta o instrumento_id válido")
 
@@ -406,6 +424,25 @@ def obtener_secciones_de_firestore(instrumento_id: str) -> dict:
             secciones = generar_secciones(redactor_input)
         except Exception as e:
             logger.warning(f"generar_secciones falló: {e}")
+
+    # Guardar secciones en Firestore
+    if secciones and db:
+        try:
+            secciones_serializadas = [
+                {
+                    "tipo": sec.tipo,
+                    "runs": sec.runs,
+                    "data": sec.data if isinstance(sec.data, dict) else {}
+                }
+                for sec in secciones
+            ]
+            db.collection("instrumentos").document(instrumento_id).update({
+                "secciones": secciones_serializadas
+            })
+            logger.info(f"Secciones guardadas en Firestore para {instrumento_id} ({len(secciones_serializadas)} secciones)")
+        except Exception as e:
+            logger.warning(f"No se pudieron guardar secciones en Firestore: {e}")
+
     return {
         **resultado,
         "secciones": secciones,
