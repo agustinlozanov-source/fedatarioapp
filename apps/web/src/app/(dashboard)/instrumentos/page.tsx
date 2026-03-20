@@ -29,22 +29,9 @@ const ESTADO_LABEL: Record<string, { label: string; color: string; bg: string; p
   cerrado:                  { label: 'Cerrado',           color: 'var(--ink4)',   bg: 'var(--bg3)',       paso: 11 },
 };
 
-/** Score de integración: cuántos socios tienen datos + documentos completos. */
+/** Devuelve el porcentaje de completitud guardado por el compendio (0-100). */
 function calcularScore(inst: Instrumento): number {
-  const socios = inst.socios ?? [];
-  if (socios.length === 0) return 0;
-  // Puntaje por socio: datosCompletos (50%) + documentosCompletos (50%)
-  const puntos = socios.reduce((acc, s) => {
-    return acc + (s.datosCompletos ? 0.5 : 0) + (s.documentosCompletos ? 0.5 : 0);
-  }, 0);
-  // Bonus por campos del instrumento completos
-  let instrBonus = 0;
-  if (inst.denominacion_social) instrBonus += 0.5;
-  if (inst.capital_social || (inst as any).capital_fijo) instrBonus += 0.25;
-  if (inst.objeto_social_texto || (inst as any).objetoSocial) instrBonus += 0.25;
-  const baseScore = (puntos / socios.length) * 80;
-  const instrScore = Math.min(instrBonus, 1) * 20;
-  return Math.round(baseScore + instrScore);
+  return inst.completitud ?? 0;
 }
 
 /** Fuzzy search: devuelve 0 si no coincide, >0 cuanto mejor el match. */

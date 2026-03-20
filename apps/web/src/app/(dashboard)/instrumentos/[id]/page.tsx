@@ -253,8 +253,39 @@ export default function InstrumentoDetallePage() {
 
     const guardarCampo = async (campo: string, valor: any) => {
         if (!id) return
-        await updateDoc(doc(db, 'instrumentos', id), { [campo]: valor })
-        setInstrumento(prev => prev ? { ...prev, [campo]: valor } : prev)
+        const instActualizado = instrumento ? { ...instrumento, [campo]: valor } : null
+        const { porcentaje } = instActualizado
+            ? (() => {
+                const i = instActualizado
+                const faltantes: string[] = []
+                if (!getNumPoliza(i)) faltantes.push('x')
+                if (!i.fecha_instrumento) faltantes.push('x')
+                if (!i.tipo) faltantes.push('x')
+                if (!getDenominacion(i)) faltantes.push('x')
+                if (!getDomicilio(i)) faltantes.push('x')
+                if (!getCapital(i)) faltantes.push('x')
+                if (!getObjeto(i)) faltantes.push('x')
+                const socios = i.socios ?? []
+                if (socios.length === 0) faltantes.push('x')
+                socios.forEach(s => {
+                    const p = getSocioPerfil(s)
+                    if (!p.nombre_completo) faltantes.push('x')
+                    if (!p.rfc) faltantes.push('x')
+                    if (!p.curp) faltantes.push('x')
+                    if (!p.fecha_nacimiento) faltantes.push('x')
+                    if (!p.lugar_nacimiento) faltantes.push('x')
+                    if (!p.genero) faltantes.push('x')
+                    if (!p.ocupacion) faltantes.push('x')
+                    if (!p.estado_civil) faltantes.push('x')
+                    if (!p.domicilio) faltantes.push('x')
+                    if (!s.rol) faltantes.push('x')
+                })
+                const totalCampos = 7 + Math.max(socios.length, 1) * 10
+                return { porcentaje: Math.max(0, Math.round(((totalCampos - faltantes.length) / totalCampos) * 100)) }
+              })()
+            : { porcentaje: 0 }
+        await updateDoc(doc(db, 'instrumentos', id), { [campo]: valor, completitud: porcentaje })
+        setInstrumento(prev => prev ? { ...prev, [campo]: valor, completitud: porcentaje } : prev)
     }
 
     const guardarCampoCliente = async (clienteId: string, campo: string, valor: string) => {

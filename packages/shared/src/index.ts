@@ -187,6 +187,7 @@ export interface Instrumento {
   fechaFirma?: string;
   actaUrl?: string;
   partes?: string[];
+  completitud?: number;  // Porcentaje 0-100 calculado por el compendio
   creadoEn: string;
   actualizadoEn: string;
 }
