@@ -452,6 +452,24 @@ def obtener_secciones_de_firestore(instrumento_id: str) -> dict:
     }
 
 
+@app.post("/secciones/generar")
+async def generar_secciones_endpoint(request: Request):
+    """Genera y guarda secciones estructuradas en Firestore sin descargar nada."""
+    try:
+        body = await request.json()
+        instrumento_id = body.get("instrumento_id")
+        if not instrumento_id:
+            raise HTTPException(status_code=400, detail="instrumento_id es requerido")
+        resultado = obtener_secciones_de_firestore(instrumento_id)
+        secciones = resultado.get("secciones", [])
+        return {"ok": True, "total": len(secciones)}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(traceback.format_exc())
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @app.post("/docx/exportar-docs")
 async def exportar_docs(request: Request):
     """AGT-07 — Exporta el instrumento a Google Docs y regresa la URL."""
