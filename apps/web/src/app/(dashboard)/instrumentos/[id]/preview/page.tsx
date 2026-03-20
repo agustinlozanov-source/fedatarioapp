@@ -35,7 +35,12 @@ export default function PreviewPage() {
       setDenominacion(instr.denominacion_social ?? '')
 
       if (instr.secciones?.length) {
-        setSecciones(instr.secciones)
+        // Parsear runs_json si viene como string (formato nuevo)
+        const parsed = instr.secciones.map((s: any) => ({
+          ...s,
+          runs: s.runs_json ? JSON.parse(s.runs_json) : (s.runs ?? [])
+        }))
+        setSecciones(parsed)
       } else {
         setSecciones([])   // vacío → muestra pantalla de "generar"
       }

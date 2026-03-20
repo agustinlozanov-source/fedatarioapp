@@ -434,11 +434,11 @@ def obtener_secciones_de_firestore(instrumento_id: str) -> dict:
 
     # Guardar secciones en Firestore
     if secciones and db:
-        # Convertir tuplas a listas para que Firestore pueda serializarlas
+        # Firestore no permite arrays de arrays — convertir runs a maps
         secciones_serializadas = [
             {
                 "tipo": sec.tipo,
-                "runs": [[str(t), bool(b)] for t, b in sec.runs],
+                "runs": [{"t": str(t), "b": bool(b)} for t, b in sec.runs],
                 "data": _firestore_safe(sec.data if isinstance(sec.data, dict) else {})
             }
             for sec in secciones
