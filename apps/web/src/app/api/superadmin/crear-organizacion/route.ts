@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { adminAuth, adminDb } from '@/lib/firebaseAdmin';
 
+export const dynamic = 'force-dynamic';
+
 const SUPERADMIN_UID = process.env.NEXT_PUBLIC_SUPERADMIN_UID ?? '';
 
 export async function POST(req: NextRequest) {
@@ -11,9 +13,12 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
     }
 
+    const auth = adminAuth();
+    const firestore = adminDb();
+
     let callerUid: string;
     try {
-        const decoded = await adminAuth.verifyIdToken(idToken);
+        const decoded = await auth.verifyIdToken(idToken);
         callerUid = decoded.uid;
     } catch {
         return NextResponse.json({ error: 'Token inválido' }, { status: 401 });
@@ -38,7 +43,7 @@ export async function POST(req: NextRequest) {
     const owner = usuarios[0];
     let ownerRecord;
     try {
-        ownerRecord = await adminAuth.createUser({
+        ownerRecord = await auth.createUser({
             email: owner.email,
             password: owner.password,
             displayName: owner.nombre,
@@ -50,7 +55,7 @@ export async function POST(req: NextRequest) {
     const tenantId = ownerRecord.uid;
 
     // 4. Crear la organización en Firestore
-    await adminDb.collection('organizaciones').doc(tenantId).set({
+    await firestore.collection('organizaciones').doc(tenantId).set({
         nombre: nombreOrg,
         ownerUid: tenantId,
         creadoEn: new Date().toISOString(),
@@ -63,13 +68,13 @@ export async function POST(req: NextRequest) {
 
     for (const u of usuarios.slice(1)) {
         try {
-            const record = await adminAuth.createUser({
+            const record = await auth.createUser({
                 email: u.email,
                 password: u.password,
                 displayName: u.nombre,
             });
             // Los usuarios adicionales comparten el tenantId del owner
-            await adminDb.collection('usuarios').doc(record.uid).set({
+            await firestore.collection('usuarios').doc(record.uid).set({
                 tenantId,
                 email: u.email,
                 nombre: u.nombre,
