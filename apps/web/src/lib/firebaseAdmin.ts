@@ -6,11 +6,12 @@ function getAdminApp() {
     const projectId = process.env.FIREBASE_ADMIN_PROJECT_ID;
     const clientEmail = process.env.FIREBASE_ADMIN_CLIENT_EMAIL;
 
-    // Netlify a veces envuelve el valor entre comillas o no interpreta \n como saltos de línea reales
+    // Netlify puede almacenar \n como \\n (doble escape), como \n literal, o como salto de línea real
     const rawKey = process.env.FIREBASE_ADMIN_PRIVATE_KEY ?? '';
     const privateKey = rawKey
-        .replace(/^["']|["']$/g, '')  // elimina comillas envolventes si existen
-        .replace(/\\n/g, '\n');        // convierte \n literales en saltos de línea reales
+        .replace(/^["']|["']$/g, '')   // elimina comillas envolventes si existen
+        .replace(/\\\\n/g, '\n')        // caso doble-escape: \\n → salto de línea real
+        .replace(/\\n/g, '\n');         // caso normal: \n literal → salto de línea real
 
     if (!projectId || !clientEmail || !privateKey) {
         throw new Error(
@@ -19,12 +20,19 @@ function getAdminApp() {
         );
     }
 
-    // Validación básica del formato PEM
+    // Diagnóstico detallado si el formato PEM falla
     if (!privateKey.includes('-----BEGIN') || !privateKey.includes('-----END')) {
         throw new Error(
-            `Firebase Admin: FIREBASE_ADMIN_PRIVATE_KEY no tiene formato PEM válido. ` +
-            `Asegúrate de que NO tenga comillas externas y que los \\n sean saltos de línea reales. ` +
-            `Primeros 40 chars: ${privateKey.substring(0, 40)}`
+            `Firebase Admin: PRIVATE_KEY sin cabeceras PEM. ` +
+            `Raw length=${rawKey.length} Processed length=${privateKey.length} ` +
+            `Primeros 60 chars: "${rawKey.substring(0, 60)}"`
+        );
+    }
+
+    if (!privateKey.includes('\n')) {
+        throw new Error(
+            `Firebase Admin: PRIVATE_KEY no tiene saltos de línea reales después del procesamiento. ` +
+            `Revisa el formato en Netlify. Raw primeros 80 chars: "${rawKey.substring(0, 80)}"`
         );
     }
 
