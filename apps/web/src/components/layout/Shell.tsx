@@ -4,10 +4,10 @@ import { usePathname } from 'next/navigation';
 import {
   FileText, Plus, Users, BookOpen,
   Settings, LayoutDashboard, LogOut, FileCheck,
-  Moon, Sun, ChevronLeft, ChevronRight
+  Moon, Sun, ChevronLeft, ChevronRight, ShieldAlert
 } from 'lucide-react';
 import { auth } from '@/lib/firebase';
-import { signOut } from 'firebase/auth';
+import { signOut, onAuthStateChanged } from 'firebase/auth';
 import { useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import { useSidebar } from '@/context/SidebarContext';
@@ -53,10 +53,20 @@ function ThemeToggle() {
   );
 }
 
+const SUPERADMIN_UID = process.env.NEXT_PUBLIC_SUPERADMIN_UID ?? '';
+
 export function Sidebar() {
   const path = usePathname();
   const router = useRouter();
   const { collapsed, setCollapsed } = useSidebar();
+  const [currentUid, setCurrentUid] = useState<string | null>(null);
+
+  useEffect(() => {
+    const unsub = onAuthStateChanged(auth, u => setCurrentUid(u?.uid ?? null));
+    return () => unsub();
+  }, []);
+
+  const isSuperadmin = !!SUPERADMIN_UID && currentUid === SUPERADMIN_UID;
 
   const handleLogout = async () => {
     await signOut(auth);
@@ -118,6 +128,27 @@ export function Sidebar() {
               </Link>
             );
           })}
+          {isSuperadmin && (
+            <>
+              {!collapsed && (
+                <div className="text-xs font-bold uppercase tracking-[0.08em] px-4 pt-4 pb-1 text-gray-400 dark:text-gray-500">
+                  Admin
+                </div>
+              )}
+              <Link
+                href="/superadmin"
+                className={`flex items-center gap-3 px-4 py-2.5 rounded-2xl transition-all ${
+                  path.startsWith('/superadmin')
+                    ? 'bg-blue-600 text-white'
+                    : 'text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20'
+                }`}
+                title={collapsed ? 'Superadmin' : ''}
+              >
+                <ShieldAlert size={20} className="shrink-0" />
+                {!collapsed && <span className="text-sm font-semibold">Superadmin</span>}
+              </Link>
+            </>
+          )}
         </div>
       </nav>
 
