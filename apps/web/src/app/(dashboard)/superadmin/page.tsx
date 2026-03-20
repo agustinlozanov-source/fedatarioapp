@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { onAuthStateChanged, getIdToken } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
-import { collection, getDocs, query, orderBy } from 'firebase/firestore';
+import { collection, getDocs, query, orderBy, where } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { Topbar } from '@/components/layout/Shell';
 import { Plus, Trash2, Building2, Users, ChevronDown, ChevronUp, Loader2, CheckCircle, XCircle } from 'lucide-react';
@@ -26,6 +26,14 @@ interface Organizacion {
     activo: boolean;
 }
 
+interface UsuarioInfo {
+    uid: string;
+    email: string;
+    nombre: string;
+    rol: string;
+    esOwner?: boolean;
+}
+
 export default function SuperadminPage() {
     const router = useRouter();
     const [uid, setUid] = useState<string | null>(null);
@@ -41,6 +49,16 @@ export default function SuperadminPage() {
         { id: '1', email: '', password: '', nombre: '', rol: 'admin' },
     ]);
     const [formAbierto, setFormAbierto] = useState(false);
+
+    // Estado para expandir orgs y gestionar usuarios
+    const [orgExpandida, setOrgExpandida] = useState<string | null>(null);
+    const [usuariosPorOrg, setUsuariosPorOrg] = useState<Record<string, UsuarioInfo[]>>({});
+    const [cargandoUsuarios, setCargandoUsuarios] = useState<string | null>(null);
+    const [formNuevoUsuario, setFormNuevoUsuario] = useState<{
+        orgId: string; email: string; password: string; nombre: string; rol: string;
+    } | null>(null);
+    const [guardandoUsuario, setGuardandoUsuario] = useState(false);
+    const [actualizandoRol, setActualizandoRol] = useState<string | null>(null);
 
     useEffect(() => {
         const unsub = onAuthStateChanged(auth, async user => {
@@ -108,6 +126,73 @@ export default function SuperadminPage() {
             setResultado({ ok: false, msg: e.message });
         } finally {
             setCreando(false);
+        }
+    };
+
+    const toggleOrg = async (orgId: string) => {
+        if (orgExpandida === orgId) { setOrgExpandida(null); return; }
+        setOrgExpandida(orgId);
+        if (!usuariosPorOrg[orgId]) await cargarUsuariosOrg(orgId);
+    };
+
+    const cargarUsuariosOrg = async (orgId: string) => {
+        setCargandoUsuarios(orgId);
+        try {
+            const snap = await getDocs(query(collection(db, 'usuarios'), where('tenantId', '==', orgId)));
+            const lista: UsuarioInfo[] = snap.docs.map(d => ({
+                uid: d.id,
+                email: d.data().email ?? '',
+                nombre: d.data().nombre ?? '',
+                rol: d.data().rol ?? 'usuario',
+                esOwner: d.data().esOwner === true || d.id === orgId,
+            }));
+            lista.sort((a, b) => (b.esOwner ? 1 : 0) - (a.esOwner ? 1 : 0));
+            setUsuariosPorOrg(prev => ({ ...prev, [orgId]: lista }));
+        } finally {
+            setCargandoUsuarios(null);
+        }
+    };
+
+    const submitNuevoUsuario = async () => {
+        if (!formNuevoUsuario || !formNuevoUsuario.email || !formNuevoUsuario.password || !formNuevoUsuario.nombre) return;
+        setGuardandoUsuario(true);
+        try {
+            const res = await fetch('/api/superadmin/agregar-usuario', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+                body: JSON.stringify({ tenantId: formNuevoUsuario.orgId, ...formNuevoUsuario }),
+            });
+            const data = await res.json();
+            if (!res.ok) {
+                setResultado({ ok: false, msg: data.error ?? 'Error desconocido' });
+            } else {
+                const orgId = formNuevoUsuario.orgId;
+                setFormNuevoUsuario(null);
+                await cargarUsuariosOrg(orgId);
+            }
+        } catch (e: any) {
+            setResultado({ ok: false, msg: e.message });
+        } finally {
+            setGuardandoUsuario(false);
+        }
+    };
+
+    const actualizarRolUsuario = async (uid: string, nuevoRol: string, orgId: string) => {
+        setActualizandoRol(uid);
+        try {
+            const res = await fetch('/api/superadmin/actualizar-usuario', {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+                body: JSON.stringify({ uid, rol: nuevoRol }),
+            });
+            if (res.ok) {
+                setUsuariosPorOrg(prev => ({
+                    ...prev,
+                    [orgId]: (prev[orgId] ?? []).map(u => u.uid === uid ? { ...u, rol: nuevoRol } : u),
+                }));
+            }
+        } finally {
+            setActualizandoRol(null);
         }
     };
 
@@ -251,25 +336,153 @@ export default function SuperadminPage() {
                         </div>
                     ) : (
                         <div className="space-y-2">
-                            {orgs.map(org => (
-                                <div key={org.id} className="bg-white dark:bg-gray-800 border border-black/[0.07] dark:border-white/[0.07] rounded-xl px-4 py-3 flex items-center gap-3">
-                                    <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
-                                        style={{ background: org.activo ? 'var(--green-bg)' : 'var(--bg3)' }}>
-                                        <Building2 size={14} style={{ color: org.activo ? 'var(--green)' : 'var(--ink4)' }} />
+                            {orgs.map(org => {
+                                const estaExpandida = orgExpandida === org.id;
+                                const usuariosOrg = usuariosPorOrg[org.id] ?? [];
+                                const loadingUsuarios = cargandoUsuarios === org.id;
+                                return (
+                                    <div key={org.id} className="bg-white dark:bg-gray-800 border border-black/[0.07] dark:border-white/[0.07] rounded-xl overflow-hidden">
+                                        {/* Header clickeable */}
+                                        <button
+                                            onClick={() => toggleOrg(org.id)}
+                                            className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-black/[0.02] dark:hover:bg-white/[0.02] transition-colors">
+                                            <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
+                                                style={{ background: org.activo ? 'var(--green-bg)' : 'var(--bg3)' }}>
+                                                <Building2 size={14} style={{ color: org.activo ? 'var(--green)' : 'var(--ink4)' }} />
+                                            </div>
+                                            <div className="flex-1 min-w-0">
+                                                <div className="text-[13px] font-bold text-[#1D1D1F] dark:text-white">{org.nombre}</div>
+                                                <div className="text-[11px] text-[#86868B] dark:text-gray-400 font-mono">tenant: {org.ownerUid}</div>
+                                            </div>
+                                            <div className="text-[11px] text-[#86868B] dark:text-gray-400 mr-2">
+                                                {new Date(org.creadoEn).toLocaleDateString('es-MX')}
+                                            </div>
+                                            <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full mr-2"
+                                                style={{ background: org.activo ? 'var(--green-bg)' : 'var(--bg3)', color: org.activo ? 'var(--green)' : 'var(--ink4)' }}>
+                                                {org.activo ? 'Activo' : 'Inactivo'}
+                                            </span>
+                                            {estaExpandida
+                                                ? <ChevronUp size={15} style={{ color: 'var(--ink4)' }} />
+                                                : <ChevronDown size={15} style={{ color: 'var(--ink4)' }} />}
+                                        </button>
+
+                                        {/* Sección expandida: usuarios */}
+                                        {estaExpandida && (
+                                            <div className="border-t border-black/[0.06] dark:border-white/[0.06] px-4 pb-4 pt-3">
+                                                {loadingUsuarios ? (
+                                                    <div className="flex justify-center py-4">
+                                                        <Loader2 size={16} className="animate-spin" style={{ color: 'var(--ink4)' }} />
+                                                    </div>
+                                                ) : (
+                                                    <div className="space-y-2">
+                                                        <div className="flex items-center justify-between mb-1">
+                                                            <span className="text-[11px] font-bold text-[#86868B] dark:text-gray-400 uppercase tracking-[0.06em] flex items-center gap-1.5">
+                                                                <Users size={11} /> {usuariosOrg.length} usuario{usuariosOrg.length !== 1 ? 's' : ''}
+                                                            </span>
+                                                            <button
+                                                                onClick={() => setFormNuevoUsuario({ orgId: org.id, email: '', password: '', nombre: '', rol: 'usuario' })}
+                                                                className="flex items-center gap-1 text-[11px] font-semibold px-2 py-1 rounded-lg"
+                                                                style={{ background: 'var(--blue-bg)', color: 'var(--blue)' }}>
+                                                                <Plus size={11} /> Agregar usuario
+                                                            </button>
+                                                        </div>
+
+                                                        {usuariosOrg.map(u => (
+                                                            <div key={u.uid} className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl"
+                                                                style={{ background: u.esOwner ? 'var(--blue-bg)' : 'var(--bg2)' }}>
+                                                                <div className="w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-bold shrink-0"
+                                                                    style={{ background: u.esOwner ? 'var(--blue)' : 'var(--bg3)', color: u.esOwner ? 'white' : 'var(--ink4)' }}>
+                                                                    {u.nombre?.charAt(0).toUpperCase() ?? '?'}
+                                                                </div>
+                                                                <div className="flex-1 min-w-0">
+                                                                    <div className="text-[12px] font-semibold text-[#1D1D1F] dark:text-white flex items-center gap-1.5">
+                                                                        {u.nombre}
+                                                                        {u.esOwner && (
+                                                                            <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full"
+                                                                                style={{ background: 'var(--blue)', color: 'white' }}>owner</span>
+                                                                        )}
+                                                                    </div>
+                                                                    <div className="text-[11px] text-[#86868B] dark:text-gray-400">{u.email}</div>
+                                                                </div>
+                                                                <select
+                                                                    value={u.rol}
+                                                                    disabled={actualizandoRol === u.uid}
+                                                                    onChange={e => actualizarRolUsuario(u.uid, e.target.value, org.id)}
+                                                                    className="text-[11px] px-2 py-1.5 rounded-lg border border-black/[0.07] dark:border-white/[0.07] bg-white dark:bg-gray-700 dark:text-white outline-none cursor-pointer">
+                                                                    <option value="admin">Admin</option>
+                                                                    <option value="corredor">Corredor</option>
+                                                                    <option value="asistente">Asistente</option>
+                                                                    <option value="usuario">Usuario</option>
+                                                                </select>
+                                                                {actualizandoRol === u.uid && (
+                                                                    <Loader2 size={12} className="animate-spin shrink-0" style={{ color: 'var(--ink4)' }} />
+                                                                )}
+                                                            </div>
+                                                        ))}
+
+                                                        {usuariosOrg.length === 0 && (
+                                                            <div className="text-center py-3 text-[12px] text-[#86868B] dark:text-gray-400">
+                                                                No hay usuarios registrados aún
+                                                            </div>
+                                                        )}
+
+                                                        {/* Form nuevo usuario */}
+                                                        {formNuevoUsuario?.orgId === org.id && (
+                                                            <div className="mt-2 border border-black/[0.07] dark:border-white/[0.07] rounded-xl p-3.5"
+                                                                style={{ background: 'var(--bg2)' }}>
+                                                                <div className="text-[11px] font-bold text-[#86868B] dark:text-gray-400 uppercase tracking-[0.06em] mb-2.5">
+                                                                    Nuevo usuario
+                                                                </div>
+                                                                <div className="grid grid-cols-2 gap-2 mb-2">
+                                                                    {[
+                                                                        { campo: 'nombre', placeholder: 'Nombre completo', tipo: 'text' },
+                                                                        { campo: 'email', placeholder: 'correo@despacho.com', tipo: 'email' },
+                                                                        { campo: 'password', placeholder: 'Contraseña (mín. 6)', tipo: 'password' },
+                                                                    ].map(f => (
+                                                                        <input key={f.campo}
+                                                                            type={f.tipo}
+                                                                            value={(formNuevoUsuario as any)[f.campo]}
+                                                                            onChange={e => setFormNuevoUsuario(prev => prev ? { ...prev, [f.campo]: e.target.value } : null)}
+                                                                            placeholder={f.placeholder}
+                                                                            className="px-3 py-2 rounded-lg text-[12px] outline-none border border-black/[0.07] dark:border-white/[0.07] bg-white dark:bg-gray-700 dark:text-white"
+                                                                        />
+                                                                    ))}
+                                                                    <select
+                                                                        value={formNuevoUsuario.rol}
+                                                                        onChange={e => setFormNuevoUsuario(prev => prev ? { ...prev, rol: e.target.value } : null)}
+                                                                        className="px-3 py-2 rounded-lg text-[12px] outline-none border border-black/[0.07] dark:border-white/[0.07] bg-white dark:bg-gray-700 dark:text-white">
+                                                                        <option value="admin">Admin</option>
+                                                                        <option value="corredor">Corredor</option>
+                                                                        <option value="asistente">Asistente</option>
+                                                                        <option value="usuario">Usuario</option>
+                                                                    </select>
+                                                                </div>
+                                                                <div className="flex gap-2">
+                                                                    <button
+                                                                        onClick={submitNuevoUsuario}
+                                                                        disabled={guardandoUsuario}
+                                                                        className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-[12px] font-bold disabled:opacity-50"
+                                                                        style={{ background: 'var(--blue)', color: 'white' }}>
+                                                                        {guardandoUsuario
+                                                                            ? <><Loader2 size={12} className="animate-spin" /> Creando...</>
+                                                                            : <><Plus size={12} /> Agregar</>}
+                                                                    </button>
+                                                                    <button
+                                                                        onClick={() => setFormNuevoUsuario(null)}
+                                                                        className="px-4 py-2 rounded-xl text-[12px] font-semibold"
+                                                                        style={{ background: 'var(--bg3)', color: 'var(--ink4)' }}>
+                                                                        Cancelar
+                                                                    </button>
+                                                                </div>
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        )}
                                     </div>
-                                    <div className="flex-1 min-w-0">
-                                        <div className="text-[13px] font-bold text-[#1D1D1F] dark:text-white">{org.nombre}</div>
-                                        <div className="text-[11px] text-[#86868B] dark:text-gray-400 font-mono">tenant: {org.ownerUid}</div>
-                                    </div>
-                                    <div className="text-[11px] text-[#86868B] dark:text-gray-400">
-                                        {new Date(org.creadoEn).toLocaleDateString('es-MX')}
-                                    </div>
-                                    <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full"
-                                        style={{ background: org.activo ? 'var(--green-bg)' : 'var(--bg3)', color: org.activo ? 'var(--green)' : 'var(--ink4)' }}>
-                                        {org.activo ? 'Activo' : 'Inactivo'}
-                                    </span>
-                                </div>
-                            ))}
+                                );
+                            })}
                         </div>
                     )}
                 </div>

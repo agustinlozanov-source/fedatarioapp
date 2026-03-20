@@ -71,6 +71,15 @@ async function _handler(req: NextRequest) {
             creadoEn: new Date().toISOString(),
             activo: true,
         });
+        // Guardar owner también en colección usuarios para poder listarlo
+        await firestore.collection('usuarios').doc(tenantId).set({
+            tenantId,
+            email: owner.email,
+            nombre: owner.nombre,
+            rol: owner.rol,
+            esOwner: true,
+            creadoEn: new Date().toISOString(),
+        });
     } catch (e: any) {
         return NextResponse.json({ error: `Error guardando organización en Firestore: ${e.message}` }, { status: 500 });
     }
