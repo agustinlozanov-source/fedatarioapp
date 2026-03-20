@@ -391,8 +391,8 @@ export default function NuevoInstrumentoPage() {
 
       <main className="flex-1 overflow-y-auto p-8 max-w-2xl mx-auto">
         <div className="mb-8">
-          <h1 className="text-4xl font-bold text-gray-900 mb-2">Nuevo instrumento</h1>
-          <p className="text-gray-600">Captura de primera sesión</p>
+          <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-2">Nuevo instrumento</h1>
+          <p className="text-gray-600 dark:text-gray-400">Captura de primera sesión</p>
         </div>
 
         {/* Stepper — solo mientras no esté en paso de éxito */}
@@ -429,8 +429,8 @@ export default function NuevoInstrumentoPage() {
         {/* ── PASO 1 — TIPO ── */}
         {paso === 0 && (
           <div>
-            <h2 className="text-lg font-bold text-gray-900 mb-2">Tipo de instrumento</h2>
-            <p className="text-sm text-gray-600 mb-6">El tipo define el formato y las reglas del acta</p>
+            <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-2">Tipo de instrumento</h2>
+            <p className="text-sm text-gray-600 dark:text-gray-400 mb-6">El tipo define el formato y las reglas del acta</p>
 
             <div className="grid grid-cols-2 gap-4 mb-6">
               {[
@@ -440,12 +440,12 @@ export default function NuevoInstrumentoPage() {
                 <button key={t.id} onClick={() => setTipo(t.id)}
                   className={`p-5 rounded-2xl text-left transition-all ${
                     tipo === t.id 
-                      ? 'border-2 border-blue-600 bg-blue-50' 
-                      : 'border-2 border-gray-200 bg-white'
+                      ? 'border-2 border-blue-600 bg-blue-50 dark:bg-blue-900/20' 
+                      : 'border-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800'
                   }`}>
-                  <div className="text-base font-bold text-gray-900 mb-1">{t.label}</div>
+                  <div className="text-base font-bold text-gray-900 dark:text-white mb-1">{t.label}</div>
                   <div className="text-xs font-mono mb-3 text-blue-600">{t.sub}</div>
-                  <div className="text-xs text-gray-600">{t.desc}</div>
+                  <div className="text-xs text-gray-600 dark:text-gray-400">{t.desc}</div>
                   {tipo === t.id && (
                     <div className="mt-3 flex items-center gap-1 text-xs font-bold text-blue-600">
                       <CheckCircle size={11} /> Seleccionado
@@ -462,29 +462,29 @@ export default function NuevoInstrumentoPage() {
         {/* ── PASO 2 — SOCIOS ── */}
         {paso === 1 && (
           <div>
-            <h2 className="text-lg font-bold text-gray-900 mb-2">Socios</h2>
-            <p className="text-sm text-gray-600 mb-4">Mínimo 2 · Los porcentajes deben sumar 100%</p>
+            <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-2">Socios</h2>
+            <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">Mínimo 2 · Los porcentajes deben sumar 100%</p>
 
             {/* Indicador porcentaje */}
             <div className={`flex items-center justify-between px-4 py-2.5 rounded-xl mb-4 ${
-              totalPorcentaje === 100 ? 'bg-green-50' : totalPorcentaje > 100 ? 'bg-red-50' : 'bg-amber-50'
+              totalPorcentaje === 100 ? 'bg-green-50 dark:bg-green-900/25' : totalPorcentaje > 100 ? 'bg-red-50 dark:bg-red-900/25' : 'bg-amber-50 dark:bg-amber-900/25'
             }`}>
               <span className={`text-sm font-semibold ${
-                totalPorcentaje === 100 ? 'text-green-700' : totalPorcentaje > 100 ? 'text-red-700' : 'text-amber-700'
+                totalPorcentaje === 100 ? 'text-green-700 dark:text-green-400' : totalPorcentaje > 100 ? 'text-red-700 dark:text-red-400' : 'text-amber-700 dark:text-amber-400'
               }`}>
                 {totalPorcentaje === 100 ? '✓ Porcentajes correctos' : `Total: ${totalPorcentaje}% — debe ser 100%`}
               </span>
               <button onClick={distribuir}
-                className="text-xs font-semibold px-3 py-1 rounded-lg bg-white text-gray-700 hover:bg-gray-100">
+                className="text-xs font-semibold px-3 py-1 rounded-lg bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600">
                 Distribuir equitativamente
               </button>
             </div>
 
             <div className="space-y-3">
               {socios.map((socio, idx) => (
-                <div key={socio.uid} className="bg-white border border-black/[0.07] rounded-2xl p-4">
+                <div key={socio.uid} className="bg-white dark:bg-gray-800 border border-black/[0.07] dark:border-white/[0.07] rounded-2xl p-4">
                   <div className="flex items-center justify-between mb-3">
-                    <span className="text-[13px] font-bold text-[#1D1D1F]">Socio {idx + 1}</span>
+                    <span className="text-[13px] font-bold text-[#1D1D1F] dark:text-white">Socio {idx + 1}</span>
                     {socios.length > 2 && (
                       <button onClick={() => eliminarSocio(socio.uid)}
                         className="p-1.5 rounded-lg hover:bg-[#F5F5F7]">
@@ -502,7 +502,7 @@ export default function NuevoInstrumentoPage() {
                         {socio.cliente.nombre.charAt(0)}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <div className="text-[13px] font-semibold text-[#1D1D1F] truncate">{socio.cliente.nombre}</div>
+                        <div className="text-[13px] font-semibold text-[#1D1D1F] dark:text-white truncate">{socio.cliente.nombre}</div>
                         <div className="text-[11px] text-[#86868B]">{socio.cliente.rfc || 'Sin RFC'}</div>
                       </div>
                       <button onClick={() => actualizarSocio(socio.uid, { cliente: undefined, clienteId: undefined })}>
@@ -556,7 +556,7 @@ export default function NuevoInstrumentoPage() {
                   <div className="flex items-center justify-between px-3 py-2.5 rounded-xl mb-3"
                     style={{ background: socio.esExtranjero ? 'var(--blue-bg)' : 'var(--bg2)', border: '1px solid var(--border)' }}>
                     <div>
-                      <div className="text-[12px] font-semibold text-[#1D1D1F]">
+                      <div className="text-[12px] font-semibold text-[#1D1D1F] dark:text-white">
                         {socio.esExtranjero ? '🌐 Extranjero' : '🇲🇽 Mexicano'}
                       </div>
                       <div className="text-[10px] text-[#86868B] mt-0.5">
@@ -615,7 +615,7 @@ export default function NuevoInstrumentoPage() {
         {/* ── PASO 3 — OBJETO SOCIAL ── */}
         {paso === 2 && (
           <div>
-            <h2 className="text-lg font-bold text-gray-900 mb-2">Objeto social</h2>
+            <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-2">Objeto social</h2>
             <p className="text-sm text-gray-600 mb-6">Puedes agregar uno o varios objetos sociales</p>
 
             {/* Objetos seleccionados */}
@@ -661,7 +661,7 @@ export default function NuevoInstrumentoPage() {
                     : resultadosObjeto.map(o => (
                       <button key={o.id} onClick={() => agregarObjetoPredefinido(o)}
                         className="w-full px-4 py-3 hover:bg-[#F5F5F7] transition-colors text-left border-b border-black/[0.04] last:border-0">
-                        <div className="text-[13px] font-semibold text-[#1D1D1F]">{o.etiqueta}</div>
+                        <div className="text-[13px] font-semibold text-[#1D1D1F] dark:text-white">{o.etiqueta}</div>
                         <div className="text-[11px] text-[#86868B] mt-0.5 line-clamp-2">{o.texto}</div>
                       </button>
                     ))
@@ -718,10 +718,10 @@ export default function NuevoInstrumentoPage() {
         {/* ── PASO 4 — CAPITAL ── */}
         {paso === 3 && (
           <div>
-            <h2 className="text-lg font-bold text-gray-900 mb-2">Capital social</h2>
-            <p className="text-sm text-gray-600 mb-6">El valor inicial de la sociedad</p>
+            <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-2">Capital social</h2>
+            <p className="text-sm text-gray-600 dark:text-gray-400 mb-6">El valor inicial de la sociedad</p>
 
-            <div className="bg-white border border-black/[0.07] rounded-2xl p-6">
+            <div className="bg-white dark:bg-gray-800 border border-black/[0.07] dark:border-white/[0.07] rounded-2xl p-6">
               <label className="text-[11px] font-bold text-[#86868B] uppercase tracking-[0.06em] block mb-2">
                 Monto en pesos mexicanos
               </label>
@@ -746,16 +746,16 @@ export default function NuevoInstrumentoPage() {
         {/* ── PASO 5 — CONFIRMACIÓN ── */}
         {paso === 4 && (
           <div>
-            <h2 className="text-lg font-bold text-gray-900 mb-2">Confirmar</h2>
-            <p className="text-sm text-gray-600 mb-6">Resumen de la primera sesión</p>
+            <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-2">Confirmar</h2>
+            <p className="text-sm text-gray-600 dark:text-gray-400 mb-6">Resumen de la primera sesión</p>
 
             <div className="space-y-3">
               {/* Tipo e instrumento */}
-              <div className="bg-white border border-black/[0.07] rounded-xl p-4">
+              <div className="bg-white dark:bg-gray-800 border border-black/[0.07] dark:border-white/[0.07] rounded-xl p-4">
                 <div className="text-[10px] font-bold text-[#86868B] uppercase tracking-[0.06em] mb-2">Instrumento</div>
                 <div className="flex items-center justify-between">
                   <div>
-                    <div className="text-[14px] font-bold text-[#1D1D1F]">
+                    <div className="text-[14px] font-bold text-[#1D1D1F] dark:text-white">
                       {tipo === 'sa_de_cv' ? 'Sociedad Anónima de Capital Variable' : 'Sociedad de Responsabilidad Limitada'}
                     </div>
 
@@ -765,11 +765,11 @@ export default function NuevoInstrumentoPage() {
               </div>
 
               {/* Socios */}
-              <div className="bg-white border border-black/[0.07] rounded-xl p-4">
+              <div className="bg-white dark:bg-gray-800 border border-black/[0.07] dark:border-white/[0.07] rounded-xl p-4">
                 <div className="text-[10px] font-bold text-[#86868B] uppercase tracking-[0.06em] mb-2">Socios ({socios.length})</div>
                 {socios.map((s, i) => (
-                  <div key={s.uid} className="flex items-center gap-3 py-2 border-b border-black/[0.04] last:border-0">
-                    <div className="w-7 h-7 rounded-full bg-[#F5F5F7] flex items-center justify-center text-[11px] font-bold shrink-0">
+                  <div key={s.uid} className="flex items-center gap-3 py-2 border-b border-black/[0.04] dark:border-white/[0.06] last:border-0">
+                    <div className="w-7 h-7 rounded-full bg-[#F5F5F7] dark:bg-gray-700 flex items-center justify-center text-[11px] font-bold dark:text-white shrink-0">
                       {(s.cliente?.nombre || s.nuevoNombre || '?').charAt(0)}
                     </div>
                     <div className="flex-1 min-w-0">
@@ -788,7 +788,7 @@ export default function NuevoInstrumentoPage() {
 
               {/* Objeto social */}
               {objetosSociales.length > 0 && (
-                <div className="bg-white border border-black/[0.07] rounded-xl p-4">
+                <div className="bg-white dark:bg-gray-800 border border-black/[0.07] dark:border-white/[0.07] rounded-xl p-4">
                   <div className="text-[10px] font-bold text-[#86868B] uppercase tracking-[0.06em] mb-2">
                     Objeto social ({objetosSociales.length})
                   </div>
@@ -802,9 +802,9 @@ export default function NuevoInstrumentoPage() {
 
               {/* Capital */}
               {capitalSocial && (
-                <div className="bg-white border border-black/[0.07] rounded-xl p-4">
+                <div className="bg-white dark:bg-gray-800 border border-black/[0.07] dark:border-white/[0.07] rounded-xl p-4">
                   <div className="text-[10px] font-bold text-[#86868B] uppercase tracking-[0.06em] mb-1">Capital social</div>
-                  <div className="text-[18px] font-bold font-mono text-[#1D1D1F]">
+                  <div className="text-[18px] font-bold font-mono text-[#1D1D1F] dark:text-white">
                     ${parseFloat(capitalSocial.replace(/,/g, '')).toLocaleString('es-MX')} MXN
                   </div>
                 </div>
@@ -828,14 +828,14 @@ export default function NuevoInstrumentoPage() {
         {/* ── PASO 6 — ÉXITO ── */}
         {paso === 5 && (
           <div className="text-center">
-            <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 bg-green-100">
-              <CheckCircle size={32} className="text-green-600" />
+            <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 bg-green-100 dark:bg-green-900/40">
+              <CheckCircle size={32} className="text-green-600 dark:text-green-400" />
             </div>
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">Instrumento creado</h2>
-            <p className="text-base text-gray-600 mb-8">El expediente está abierto y listo para continuar</p>
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Instrumento creado</h2>
+            <p className="text-base text-gray-600 dark:text-gray-400 mb-8">El expediente está abierto y listo para continuar</p>
 
             {/* Link del portal */}
-            <div className="bg-white border border-black/[0.07] rounded-2xl p-5 mb-4 text-left">
+            <div className="bg-white dark:bg-gray-800 border border-black/[0.07] dark:border-white/[0.07] rounded-2xl p-5 mb-4 text-left">
               <div className="text-[11px] font-bold text-[#86868B] uppercase tracking-[0.06em] mb-2">
                 Link del portal para los socios
               </div>
@@ -859,7 +859,7 @@ export default function NuevoInstrumentoPage() {
                 Ir al expediente
               </button>
               <button onClick={() => router.push('/instrumentos')}
-                className="flex-1 py-3 rounded-xl text-base font-bold bg-gray-200 text-gray-700 hover:bg-gray-300 transition-colors">
+                className="flex-1 py-3 rounded-xl text-base font-bold bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors">
                 Ver todos
               </button>
             </div>
@@ -868,9 +868,9 @@ export default function NuevoInstrumentoPage() {
 
         {/* ── NAVEGACIÓN ── */}
         {paso < 5 && (
-          <div className="flex items-center justify-between mt-8 pt-6 border-t border-gray-200">
+          <div className="flex items-center justify-between mt-8 pt-6 border-t border-gray-200 dark:border-gray-700">
             <button onClick={() => paso === 0 ? router.push('/instrumentos') : setPaso(p => p - 1)}
-              className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all bg-gray-200 text-gray-700 hover:bg-gray-300">
+              className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-600">
               <ChevronLeft size={16} /> {paso === 0 ? 'Cancelar' : 'Anterior'}
             </button>
 
