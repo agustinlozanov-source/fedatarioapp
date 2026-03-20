@@ -7,8 +7,6 @@ import { db } from '@/lib/firebase'
 import { InstrumentViewer } from '@/components/instrument-viewer/InstrumentViewer'
 import '@/styles/instrument-viewer.css'
 
-const AGENTS_URL = process.env.NEXT_PUBLIC_AGENTS_URL || 'https://fedatario-production.up.railway.app'
-
 export default function PreviewPage() {
   const { id } = useParams()
   const router  = useRouter()
@@ -55,13 +53,11 @@ export default function PreviewPage() {
     setGenerando(true)
     setError(null)
     try {
-      const res = await fetch(`${AGENTS_URL}/secciones/generar`, {
+      const res = await fetch(`/api/instrumentos/${id}/generar-secciones`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ instrumento_id: id }),
       })
       const data = await res.json()
-      if (!res.ok) throw new Error(data.detail ?? 'Error generando secciones')
+      if (!res.ok) throw new Error(data.error ?? 'Error generando secciones')
       await cargar()   // recargar desde Firestore
     } catch (e: any) {
       setError(e.message)
