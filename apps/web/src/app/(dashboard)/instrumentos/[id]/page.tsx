@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useRef } from 'react'
 import { useParams, useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { doc, getDoc, updateDoc, collection, query, where, getDocs, onSnapshot } from 'firebase/firestore'
 import { storage } from '@/lib/firebase'
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage'
@@ -553,6 +554,30 @@ export default function InstrumentoDetallePage() {
                         {numPoliza && <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Póliza #{numPoliza}</p>}
                     </div>
                     <div className="flex gap-3">
+                        <Link
+                            href={`/instrumentos/${id}/preview`}
+                            style={{
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: 6,
+                                padding: '7px 14px',
+                                background: 'white',
+                                color: 'var(--ink)',
+                                border: '1px solid var(--border)',
+                                borderRadius: 8,
+                                fontSize: 13,
+                                fontWeight: 500,
+                                textDecoration: 'none',
+                                fontFamily: 'Plus Jakarta Sans, system-ui, sans-serif',
+                            }}
+                        >
+                            <svg width="15" height="15" viewBox="0 0 15 15" fill="none">
+                                <path d="M1 7.5C1 7.5 3.5 3 7.5 3s6.5 4.5 6.5 4.5-2.5 4.5-6.5 4.5S1 7.5 1 7.5z"
+                                    stroke="currentColor" strokeWidth="1.2"/>
+                                <circle cx="7.5" cy="7.5" r="1.5" stroke="currentColor" strokeWidth="1.2"/>
+                            </svg>
+                            Vista previa y edición
+                        </Link>
                         <button onClick={descargarDocx} disabled={descargando} className="flex items-center gap-2 px-4 py-2 border border-gray-200 dark:border-gray-700 rounded-xl text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 disabled:opacity-40 transition-colors">
                             {descargando ? <><Loader2 size={15} className="animate-spin" /> Generando...</> : <><Download size={15} /> Descargar .docx</>}
                         </button>
