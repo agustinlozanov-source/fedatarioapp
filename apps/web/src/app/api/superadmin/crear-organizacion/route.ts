@@ -6,6 +6,15 @@ export const dynamic = 'force-dynamic';
 const SUPERADMIN_UID = process.env.NEXT_PUBLIC_SUPERADMIN_UID ?? '';
 
 export async function POST(req: NextRequest) {
+    try {
+        return await _handler(req);
+    } catch (e: any) {
+        console.error('[superadmin] Error no capturado:', e);
+        return NextResponse.json({ error: e?.message ?? 'Error interno del servidor' }, { status: 500 });
+    }
+}
+
+async function _handler(req: NextRequest) {
     // 1. Verificar que el caller es el superadmin
     const authHeader = req.headers.get('authorization') ?? '';
     const idToken = authHeader.replace('Bearer ', '');
@@ -55,12 +64,16 @@ export async function POST(req: NextRequest) {
     const tenantId = ownerRecord.uid;
 
     // 4. Crear la organización en Firestore
-    await firestore.collection('organizaciones').doc(tenantId).set({
-        nombre: nombreOrg,
-        ownerUid: tenantId,
-        creadoEn: new Date().toISOString(),
-        activo: true,
-    });
+    try {
+        await firestore.collection('organizaciones').doc(tenantId).set({
+            nombre: nombreOrg,
+            ownerUid: tenantId,
+            creadoEn: new Date().toISOString(),
+            activo: true,
+        });
+    } catch (e: any) {
+        return NextResponse.json({ error: `Error guardando organización en Firestore: ${e.message}` }, { status: 500 });
+    }
 
     // 5. Crear usuarios adicionales (si los hay)
     const usuariosCreados: { uid: string; email: string; nombre: string; rol: string }[] = [];
