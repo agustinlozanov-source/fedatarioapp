@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
-import { doc, getDoc } from 'firebase/firestore'
+import { doc, getDoc, getDocFromServer } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
 import { InstrumentViewer } from '@/components/instrument-viewer/InstrumentViewer'
 import '@/styles/instrument-viewer.css'
@@ -28,7 +28,7 @@ export default function PreviewPage() {
         return
       }
 
-      const instrSnap = await getDoc(doc(db, 'instrumentos', id as string))
+      const instrSnap = await getDocFromServer(doc(db, 'instrumentos', id as string))
       if (!instrSnap.exists()) { setError('Instrumento no encontrado.'); return }
 
       const instr = instrSnap.data()
