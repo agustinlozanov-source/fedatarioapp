@@ -390,7 +390,7 @@ export default function NuevoClientePage() {
                         <div className="text-[14px] font-bold text-[#1D1D1F] mb-4">Documentos opcionales</div>
                         <p className="text-[12px] text-[#86868B] mb-4">Sube documentos para rellenar automáticamente los campos de información</p>
                         
-                        <div className="bg-white border border-black/[0.07] rounded-2xl p-5 mb-4">
+                        <div className="bg-white dark:bg-gray-800 border border-black/[0.07] dark:border-white/[0.07] rounded-2xl p-5 mb-4">
                             <div className="flex items-center gap-3">
                                 <select value={tipoDocSeleccionado}
                                     onChange={e => setTipoDocSeleccionado(e.target.value as TipoDocumento)}

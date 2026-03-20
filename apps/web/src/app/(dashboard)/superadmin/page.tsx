@@ -135,7 +135,7 @@ export default function SuperadminPage() {
                 <div className="h-px bg-black/[0.06] my-5" />
 
                 {/* Nueva organización */}
-                <div className="bg-white border border-black/[0.07] rounded-2xl mb-5 overflow-hidden">
+                <div className="bg-white dark:bg-gray-800 border border-black/[0.07] dark:border-white/[0.07] rounded-2xl mb-5 overflow-hidden">
                     <button
                         onClick={() => setFormAbierto(!formAbierto)}
                         className="w-full flex items-center justify-between px-5 py-4 text-left">
@@ -198,13 +198,13 @@ export default function SuperadminPage() {
                                                         value={(u as any)[f.campo]}
                                                         onChange={e => actualizarUsuario(u.id, f.campo, e.target.value)}
                                                         placeholder={f.placeholder}
-                                                        className="px-3 py-2 rounded-lg text-[12px] outline-none border border-black/[0.07] bg-white"
+                                                        className="px-3 py-2 rounded-lg text-[12px] outline-none border border-black/[0.07] dark:border-white/[0.07] bg-white dark:bg-gray-700 dark:text-white"
                                                     />
                                                 ))}
                                                 <select
                                                     value={u.rol}
                                                     onChange={e => actualizarUsuario(u.id, 'rol', e.target.value)}
-                                                    className="px-3 py-2 rounded-lg text-[12px] outline-none border border-black/[0.07] bg-white">
+                                                    className="px-3 py-2 rounded-lg text-[12px] outline-none border border-black/[0.07] dark:border-white/[0.07] bg-white dark:bg-gray-700 dark:text-white">
                                                     <option value="admin">Admin</option>
                                                     <option value="corredor">Corredor</option>
                                                     <option value="asistente">Asistente</option>
@@ -252,7 +252,7 @@ export default function SuperadminPage() {
                     ) : (
                         <div className="space-y-2">
                             {orgs.map(org => (
-                                <div key={org.id} className="bg-white border border-black/[0.07] rounded-xl px-4 py-3 flex items-center gap-3">
+                                <div key={org.id} className="bg-white dark:bg-gray-800 border border-black/[0.07] dark:border-white/[0.07] rounded-xl px-4 py-3 flex items-center gap-3">
                                     <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
                                         style={{ background: org.activo ? 'var(--green-bg)' : 'var(--bg3)' }}>
                                         <Building2 size={14} style={{ color: org.activo ? 'var(--green)' : 'var(--ink4)' }} />

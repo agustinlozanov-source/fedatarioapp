@@ -48,7 +48,7 @@ export default function ResumenPage() {
         {/* Grid de Widgets */}
         <div className="grid grid-cols-3 gap-6">
           {/* Column 1 - Instrumentos por Estado */}
-          <div className="bg-white rounded-3xl p-6 shadow-sm">
+          <div className="bg-white dark:bg-gray-800 rounded-3xl p-6 shadow-sm">
             <h3 className="text-lg font-bold text-gray-900 mb-6">Instrumentos por Estado</h3>
             
             <div className="space-y-4">
@@ -74,7 +74,7 @@ export default function ResumenPage() {
           </div>
 
           {/* Column 2 - Documentos Generados */}
-          <div className="bg-white rounded-3xl p-6 shadow-sm">
+          <div className="bg-white dark:bg-gray-800 rounded-3xl p-6 shadow-sm">
             <div className="flex justify-between items-start mb-6">
               <h3 className="text-lg font-bold text-gray-900">Documentos Generados</h3>
               <span className="text-2xl font-bold text-blue-600">+{Math.floor(stats.documentosGenerados * 0.15)}%</span>
@@ -116,7 +116,7 @@ export default function ResumenPage() {
         {/* Bottom Row */}
         <div className="grid grid-cols-3 gap-6 mt-6">
           {/* Estadísticas Rápidas */}
-          <div className="bg-white rounded-3xl p-6 shadow-sm">
+          <div className="bg-white dark:bg-gray-800 rounded-3xl p-6 shadow-sm">
             <div className="flex justify-between items-start mb-4">
               <p className="text-gray-600 text-sm">Clientes Activos</p>
               <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
@@ -134,7 +134,7 @@ export default function ResumenPage() {
           </div>
 
           {/* Últimas Acciones */}
-          <div className="bg-white rounded-3xl p-6 shadow-sm">
+          <div className="bg-white dark:bg-gray-800 rounded-3xl p-6 shadow-sm">
             <h3 className="text-lg font-bold text-gray-900 mb-4">Últimas Acciones</h3>
             <div className="space-y-3">
               {[
@@ -159,7 +159,7 @@ export default function ResumenPage() {
           </div>
 
           {/* Metadatos */}
-          <div className="bg-white rounded-3xl p-6 shadow-sm">
+          <div className="bg-white dark:bg-gray-800 rounded-3xl p-6 shadow-sm">
             <h3 className="text-lg font-bold text-gray-900 mb-4">Indicadores Clave</h3>
             <div className="space-y-4">
               <div>

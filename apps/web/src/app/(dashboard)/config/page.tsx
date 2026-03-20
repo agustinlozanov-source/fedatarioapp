@@ -226,7 +226,7 @@ export default function ConfigPage() {
           </div>
 
           {/* Notificaciones */}
-          <div className="bg-white rounded-3xl p-6 shadow-sm">
+          <div className="bg-white dark:bg-gray-800 rounded-3xl p-6 shadow-sm">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
                 <div className="w-12 h-12 bg-purple-100 rounded-2xl flex items-center justify-center text-purple-600">
@@ -244,7 +244,7 @@ export default function ConfigPage() {
           </div>
 
           {/* Privacidad */}
-          <div className="bg-white rounded-3xl p-6 shadow-sm">
+          <div className="bg-white dark:bg-gray-800 rounded-3xl p-6 shadow-sm">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
                 <div className="w-12 h-12 bg-green-100 rounded-2xl flex items-center justify-center text-green-600">
@@ -262,7 +262,7 @@ export default function ConfigPage() {
           </div>
 
           {/* Cambiar contraseña */}
-          <div className="bg-white rounded-3xl p-6 shadow-sm">
+          <div className="bg-white dark:bg-gray-800 rounded-3xl p-6 shadow-sm">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
                 <div className="w-12 h-12 bg-red-100 rounded-2xl flex items-center justify-center text-red-600">
@@ -280,7 +280,7 @@ export default function ConfigPage() {
           </div>
 
           {/* Configuración del acta (Collapsible) */}
-          <div className="bg-white rounded-3xl shadow-sm">
+          <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-sm">
             <div 
               className="flex items-center justify-between px-6 py-6 cursor-pointer hover:bg-gray-50 transition-colors"
               onClick={() => setMostrarNuevaSeccion(!mostrarNuevaSeccion)}>

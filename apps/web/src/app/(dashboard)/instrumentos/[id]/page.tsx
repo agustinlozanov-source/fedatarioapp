@@ -568,7 +568,7 @@ export default function InstrumentoDetallePage() {
                 </div>
 
                 {/* BARRA DE PROGRESO */}
-                <div className="mt-4 bg-white border border-gray-100 rounded-2xl px-5 py-4">
+                <div className="mt-4 bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-2xl px-5 py-4">
                     <div className="flex items-center justify-between mb-2">
                         <span className="text-xs font-semibold text-gray-500">Compendio</span>
                         <span className="text-xs font-bold" style={{ color: porcentaje >= 80 ? '#1A9640' : '#E65100' }}>{porcentaje}%{porcentaje >= 80 ? ' · Listo para borrador' : ''}</span>
@@ -596,7 +596,7 @@ export default function InstrumentoDetallePage() {
                     {/* Instrumento */}
                     <section>
                         <h2 className="flex items-center gap-2 text-xs font-semibold text-gray-400 uppercase tracking-widest mb-3"><Hash size={13} /> Datos del Instrumento</h2>
-                        <div className="bg-white border border-gray-100 rounded-2xl divide-y divide-gray-50">
+                        <div className="bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-2xl divide-y divide-gray-50 dark:divide-gray-700">
                             <CampoEditable label="Número de póliza" value={numPoliza} tipo="number" onSave={v => guardarCampo('numero_poliza', Number(v))} />
                             <CampoEditable label="Fecha del instrumento" value={formatFecha(instrumento.fecha_instrumento)} onSave={v => guardarCampo('fecha_instrumento', v)} tipo="date" />
                         </div>
@@ -605,7 +605,7 @@ export default function InstrumentoDetallePage() {
                     {/* Sociedad */}
                     <section>
                         <h2 className="flex items-center gap-2 text-xs font-semibold text-gray-400 uppercase tracking-widest mb-3"><Building2 size={13} /> Sociedad</h2>
-                        <div className="bg-white border border-gray-100 rounded-2xl divide-y divide-gray-50">
+                        <div className="bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-2xl divide-y divide-gray-50 dark:divide-gray-700">
                             <CampoEditable label="Denominación social" value={denominacion} onSave={v => guardarCampo('denominacion_social', v)} />
                             <CampoEditable label="Tipo de sociedad" value={tipoLabel[instrumento.tipo] ?? instrumento.tipo} onSave={null} />
                             <CampoEditable label="Domicilio social" value={getDomicilio(instrumento)} onSave={v => guardarCampo('domicilio_social', v)} />
@@ -616,7 +616,7 @@ export default function InstrumentoDetallePage() {
                     {/* MUA */}
                     <section>
                         <h2 className="flex items-center gap-2 text-xs font-semibold text-gray-400 uppercase tracking-widest mb-3"><Shield size={13} /> MUA</h2>
-                        <div className="bg-white border border-gray-100 rounded-2xl divide-y divide-gray-50">
+                        <div className="bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-2xl divide-y divide-gray-50 dark:divide-gray-700">
                             {/* Carga de PDF del CUD */}
                             <div className="px-5 py-4">
                                 <div className="flex items-center gap-2 mb-3">
@@ -671,7 +671,7 @@ export default function InstrumentoDetallePage() {
                                     : () => async () => {}
 
                                 return (
-                                    <div key={i} className="bg-white border border-gray-100 rounded-2xl overflow-hidden">
+                                    <div key={i} className="bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-2xl overflow-hidden">
                                         {/* Cabecera del socio */}
                                         <div className="flex items-center justify-between px-5 py-3 bg-gray-50 border-b border-gray-100">
                                             <div className="flex items-center gap-3">
@@ -686,7 +686,7 @@ export default function InstrumentoDetallePage() {
                                             <span className="text-xs font-medium bg-black text-white px-2.5 py-0.5 rounded-full">{rolLabel[socio.rol || ''] || socio.rol || '—'}</span>
                                         </div>
 
-                                        <div className="divide-y divide-gray-50">
+                                        <div className="divide-y divide-gray-50 dark:divide-gray-700">
                                             {/* Datos personales — desde clientes/{id} */}
                                             <CampoEditable label="% Participación" value={socio.porcentaje != null ? String(socio.porcentaje) : ''} tipo="number" fuente="Formulario" onSave={async (v) => {
                                                 const nuevos = (instrumento.socios ?? []).map((s, j) => j === i ? { ...s, porcentaje: Number(v) } : s)
@@ -756,7 +756,7 @@ export default function InstrumentoDetallePage() {
                     {/* Objeto social */}
                     <section>
                         <h2 className="flex items-center gap-2 text-xs font-semibold text-gray-400 uppercase tracking-widest mb-3"><Briefcase size={13} /> Objeto Social</h2>
-                        <div className="bg-white border border-gray-100 rounded-2xl divide-y divide-gray-50">
+                        <div className="bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-2xl divide-y divide-gray-50 dark:divide-gray-700">
                             <CampoEditable label="Objeto social" value={objeto} tipo="textarea" onSave={v => guardarCampo('objeto_social_texto', v)} />
                         </div>
                     </section>
@@ -768,7 +768,7 @@ export default function InstrumentoDetallePage() {
                 <div className="space-y-6">
                     <section>
                         <h2 className="flex items-center gap-2 text-xs font-semibold text-gray-400 uppercase tracking-widest mb-3"><Building2 size={13} /> Sociedad</h2>
-                        <div className="bg-white border border-gray-100 rounded-2xl divide-y divide-gray-50">
+                        <div className="bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-2xl divide-y divide-gray-50 dark:divide-gray-700">
                             {([
                                 ['Denominación', denominacion], ['Tipo', tipoLabel[instrumento.tipo] ?? instrumento.tipo],
                                 ['Domicilio social', getDomicilio(instrumento)],
@@ -789,7 +789,7 @@ export default function InstrumentoDetallePage() {
                             {(instrumento.socios ?? []).map((socio, i) => {
                                 const perfil = getSocioPerfil(socio)
                                 return (
-                                    <div key={i} className="bg-white border border-gray-100 rounded-2xl p-5">
+                                    <div key={i} className="bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-2xl p-5">
                                         <div className="flex items-center justify-between mb-3">
                                             <p className="font-semibold text-gray-900">{perfil.nombre_completo || '—'}</p>
                                             <span className="text-xs font-mono bg-gray-50 border border-gray-100 px-2 py-1 rounded-lg text-gray-500">{rolLabel[socio.rol || ''] || socio.rol || '—'}</span>
@@ -815,7 +815,7 @@ export default function InstrumentoDetallePage() {
                     {objeto && (
                         <section>
                             <h2 className="flex items-center gap-2 text-xs font-semibold text-gray-400 uppercase tracking-widest mb-3"><FileText size={13} /> Objeto Social</h2>
-                            <div className="bg-white border border-gray-100 rounded-2xl px-5 py-4">
+                            <div className="bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-2xl px-5 py-4">
                                 <p className="text-sm text-gray-700 whitespace-pre-line leading-relaxed">{objeto}</p>
                             </div>
                         </section>
@@ -829,7 +829,7 @@ export default function InstrumentoDetallePage() {
                     {instrumento.linkPortalToken ? (
                         <section>
                             <h2 className="flex items-center gap-2 text-xs font-semibold text-gray-400 uppercase tracking-widest mb-3"><Link2 size={13} /> Enlace del Portal</h2>
-                            <div className="bg-white border border-gray-100 rounded-2xl px-5 py-4">
+                            <div className="bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-2xl px-5 py-4">
                                 <p className="text-xs text-gray-500 mb-3">Comparte este enlace con los socios para que suban sus documentos:</p>
                                 <div className="flex items-center gap-2">
                                     <input
@@ -887,7 +887,7 @@ export default function InstrumentoDetallePage() {
                                 </div>
                                 <div className="ml-auto text-right"><p className="text-2xl font-bold">{borrador.auditoria.score}</p><p className="text-xs opacity-60">/ 100</p></div>
                             </div>
-                            <div className="bg-white border border-gray-100 rounded-2xl p-6">
+                            <div className="bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-2xl p-6">
                                 <div className="flex items-center justify-between mb-4">
                                     <div className="flex items-center gap-2"><Shield size={14} className="text-gray-400" /><span className="text-xs font-semibold text-gray-400 uppercase tracking-widest">Texto del Acta — Borrador</span></div>
                                 <div className="flex items-center gap-2">

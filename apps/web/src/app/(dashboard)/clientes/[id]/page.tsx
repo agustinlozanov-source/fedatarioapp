@@ -98,7 +98,7 @@ function CampoEditable({ label, value, onSave, tipo = 'text', opciones, soloNume
                 <div className="flex gap-2 flex-1">
                     {tipo === 'select' && opciones ? (
                         <select value={draft} onChange={e => setDraft(e.target.value)} autoFocus
-                            className="flex-1 text-[13px] text-[#1D1D1F] font-semibold border border-gray-200 rounded-lg px-2 py-1 focus:outline-none focus:border-black bg-white">
+                            className="flex-1 text-[13px] text-[#1D1D1F] dark:text-white font-semibold border border-gray-200 dark:border-gray-600 rounded-lg px-2 py-1 focus:outline-none focus:border-black bg-white dark:bg-gray-700">
                             <option value="">Sin datos</option>
                             {opciones.map(o => <option key={o} value={o}>{o}</option>)}
                         </select>
@@ -358,7 +358,7 @@ export default function ClientePage() {
                     <div className="space-y-4">
 
                         {/* Identificación */}
-                        <div className="bg-white border border-black/[0.07] rounded-2xl p-5">
+                        <div className="bg-white dark:bg-gray-800 border border-black/[0.07] dark:border-white/[0.07] rounded-2xl p-5">
                             <div className="text-[11px] font-bold text-[#86868B] uppercase tracking-[0.06em] mb-1">Identificación</div>
                             <CampoEditable label="Nombre completo" value={(cliente as any).nombre_completo || cliente.nombre} onSave={v => actualizarCampo('nombre_completo', v)} />
                             <CampoEditable label="RFC" value={cliente.rfc} onSave={v => actualizarCampo('rfc', v)} />
@@ -378,14 +378,14 @@ export default function ClientePage() {
                         </div>
 
                         {/* Datos personales */}
-                        <div className="bg-white border border-black/[0.07] rounded-2xl p-5">
+                        <div className="bg-white dark:bg-gray-800 border border-black/[0.07] dark:border-white/[0.07] rounded-2xl p-5">
                             <div className="text-[11px] font-bold text-[#86868B] uppercase tracking-[0.06em] mb-1">Datos personales</div>
                             <CampoEditable label="Estado civil" value={(cliente as any).estado_civil} onSave={v => actualizarCampo('estado_civil', v)} tipo="select" opciones={['Soltero/a', 'Casado/a', 'Divorciado/a', 'Viudo/a', 'Unión libre', 'Separado/a']} />
                             <CampoEditable label="Ocupación" value={(cliente as any).ocupacion} onSave={v => actualizarCampo('ocupacion', v)} />
                             <CampoEditable label="Régimen fiscal" value={(cliente as any).regimen_fiscal} onSave={v => actualizarCampo('regimen_fiscal', v)} />
                             <CampoEditable label="Domicilio" value={domicilioLineaStr((cliente as any).domicilio)} onSave={v => actualizarCampo('domicilio', v)} />
                         </div>
-                        <div className="bg-white border border-black/[0.07] rounded-2xl p-5">
+                        <div className="bg-white dark:bg-gray-800 border border-black/[0.07] dark:border-white/[0.07] rounded-2xl p-5">
                             <div className="text-[11px] font-bold text-[#86868B] uppercase tracking-[0.06em] mb-1">Contacto</div>
                             <CampoEditable label="Correo electrónico" value={(cliente as any).email} onSave={v => actualizarCampo('email', v)} />
                             <CampoEditable label="Teléfono" value={(cliente as any).telefono} onSave={v => actualizarCampo('telefono', v)} />
@@ -394,7 +394,7 @@ export default function ClientePage() {
 
                         {/* Documentos de identidad */}
                         {!(cliente as any).es_extranjero ? (
-                            <div className="bg-white border border-black/[0.07] rounded-2xl p-5">
+                            <div className="bg-white dark:bg-gray-800 border border-black/[0.07] dark:border-white/[0.07] rounded-2xl p-5">
                                 <div className="text-[11px] font-bold text-[#86868B] uppercase tracking-[0.06em] mb-1">Documentos de identidad</div>
                                 <CampoEditable label="Clave de elector" value={(cliente as any).clave_elector} onSave={v => actualizarCampo('clave_elector', v)} />
                                 <CampoEditable label="Sección INE" value={(cliente as any).seccion_ine} onSave={v => actualizarCampo('seccion_ine', v)} />
@@ -402,7 +402,7 @@ export default function ClientePage() {
                                 <CampoEditable label="Vigencia INE" value={(cliente as any).vigencia_ine} onSave={v => actualizarCampo('vigencia_ine', v)} tipo="date" />
                             </div>
                         ) : (
-                            <div className="bg-white border border-black/[0.07] rounded-2xl p-5">
+                            <div className="bg-white dark:bg-gray-800 border border-black/[0.07] dark:border-white/[0.07] rounded-2xl p-5">
                                 <div className="text-[11px] font-bold text-[#86868B] uppercase tracking-[0.06em] mb-1">Documentos de identidad (extranjero)</div>
                                 <CampoEditable label="N° Pasaporte" value={(cliente as any).numero_pasaporte} onSave={v => actualizarCampo('numero_pasaporte', v)} />
                                 <CampoEditable label="Vigencia pasaporte" value={(cliente as any).vigencia_pasaporte} onSave={v => actualizarCampo('vigencia_pasaporte', v)} tipo="date" />
@@ -413,7 +413,7 @@ export default function ClientePage() {
                         )}
 
                         {/* Capacidades */}
-                        <div className="bg-white border border-black/[0.07] rounded-2xl p-5">
+                        <div className="bg-white dark:bg-gray-800 border border-black/[0.07] dark:border-white/[0.07] rounded-2xl p-5">
                             <div className="text-[11px] font-bold text-[#86868B] uppercase tracking-[0.06em] mb-3">Capacidades</div>
                             <div className="grid grid-cols-3 gap-3">
                                 {([
@@ -445,7 +445,7 @@ export default function ClientePage() {
                 {tab === 'documentos' && (
                     <div className="space-y-4">
                         {/* Subir documento */}
-                        <div className="bg-white border border-black/[0.07] rounded-2xl p-5">
+                        <div className="bg-white dark:bg-gray-800 border border-black/[0.07] dark:border-white/[0.07] rounded-2xl p-5">
                             <div className="text-[13px] font-bold text-[#1D1D1F] mb-3">Subir documento</div>
                             <div className="flex items-center gap-3">
                                 <select value={tipoSeleccionado}
@@ -485,7 +485,7 @@ export default function ClientePage() {
                                     const IconoEstado = estado.icon;
                                     const tipoInfo = TIPOS_DOCUMENTO.find(t => t.id === doc.tipo);
                                     return (
-                                        <div key={doc.id} className="bg-white border border-black/[0.07] rounded-xl p-4">
+                                        <div key={doc.id} className="bg-white dark:bg-gray-800 border border-black/[0.07] dark:border-white/[0.07] rounded-xl p-4">
                                             <div className="flex items-center gap-3">
                                                 <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
                                                     style={{ background: 'var(--bg2)' }}>
@@ -544,7 +544,7 @@ export default function ClientePage() {
                             instrumentos.map(inst => {
                                 const socio = inst.socios.find(s => s.clienteId === id);
                                 return (
-                                    <div key={inst.id} className="bg-white border border-black/[0.07] rounded-xl p-4">
+                                    <div key={inst.id} className="bg-white dark:bg-gray-800 border border-black/[0.07] dark:border-white/[0.07] rounded-xl p-4">
                                         <div className="flex items-center justify-between">
                                             <div>
                                                 <div className="text-[14px] font-bold text-[#1D1D1F]">

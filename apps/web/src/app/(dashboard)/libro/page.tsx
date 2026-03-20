@@ -44,7 +44,7 @@ export default function LibroPage() {
         </div>
 
         {/* Tabla */}
-        <div className="bg-white rounded-3xl shadow-sm overflow-hidden">
+        <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-sm overflow-hidden">
           <div className="px-6 py-4 border-b border-gray-200">
             <div className="flex items-center justify-between">
               <div>

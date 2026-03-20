@@ -169,7 +169,7 @@ export default function DocumentosPage() {
                         { label: 'Aprobados',  val: aprobados,  color: 'var(--green)' },
                         { label: 'En carpetas',val: enCarpetas, color: 'var(--blue)' },
                     ].map(k => (
-                        <div key={k.label} className="bg-white border border-black/[0.07] rounded-2xl p-4">
+                        <div key={k.label} className="bg-white dark:bg-gray-800 border border-black/[0.07] dark:border-white/[0.07] rounded-2xl p-4">
                             <div className="text-[11px] font-bold text-[#86868B] uppercase tracking-[0.06em] mb-1">{k.label}</div>
                             <div className="text-[28px] font-extrabold" style={{ color: k.color }}>{k.val}</div>
                         </div>
@@ -206,7 +206,7 @@ export default function DocumentosPage() {
                                 {/* Lista clientes */}
                                 <div className="space-y-2">
                                     <div className="text-[11px] font-bold text-[#86868B] uppercase tracking-[0.06em] mb-1">Buscar cliente</div>
-                                    <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-white border border-black/[0.08]">
+                                    <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-white dark:bg-gray-800 border border-black/[0.08] dark:border-white/[0.08]">
                                         <Search size={13} style={{ color: 'var(--ink4)' }} />
                                         <input value={busqueda} onChange={e => setBusqueda(e.target.value)}
                                             placeholder="Nombre, RFC, CURP..."
@@ -217,7 +217,7 @@ export default function DocumentosPage() {
                                             </button>
                                         )}
                                     </div>
-                                    <div className="bg-white border border-black/[0.07] rounded-xl overflow-hidden max-h-[calc(100vh-360px)] overflow-y-auto">
+                                    <div className="bg-white dark:bg-gray-800 border border-black/[0.07] dark:border-white/[0.07] rounded-xl overflow-hidden max-h-[calc(100vh-360px)] overflow-y-auto">
                                         {clientesFiltrados.length === 0 ? (
                                             <div className="text-[12px] text-[#86868B] text-center py-6">Sin resultados</div>
                                         ) : clientesFiltrados.map((c, i) => {
@@ -312,7 +312,7 @@ export default function DocumentosPage() {
                                                         const yaEnCarpeta = doc.carpetaInstrumentoId === instrumentoCarpeta?.id;
                                                         const enOtraCarpeta = doc.carpetaInstrumentoId && doc.carpetaInstrumentoId !== instrumentoCarpeta?.id;
                                                         return (
-                                                            <div key={doc.id} className="bg-white border border-black/[0.06] rounded-xl p-3.5 space-y-2">
+                                                            <div key={doc.id} className="bg-white dark:bg-gray-800 border border-black/[0.06] dark:border-white/[0.06] rounded-xl p-3.5 space-y-2">
                                                                 <div className="flex items-start gap-2.5">
                                                                     <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0" style={{ background: 'var(--bg2)' }}>
                                                                         <FileText size={14} style={{ color: 'var(--ink4)' }} />
@@ -391,7 +391,7 @@ export default function DocumentosPage() {
                         {/* ══ CARPETA DE INTEGRACIÓN ═══════════════════════════════ */}
                         {tab === 'carpeta' && (
                             <div>
-                                <div className="bg-white border border-black/[0.07] rounded-2xl p-4 mb-4">
+                                <div className="bg-white dark:bg-gray-800 border border-black/[0.07] dark:border-white/[0.07] rounded-2xl p-4 mb-4">
                                     <div className="text-[11px] font-bold text-[#86868B] uppercase tracking-[0.06em] mb-2">Instrumento</div>
                                     <select value={instrumentoCarpeta?.id ?? ''}
                                         onChange={e => setInstrumentoCarpeta(instrumentos.find(i => i.id === e.target.value) ?? null)}
@@ -440,7 +440,7 @@ export default function DocumentosPage() {
                                                     <div className="text-[12px] text-[#86868B]">Busca un cliente en la columna derecha y añade sus documentos</div>
                                                 </div>
                                             ) : (
-                                                <div className="bg-white border border-black/[0.07] rounded-2xl overflow-hidden">
+                                                <div className="bg-white dark:bg-gray-800 border border-black/[0.07] dark:border-white/[0.07] rounded-2xl overflow-hidden">
                                                     {docsCarpeta.map((doc, i) => {
                                                         const clienteDoc = clienteMap[doc.clienteId];
                                                         const estadoInfo = ESTADO_COLORS[doc.estado] ?? ESTADO_COLORS.pendiente;
@@ -483,7 +483,7 @@ export default function DocumentosPage() {
                                         {/* Panel derecho: añadir por cliente */}
                                         <div>
                                             <div className="text-[11px] font-bold text-[#86868B] uppercase tracking-[0.06em] mb-2">Añadir documentos</div>
-                                            <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-white border border-black/[0.08] mb-2">
+                                            <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-white dark:bg-gray-800 border border-black/[0.08] dark:border-white/[0.08] mb-2">
                                                 <Search size={13} style={{ color: 'var(--ink4)' }} />
                                                 <input value={busqueda} onChange={e => setBusqueda(e.target.value)}
                                                     placeholder="Buscar cliente..."
@@ -500,7 +500,7 @@ export default function DocumentosPage() {
                                                     grupo.items.length === 0 ? null :
                                                     <div key={grupo.label} className="mb-3">
                                                         <div className="text-[10px] font-bold text-[#86868B] uppercase tracking-[0.05em] mb-1.5 px-1">{grupo.label}</div>
-                                                        <div className="bg-white border border-black/[0.07] rounded-xl overflow-hidden">
+                                                        <div className="bg-white dark:bg-gray-800 border border-black/[0.07] dark:border-white/[0.07] rounded-xl overflow-hidden">
                                                             {grupo.items.map((c, ci) => {
                                                                 const docsC = documentos.filter(d => d.clienteId === c.id);
                                                                 const sel = clienteSeleccionado?.id === c.id;
@@ -563,7 +563,7 @@ export default function DocumentosPage() {
             {/* Visor */}
             {visorUrl && (
                 <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-6">
-                    <div className="bg-white rounded-2xl w-full max-w-4xl h-[80vh] flex flex-col overflow-hidden">
+                    <div className="bg-white dark:bg-gray-800 rounded-2xl w-full max-w-4xl h-[80vh] flex flex-col overflow-hidden">
                         <div className="flex items-center justify-between px-4 py-3 border-b border-black/[0.07]">
                             <span className="text-[13px] font-bold text-[#1D1D1F]">Visor de documento</span>
                             <div className="flex items-center gap-2">

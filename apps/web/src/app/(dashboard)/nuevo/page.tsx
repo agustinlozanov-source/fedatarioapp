@@ -622,7 +622,7 @@ export default function NuevoInstrumentoPage() {
             {objetosSociales.length > 0 && (
               <div className="space-y-2 mb-4">
                 {objetosSociales.map((obj, idx) => (
-                  <div key={obj.uid} className="bg-white border border-black/[0.07] rounded-xl p-3">
+                  <div key={obj.uid} className="bg-white dark:bg-gray-800 border border-black/[0.07] dark:border-white/[0.07] rounded-xl p-3">
                     <div className="flex items-center justify-between mb-2">
                       <span className="text-[11px] font-bold text-[#86868B] uppercase tracking-[0.06em]">
                         Objeto {idx + 1}
@@ -654,7 +654,7 @@ export default function NuevoInstrumentoPage() {
                   className="flex-1 text-[13px] outline-none" />
               </div>
               {abiertoObjeto && (
-                <div className="absolute top-full left-0 right-0 mt-1 bg-white rounded-xl shadow-lg z-50 overflow-hidden"
+                <div className="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-gray-800 rounded-xl shadow-lg z-50 overflow-hidden"
                   style={{ border: '1px solid var(--border)' }}>
                   {resultadosObjeto.length === 0
                     ? <div className="px-4 py-3 text-[13px] text-[#86868B]">No hay objetos predefinidos aún</div>
@@ -678,7 +678,7 @@ export default function NuevoInstrumentoPage() {
                 <Plus size={14} /> Redactar objeto social nuevo
               </button>
             ) : (
-              <div className="border border-black/[0.07] rounded-xl p-4 bg-white">
+              <div className="border border-black/[0.07] dark:border-white/[0.07] rounded-xl p-4 bg-white dark:bg-gray-800">
                 <div className="text-[11px] font-bold text-[#86868B] uppercase tracking-[0.06em] mb-2">Nuevo objeto social</div>
                 <input value={nuevoObjetoEtiqueta}
                   onChange={e => setNuevoObjetoEtiqueta(e.target.value)}

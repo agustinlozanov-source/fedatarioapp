@@ -208,7 +208,7 @@ export default function CargaMasivaPage() {
                 {modo === 'csv' && rows.length === 0 && (
                     <div className="space-y-4">
                         {/* Paso 1 — Descargar plantilla */}
-                        <div className="bg-white border border-black/[0.07] rounded-2xl p-5">
+                        <div className="bg-white dark:bg-gray-800 border border-black/[0.07] dark:border-white/[0.07] rounded-2xl p-5">
                             <div className="flex items-center justify-between">
                                 <div>
                                     <div className="text-[13px] font-bold text-[#1D1D1F] mb-0.5">Paso 1 — Descarga la plantilla</div>
@@ -227,7 +227,7 @@ export default function CargaMasivaPage() {
                         </div>
 
                         {/* Paso 2 — Subir archivo */}
-                        <div className="bg-white border border-black/[0.07] rounded-2xl p-5">
+                        <div className="bg-white dark:bg-gray-800 border border-black/[0.07] dark:border-white/[0.07] rounded-2xl p-5">
                             <div className="text-[13px] font-bold text-[#1D1D1F] mb-0.5">Paso 2 — Sube el archivo</div>
                             <div className="text-[12px] text-[#86868B] mb-4">Formatos aceptados: CSV, TXT</div>
                             <button onClick={() => fileRef.current?.click()}
@@ -286,7 +286,7 @@ export default function CargaMasivaPage() {
                         </div>
 
                         {/* Tabla */}
-                        <div className="bg-white border border-black/[0.07] rounded-2xl overflow-hidden mb-4">
+                        <div className="bg-white dark:bg-gray-800 border border-black/[0.07] dark:border-white/[0.07] rounded-2xl overflow-hidden mb-4">
                             <div className="overflow-x-auto">
                                 <table className="w-full">
                                     <thead>
