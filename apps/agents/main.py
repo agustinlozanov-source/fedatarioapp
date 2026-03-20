@@ -403,6 +403,17 @@ async def docx_generar(body: DocxInput):
 
 # ── AGT-07 EXPORTADOR GOOGLE DOCS ────────────────────────────────────────────
 
+def _firestore_safe(v):
+    """Convierte recursivamente cualquier valor a algo serializable por Firestore."""
+    if v is None or isinstance(v, (bool, int, float, str)):
+        return v
+    if isinstance(v, (list, tuple)):
+        return [_firestore_safe(i) for i in v]
+    if isinstance(v, dict):
+        return {str(k): _firestore_safe(val) for k, val in v.items()}
+    return str(v)
+
+
 def obtener_secciones_de_firestore(instrumento_id: str) -> dict:
     """Obtiene y genera las secciones estructuradas de un instrumento desde Firestore."""
     if not db:
@@ -428,10 +439,7 @@ def obtener_secciones_de_firestore(instrumento_id: str) -> dict:
             {
                 "tipo": sec.tipo,
                 "runs": [[str(t), bool(b)] for t, b in sec.runs],
-                "data": {
-                    k: v if isinstance(v, (str, int, float, bool, type(None))) else str(v)
-                    for k, v in (sec.data.items() if isinstance(sec.data, dict) else {})
-                }
+                "data": _firestore_safe(sec.data if isinstance(sec.data, dict) else {})
             }
             for sec in secciones
         ]
