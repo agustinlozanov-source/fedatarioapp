@@ -18,10 +18,10 @@ export default function PreviewPage() {
   const { id } = useParams()
   const router  = useRouter()
 
-  const [secciones,  setSecciones]  = useState(null)
+  const [secciones,  setSecciones]  = useState<any[] | null>(null)
   const [denominacion, setDenominacion] = useState('')
   const [loading,    setLoading]    = useState(true)
-  const [error,      setError]      = useState(null)
+  const [error,      setError]      = useState<string | null>(null)
 
   useEffect(() => {
     if (!id) return
