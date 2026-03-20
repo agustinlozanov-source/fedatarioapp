@@ -53,8 +53,10 @@ export default function PreviewPage() {
     setGenerando(true)
     setError(null)
     try {
-      const res = await fetch(`/api/instrumentos/${id}/generar-secciones`, {
+      const res = await fetch('/api/instrumentos/generar-secciones', {
         method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ instrumento_id: id }),
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error ?? 'Error generando secciones')
