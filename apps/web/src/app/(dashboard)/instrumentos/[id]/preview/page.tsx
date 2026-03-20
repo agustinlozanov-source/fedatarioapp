@@ -53,14 +53,16 @@ export default function PreviewPage() {
     setGenerando(true)
     setError(null)
     try {
-      const res = await fetch('/api/instrumentos/generar-secciones', {
+      const agentsUrl = process.env.NEXT_PUBLIC_AGENTS_URL || 'https://fedatario-production.up.railway.app'
+      const res = await fetch(`${agentsUrl}/secciones/generar`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ instrumento_id: id }),
       })
       const data = await res.json()
-      if (!res.ok) throw new Error(data.error ?? 'Error generando secciones')
-      await cargar()   // recargar desde Firestore
+      if (!res.ok) throw new Error(data.detail ?? 'Error generando secciones')
+      if (!data.total) throw new Error('No se generaron secciones. Verifica que el instrumento tenga todos sus datos.')
+      await cargar()
     } catch (e: any) {
       setError(e.message)
     } finally {
