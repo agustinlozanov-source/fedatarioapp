@@ -1,13 +1,19 @@
 'use client'
 
 import { useState, useCallback, useEffect, useRef } from 'react'
+import dynamic from 'next/dynamic'
 import { useInstrumentLayout }   from './useInstrumentLayout'
 import { InstrumentParagraph }   from './InstrumentParagraph'
 import { InstrumentHeader }      from './InstrumentHeader'
 import { InstrumentTable }       from './InstrumentTable'
 import { InstrumentSignature }   from './InstrumentSignature'
-import { InstrumentPdfViewer }  from './InstrumentPdfViewer'
 import './instrument-pdf-viewer.css'
+
+// Carga dinámica para evitar que @react-pdf se compile en el bundle SSR
+const InstrumentPdfViewer = dynamic(
+  () => import('./InstrumentPdfViewer').then(m => m.InstrumentPdfViewer),
+  { ssr: false }
+)
 
 const FUENTES_MONO = [
   'Courier New', 'Courier Prime', 'Lucida Console',

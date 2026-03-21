@@ -11,7 +11,7 @@
   "dependencies": {
     "@anthropic-ai/sdk": "^0.78.0",
     "@fedatario/shared": "*",
-    "@react-pdf/renderer": "^4.3.2",
+    "@react-pdf/renderer": "3.4.4",
     "clsx": "^2.1.1",
     "date-fns": "^3.6.0",
     "firebase": "^12.10.0",
