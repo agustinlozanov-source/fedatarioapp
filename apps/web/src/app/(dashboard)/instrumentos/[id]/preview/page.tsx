@@ -67,6 +67,15 @@ export default function PreviewPage() {
 
   useEffect(() => { if (id) cargar() }, [id])
 
+  useEffect(() => {
+    if (secciones) {
+      console.log('Total secciones:', secciones.length)
+      secciones.slice(0, 5).forEach((sec, i) => {
+        console.log(`Sec ${i}:`, JSON.stringify(sec))
+      })
+    }
+  }, [secciones])
+
   const handleGenerar = async () => {
     setGenerando(true)
     setError(null)
