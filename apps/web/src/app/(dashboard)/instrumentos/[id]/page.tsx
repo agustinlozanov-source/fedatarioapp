@@ -137,40 +137,40 @@ function CampoEditable({ label, value, onSave, tipo = 'text', fuente }: {
         <div className="flex items-start px-5 py-3 gap-4 group">
             <div className="w-40 flex-shrink-0">
                 <span className="text-xs text-gray-400">{label}</span>
-                {fuente && <div className="text-[10px] text-gray-300 mt-0.5">{fuente}</div>}
+                {fuente && <div className="text-[10px] text-gray-400 dark:text-gray-500 mt-0.5">{fuente}</div>}
             </div>
             {editing ? (
                 <div className="flex gap-2 flex-1">
                     {tipo === 'textarea' ? (
                         <textarea value={draft} onChange={e => setDraft(e.target.value)} rows={5}
-                            className="flex-1 text-sm text-gray-800 font-medium border border-gray-200 dark:border-gray-700 rounded-lg px-2 py-1.5 focus:outline-none focus:border-black resize-y" autoFocus />
+                            className="flex-1 text-sm text-gray-800 dark:text-gray-100 font-medium bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg px-2 py-1.5 focus:outline-none focus:border-black dark:focus:border-white resize-y" autoFocus />
                     ) : (
                         <input type={tipo} value={draft} onChange={e => setDraft(e.target.value)}
-                            className="flex-1 text-sm text-gray-800 font-medium border border-gray-200 dark:border-gray-700 rounded-lg px-2 py-0.5 focus:outline-none focus:border-black" autoFocus />
+                            className="flex-1 text-sm text-gray-800 dark:text-gray-100 font-medium bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg px-2 py-0.5 focus:outline-none focus:border-black dark:focus:border-white" autoFocus />
                     )}
                     <div className="flex flex-col gap-1">
-                        <button onClick={save} disabled={saving} className="p-1 rounded-md hover:bg-green-50 text-green-600 disabled:opacity-40">
+                        <button onClick={save} disabled={saving} className="p-1 rounded-md hover:bg-green-50 dark:hover:bg-green-900/30 text-green-600 disabled:opacity-40">
                             {saving ? <Loader2 size={13} className="animate-spin" /> : <Check size={13} />}
                         </button>
-                        <button onClick={() => { setDraft(String(value ?? '')); setEditing(false) }} className="p-1 rounded-md hover:bg-red-50 text-red-400">
+                        <button onClick={() => { setDraft(String(value ?? '')); setEditing(false) }} className="p-1 rounded-md hover:bg-red-50 dark:hover:bg-red-900/30 text-red-400">
                             <X size={13} />
                         </button>
                     </div>
                 </div>
             ) : (
                 <div className="flex items-start gap-2 flex-1 min-w-0">
-                    <span className={`text-sm text-gray-800 font-medium flex-1 ${tipo === 'textarea' ? 'whitespace-pre-wrap' : 'truncate'}`}>
-                        {value ?? <span className="text-gray-300 italic text-xs">Sin datos</span>}
+                    <span className={`text-sm text-gray-800 dark:text-gray-100 font-medium flex-1 ${tipo === 'textarea' ? 'whitespace-pre-wrap' : 'truncate'}`}>
+                        {value ?? <span className="text-gray-400 dark:text-gray-600 italic text-xs">Sin datos</span>}
                     </span>
                     <div className="flex items-center gap-1 flex-shrink-0">
                         {value && (
-                            <button onClick={copiar} className="p-1 rounded-md hover:bg-gray-100 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:text-gray-300 transition-colors" title="Copiar">
+                            <button onClick={copiar} className="p-1 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-100 transition-colors" title="Copiar">
                                 {copied ? <Check size={11} className="text-green-600" /> : <Copy size={11} />}
                             </button>
                         )}
                         {onSave && (
                             <button onClick={() => { setDraft(String(value ?? '')); setEditing(true) }}
-                                className="p-1 rounded-md hover:bg-gray-100 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:text-gray-300 transition-colors">
+                                className="p-1 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-100 transition-colors">
                                 <Pencil size={11} />
                             </button>
                         )}
@@ -544,7 +544,7 @@ export default function InstrumentoDetallePage() {
             />
             {/* HEADER */}
             <div className="mb-8">
-                <button onClick={() => router.push('/instrumentos')} className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400 hover:text-gray-800 mb-4 transition-colors">
+                <button onClick={() => router.push('/instrumentos')} className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-white mb-4 transition-colors">
                     <ChevronLeft size={16} /> Instrumentos
                 </button>
                 <div className="flex items-start justify-between">
@@ -556,20 +556,8 @@ export default function InstrumentoDetallePage() {
                     <div className="flex gap-3">
                         <Link
                             href={`/instrumentos/${id}/preview`}
-                            style={{
-                                display: 'inline-flex',
-                                alignItems: 'center',
-                                gap: 6,
-                                padding: '7px 14px',
-                                background: 'white',
-                                color: 'var(--ink)',
-                                border: '1px solid var(--border)',
-                                borderRadius: 8,
-                                fontSize: 13,
-                                fontWeight: 500,
-                                textDecoration: 'none',
-                                fontFamily: 'Plus Jakarta Sans, system-ui, sans-serif',
-                            }}
+                            className="inline-flex items-center gap-1.5 px-3.5 py-[7px] bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-[13px] font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                            style={{ textDecoration: 'none' }}
                         >
                             <svg width="15" height="15" viewBox="0 0 15 15" fill="none">
                                 <path d="M1 7.5C1 7.5 3.5 3 7.5 3s6.5 4.5 6.5 4.5-2.5 4.5-6.5 4.5S1 7.5 1 7.5z"
@@ -578,15 +566,15 @@ export default function InstrumentoDetallePage() {
                             </svg>
                             Vista previa y edición
                         </Link>
-                        <button onClick={descargarDocx} disabled={descargando} className="flex items-center gap-2 px-4 py-2 border border-gray-200 dark:border-gray-700 rounded-xl text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 disabled:opacity-40 transition-colors">
+                        <button onClick={descargarDocx} disabled={descargando} className="flex items-center gap-2 px-4 py-2 border border-gray-200 dark:border-gray-700 rounded-xl text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-40 transition-colors">
                             {descargando ? <><Loader2 size={15} className="animate-spin" /> Generando...</> : <><Download size={15} /> Descargar .docx</>}
                         </button>
-                        <button onClick={exportarADocs} disabled={exportandoDocs} className="flex items-center gap-2 px-4 py-2 border border-gray-200 dark:border-gray-700 rounded-xl text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 disabled:opacity-40 transition-colors">
+                        <button onClick={exportarADocs} disabled={exportandoDocs} className="flex items-center gap-2 px-4 py-2 border border-gray-200 dark:border-gray-700 rounded-xl text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-40 transition-colors">
                             {exportandoDocs ? <><Loader2 size={15} className="animate-spin" /> Exportando...</> : <><FileText size={15} /> Abrir en Google Docs</>}
                         </button>
                         <button onClick={generarBorrador} disabled={generando || !compendioListo}
                             title={!compendioListo ? `Campos faltantes: ${faltantes.join(' • ')}` : ''}
-                            className="flex items-center gap-2 px-5 py-2 bg-black text-white rounded-xl text-sm font-medium hover:bg-gray-800 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
+                            className="flex items-center gap-2 px-5 py-2 bg-green-600 text-white rounded-xl text-sm font-medium hover:bg-green-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
                             {generando ? <><Loader2 size={15} className="animate-spin" /> Generando...</> : <><FileText size={15} /> Generar Borrador</>}
                         </button>
                     </div>
@@ -598,7 +586,7 @@ export default function InstrumentoDetallePage() {
                         <span className="text-xs font-semibold text-gray-500 dark:text-gray-400 dark:text-gray-400">Compendio</span>
                         <span className="text-xs font-bold" style={{ color: porcentaje >= 80 ? '#1A9640' : '#E65100' }}>{porcentaje}%{porcentaje >= 80 ? ' · Listo para borrador' : ''}</span>
                     </div>
-                    <div className="w-full bg-gray-100 rounded-full h-1.5 mb-3">
+                    <div className="w-full bg-gray-100 dark:bg-gray-700 rounded-full h-1.5 mb-3">
                         <div className="h-1.5 rounded-full transition-all" style={{ width: `${porcentaje}%`, background: porcentaje >= 80 ? '#1A9640' : '#0071E3' }} />
                     </div>
                 </div>
@@ -606,10 +594,10 @@ export default function InstrumentoDetallePage() {
             </div>
 
             {/* TABS */}
-            <div className="flex gap-1 border-b border-gray-100 mb-6">
+            <div className="flex gap-1 border-b border-gray-100 dark:border-gray-700 mb-6">
                 {TABS.map(tab => (
                     <button key={tab.key} onClick={() => setTabActiva(tab.key)}
-                        className={`px-4 py-2 text-sm font-medium transition-colors border-b-2 -mb-px ${tabActiva === tab.key ? 'border-black text-black' : 'border-transparent text-gray-400 hover:text-gray-700'}`}>
+                        className={`px-4 py-2 text-sm font-medium transition-colors border-b-2 -mb-px ${tabActiva === tab.key ? 'border-black dark:border-white text-black dark:text-white' : 'border-transparent text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'}`}>
                         {tab.label}
                     </button>
                 ))}
@@ -664,14 +652,14 @@ export default function InstrumentoDetallePage() {
                                     <button
                                         disabled={subiendoCud}
                                         onClick={() => cudInputRef.current?.click()}
-                                        className="inline-flex items-center gap-2 px-4 py-2 bg-blue-50 text-blue-600 rounded-lg text-sm font-medium hover:bg-blue-100 disabled:opacity-40 transition-colors cursor-pointer">
+                                        className="inline-flex items-center gap-2 px-4 py-2 bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-lg text-sm font-medium hover:bg-blue-100 dark:hover:bg-blue-900/50 disabled:opacity-40 transition-colors cursor-pointer">
                                         {subiendoCud
                                             ? <><Loader2 size={14} className="animate-spin" />Subiendo...</>
                                             : <><FileUp size={14} />Subir PDF</>}
                                     </button>
                                 )}
                                 {cudOk && (
-                                    <div className="flex items-center gap-2 text-sm px-3 py-2 mt-3 rounded-lg bg-green-50 text-green-700">
+                                    <div className="flex items-center gap-2 text-sm px-3 py-2 mt-3 rounded-lg bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-400">
                                         <CheckCircle size={14} /> {cudOk}
                                     </div>
                                 )}
@@ -698,17 +686,17 @@ export default function InstrumentoDetallePage() {
                                 return (
                                     <div key={i} className="bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-2xl overflow-hidden">
                                         {/* Cabecera del socio */}
-                                        <div className="flex items-center justify-between px-5 py-3 bg-gray-50 border-b border-gray-100 dark:border-gray-700">
+                                        <div className="flex items-center justify-between px-5 py-3 bg-gray-50 dark:bg-gray-700/50 border-b border-gray-100 dark:border-gray-700">
                                             <div className="flex items-center gap-3">
-                                                <div className="w-7 h-7 rounded-full bg-gray-200 flex items-center justify-center text-xs font-bold text-gray-500 dark:text-gray-400 dark:text-gray-400">
+                                                <div className="w-7 h-7 rounded-full bg-gray-200 dark:bg-gray-600 flex items-center justify-center text-xs font-bold text-gray-500 dark:text-gray-300">
                                                     {(perfil.nombre_completo || '?').charAt(0)}
                                                 </div>
                                                 <div>
-                                                    <span className="text-sm font-semibold text-gray-800">{perfil.nombre_completo || 'Sin nombre'}</span>
+                                                    <span className="text-sm font-semibold text-gray-800 dark:text-gray-100">{perfil.nombre_completo || 'Sin nombre'}</span>
                                                     {esExtranjero && <span className="ml-2 text-xs bg-blue-50 text-blue-600 px-1.5 py-0.5 rounded-full font-medium">Extranjero</span>}
                                                 </div>
                                             </div>
-                                            <span className="text-xs font-medium bg-black text-white px-2.5 py-0.5 rounded-full">{rolLabel[socio.rol || ''] || socio.rol || '—'}</span>
+                                            <span className="text-xs font-medium bg-gray-900 dark:bg-gray-600 text-white px-2.5 py-0.5 rounded-full">{rolLabel[socio.rol || ''] || socio.rol || '—'}</span>
                                         </div>
 
                                         <div className="divide-y divide-gray-50 dark:divide-gray-700">
@@ -757,7 +745,7 @@ export default function InstrumentoDetallePage() {
 
                                         {/* Documentos */}
                                         {cid && (
-                                            <div className="px-5 py-3 border-t border-gray-50 dark:border-gray-700 bg-gray-50/50">
+                                            <div className="px-5 py-3 border-t border-gray-50 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800/50">
                                                 <p className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-2">Documentos</p>
                                                 <div className="flex gap-2 flex-wrap">
                                                     {docsReq.map(tipo => {
