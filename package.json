@@ -16,6 +16,6 @@
     "concurrently": "^8.2.0"
   },
   "dependencies": {
-    "@next/swc-darwin-x64": "^16.1.6"
+    "@react-pdf/renderer": "3.4.4"
   }
 }
