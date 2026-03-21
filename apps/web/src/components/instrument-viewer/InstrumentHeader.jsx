@@ -26,6 +26,7 @@ export function InstrumentHeader({
     const anchoPag  = anchoTextoPx()
     const anchoTxt  = medir(` ${textoLocal} `)
     const anchoEq   = medir('=')
+    if (!anchoEq || !anchoPag) return
     const espacio   = anchoPag - anchoTxt
     const cantidad  = Math.max(Math.floor((espacio / anchoEq) / 2), 2)
     const eq        = '='.repeat(cantidad)
