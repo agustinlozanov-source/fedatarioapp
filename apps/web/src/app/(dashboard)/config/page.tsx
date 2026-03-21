@@ -282,10 +282,10 @@ export default function ConfigPage() {
           {/* Configuración del acta (Collapsible) */}
           <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-sm">
             <div 
-              className="flex items-center justify-between px-6 py-6 cursor-pointer hover:bg-gray-50 transition-colors"
+              className="flex items-center justify-between px-6 py-6 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
               onClick={() => setMostrarNuevaSeccion(!mostrarNuevaSeccion)}>
               <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-gray-100 rounded-2xl flex items-center justify-center text-gray-600 dark:text-gray-400 dark:text-gray-400">
+                <div className="w-12 h-12 bg-gray-100 dark:bg-gray-700 rounded-2xl flex items-center justify-center text-gray-600 dark:text-gray-400">
                   <Settings2 size={24} />
                 </div>
                 <div>
@@ -299,7 +299,7 @@ export default function ConfigPage() {
             {mostrarNuevaSeccion && (
               <div className="px-6 pb-6 border-t border-gray-200 dark:border-gray-700 space-y-3">
                 {secciones.map(sec => (
-                  <div key={sec.id} className="p-4 bg-gray-50 rounded-2xl">
+                  <div key={sec.id} className="p-4 bg-gray-50 dark:bg-gray-700 rounded-2xl">
                     <div className="flex items-center justify-between mb-3">
                       <h4 className="font-semibold text-gray-900 dark:text-white dark:text-white">{sec.nombre}</h4>
                       <span className="text-xs px-2 py-1 bg-blue-100 text-blue-700 rounded-full">{sec.campos.length} campos</span>

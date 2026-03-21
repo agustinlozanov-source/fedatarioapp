@@ -62,7 +62,7 @@ export default function ResumenPage() {
                     <span className="text-sm font-medium text-gray-700 dark:text-gray-300 dark:text-gray-300">{item.label}</span>
                     <span className="text-sm font-bold text-gray-900 dark:text-white dark:text-white">{item.value}</span>
                   </div>
-                  <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
+                  <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3 overflow-hidden">
                     <div 
                       className={`h-full ${item.color}`}
                       style={{ width: `${Math.min((item.value / stats.totalInstrumentos) * 100 || 0, 100)}%` }}
@@ -119,7 +119,7 @@ export default function ResumenPage() {
           <div className="bg-white dark:bg-gray-800 rounded-3xl p-6 shadow-sm">
             <div className="flex justify-between items-start mb-4">
               <p className="text-gray-600 dark:text-gray-400 text-sm">Clientes Activos</p>
-              <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
+              <button className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors">
                 <MoreVertical size={18} className="text-gray-400" />
               </button>
             </div>

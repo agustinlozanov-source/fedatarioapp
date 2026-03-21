@@ -457,15 +457,15 @@ export default function DocumentosPage() {
                                                                 <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full shrink-0"
                                                                     style={{ background: estadoInfo.bg, color: estadoInfo.color }}>{estadoInfo.label}</span>
                                                                 <div className="flex items-center gap-1 shrink-0">
-                                                                    <button onClick={() => setVisorUrl(doc.storageUrl)} className="p-1 rounded-lg hover:bg-gray-100 dark:bg-gray-700" title="Ver">
+                                                                    <button onClick={() => setVisorUrl(doc.storageUrl)} className="p-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700" title="Ver">
                                                                         <Eye size={12} style={{ color: 'var(--ink4)' }} />
                                                                     </button>
                                                                     <button onClick={() => moverEnCarpeta(doc.id!, 'arriba')} disabled={i === 0}
-                                                                        className="p-1 rounded-lg hover:bg-gray-100 disabled:opacity-30">
+                                                                        className="p-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-30">
                                                                         <ChevronUp size={12} style={{ color: 'var(--ink4)' }} />
                                                                     </button>
                                                                     <button onClick={() => moverEnCarpeta(doc.id!, 'abajo')} disabled={i === docsCarpeta.length - 1}
-                                                                        className="p-1 rounded-lg hover:bg-gray-100 disabled:opacity-30">
+                                                                        className="p-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-30">
                                                                         <ChevronDown size={12} style={{ color: 'var(--ink4)' }} />
                                                                     </button>
                                                                     <button onClick={() => removerCarpeta(doc.id!)} disabled={procesando === doc.id}

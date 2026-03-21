@@ -497,7 +497,7 @@ export default function NuevoInstrumentoPage() {
                   {socio.cliente ? (
                     <div className="flex items-center gap-3 px-3 py-2.5 rounded-xl mb-3"
                       style={{ background: 'var(--green-bg)', border: '1px solid var(--green-border, #D1FAE5)' }}>
-                      <div className="w-7 h-7 rounded-full bg-white flex items-center justify-center text-[11px] font-bold shrink-0"
+                      <div className="w-7 h-7 rounded-full bg-white dark:bg-gray-700 flex items-center justify-center text-[11px] font-bold shrink-0"
                         style={{ color: 'var(--green)' }}>
                         {socio.cliente.nombre.charAt(0)}
                       </div>
@@ -522,19 +522,19 @@ export default function NuevoInstrumentoPage() {
                       <input value={socio.nuevoNombre || ''}
                         onChange={e => actualizarSocio(socio.uid, { nuevoNombre: e.target.value })}
                         placeholder="Nombre completo *"
-                        className="w-full px-3 py-2 rounded-lg text-[13px] outline-none"
-                        style={{ border: '1px solid var(--border)', background: 'white' }} />
+                        className="w-full px-3 py-2 rounded-lg text-[13px] outline-none text-gray-900 dark:text-white"
+                        style={{ border: '1px solid var(--border)', background: 'var(--bg)' }} />
                       <div className="grid grid-cols-2 gap-2">
                         <input value={socio.nuevoRfc || ''}
                           onChange={e => actualizarSocio(socio.uid, { nuevoRfc: e.target.value })}
                           placeholder="RFC (opcional)"
-                          className="px-3 py-2 rounded-lg text-[13px] font-mono outline-none"
-                          style={{ border: '1px solid var(--border)', background: 'white' }} />
+                          className="px-3 py-2 rounded-lg text-[13px] font-mono outline-none text-gray-900 dark:text-white"
+                          style={{ border: '1px solid var(--border)', background: 'var(--bg)' }} />
                         <input value={socio.nuevoEmail || ''}
                           onChange={e => actualizarSocio(socio.uid, { nuevoEmail: e.target.value })}
                           placeholder="Email (opcional)"
-                          className="px-3 py-2 rounded-lg text-[13px] outline-none"
-                          style={{ border: '1px solid var(--border)', background: 'white' }} />
+                          className="px-3 py-2 rounded-lg text-[13px] outline-none text-gray-900 dark:text-white"
+                          style={{ border: '1px solid var(--border)', background: 'var(--bg)' }} />
                       </div>
                     </div>
                   ) : (
