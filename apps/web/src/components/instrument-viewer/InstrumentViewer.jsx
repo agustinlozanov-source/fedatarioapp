@@ -63,13 +63,17 @@ export function InstrumentViewer({
     if (!instrumentoId || readOnly) return
     setGuardando(true)
     try {
-      // Guardar en Firestore bajo instrumentos/:id/preview_edits
-      // Importar dinámicamente para no añadir dependencia si no se usa
       const { doc, setDoc } = await import('firebase/firestore')
       const { db } = await import('@/lib/firebase')
+      // Serializar runs como JSON string para evitar arrays anidados (Firestore no los soporta)
+      const secsSerializadas = secsActuales.map(s => ({
+        tipo: s.tipo,
+        runs_json: JSON.stringify(Array.isArray(s.runs) ? s.runs : []),
+        data: s.data ?? {},
+      }))
       await setDoc(
         doc(db, 'instrumentos', instrumentoId, 'preview_edits', 'current'),
-        { secciones: secsActuales, actualizadoEn: new Date().toISOString() }
+        { secciones: secsSerializadas, actualizadoEn: new Date().toISOString() }
       )
       setUltimo(new Date())
     } catch (e) {

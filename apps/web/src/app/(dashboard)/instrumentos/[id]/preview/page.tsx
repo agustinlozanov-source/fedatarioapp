@@ -17,6 +17,15 @@ export default function PreviewPage() {
   const [generando,    setGenerando]    = useState(false)
   const [error,        setError]        = useState<string | null>(null)
 
+  const sanitizeRuns = (raw: any): [string, boolean][] => {
+    try {
+      const arr = Array.isArray(raw) ? raw : (typeof raw === 'string' ? JSON.parse(raw) : [])
+      return arr
+        .filter((r: any) => Array.isArray(r) && r.length >= 2)
+        .map((r: any) => [String(r[0] ?? ''), Boolean(r[1])] as [string, boolean])
+    } catch { return [] }
+  }
+
   async function cargar() {
     setLoading(true)
     try {
@@ -24,7 +33,12 @@ export default function PreviewPage() {
         doc(db, 'instrumentos', id as string, 'preview_edits', 'current')
       )
       if (editsSnap.exists()) {
-        setSecciones(editsSnap.data().secciones)
+        const raw = editsSnap.data().secciones ?? []
+        const parsed = raw.map((s: any) => ({
+          ...s,
+          runs: sanitizeRuns(s.runs_json ?? s.runs)
+        }))
+        setSecciones(parsed)
         return
       }
 
@@ -35,12 +49,6 @@ export default function PreviewPage() {
       setDenominacion(instr.denominacion_social ?? '')
 
       if (instr.secciones?.length) {
-        const sanitizeRuns = (raw: any): [string, boolean][] => {
-          const arr = Array.isArray(raw) ? raw : (typeof raw === 'string' ? JSON.parse(raw) : [])
-          return arr
-            .filter((r: any) => Array.isArray(r) && r.length >= 2)
-            .map((r: any) => [String(r[0] ?? ''), Boolean(r[1])] as [string, boolean])
-        }
         const parsed = instr.secciones.map((s: any) => ({
           ...s,
           runs: sanitizeRuns(s.runs_json ?? s.runs)
