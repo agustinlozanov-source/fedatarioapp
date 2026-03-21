@@ -21,8 +21,14 @@ from fastapi.responses import StreamingResponse
 from firebase_admin import credentials, firestore
 from pydantic import BaseModel
 
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
+# Silenciar librerías muy verbosas
+logging.getLogger("pdfminer").setLevel(logging.WARNING)
+logging.getLogger("googleapiclient").setLevel(logging.WARNING)
+logging.getLogger("google.auth").setLevel(logging.WARNING)
+logging.getLogger("httpx").setLevel(logging.WARNING)
 
 sys.path.insert(0, str(Path(__file__).parent))
 
