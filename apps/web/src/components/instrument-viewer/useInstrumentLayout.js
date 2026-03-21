@@ -2,194 +2,172 @@
  * useInstrumentLayout.js
  * ─────────────────────────────────────────────────────────────────
  * Hook central del visor. Calcula guiones de relleno usando canvas.measureText()
- * — medición real de píxeles, exacta para cualquier fuente monoespaciada.
+ * con medición real del DOM — exacto para cualquier fuente monoespaciada.
  *
- * Uso:
- *   const { calcGuiones, anchoRenglon } = useInstrumentLayout({ font, fontSize, pageWidthPt, margins })
+ * FIX v2: En lugar de calcular el ancho desde constantes en pt,
+ * mide el ancho real del elemento .iv-document en el DOM.
+ * Esto garantiza que pantalla e impresión usen el mismo ancho.
  */
 
 import { useRef, useCallback, useEffect, useState } from 'react'
 
-// ─── Constantes por defecto ────────────────────────────────────────
-const DEFAULTS = {
-  font: 'Courier New',
-  fontSize: 11,           // pt
-  pageWidthPt: 612,       // US Letter = 612pt (8.5in × 72pt/in)
-  pageHeightPt: 1008,     // Oficio = 14in × 72pt/in
-  marginTopPt: 168,       // 2410 twips / 1440 * 72 ≈ 120pt  (ajustado al doc real)
-  marginBottomPt: 106,
-  marginLeftPt: 120,
-  marginRightPt: 79,
-  minDashes: 3,           // mínimo de "- " para que valga la pena en el renglón actual
-  ptToPx: 96 / 72,        // conversión pt → px para canvas (screen 96dpi)
-}
-
-// ─── Separadores según contexto ───────────────────────────────────
-const SEP_PUNTO  = '- '    // cuando el texto termina en punto (evita doble punto)
+const SEP_PUNTO  = '- '    // cuando el texto termina en punto
 const SEP_NORMAL = '.- '   // separador estándar
+const MIN_DASHES = 4       // mínimo de "- " útiles antes de saltar al renglón siguiente
 
-export function useInstrumentLayout(overrides = {}) {
-  const cfg = { ...DEFAULTS, ...overrides }
-  const canvasRef = useRef(null)
-  const ctxRef    = useRef(null)
+export function useInstrumentLayout({ font = 'Courier New', fontSize = 11 } = {}) {
+  const canvasRef   = useRef(null)
+  const ctxRef      = useRef(null)
   const [ready, setReady] = useState(false)
+  // anchoRef: ancho real del área de texto en px, medido del DOM
+  const anchoRef    = useRef(0)
 
-  // Inicializar canvas offscreen
+  // ── Inicializar canvas offscreen ──────────────────────────────
   useEffect(() => {
     const canvas = document.createElement('canvas')
     canvas.width  = 1
     canvas.height = 1
-    const ctx = canvas.getContext('2d')
     canvasRef.current = canvas
-    ctxRef.current    = ctx
+    ctxRef.current    = canvas.getContext('2d')
     setReady(true)
   }, [])
 
-  // Actualizar font cuando cambie config
+  // ── Actualizar font cuando cambie config ──────────────────────
   useEffect(() => {
     if (!ctxRef.current) return
-    const px = cfg.fontSize * cfg.ptToPx
-    ctxRef.current.font = `${px}px "${cfg.font}"`
-  }, [cfg.font, cfg.fontSize, cfg.ptToPx, ready])
+    // canvas usa px (96dpi), 1pt = 96/72 px
+    const px = fontSize * (96 / 72)
+    ctxRef.current.font = `${px}px "${font}"`
+  }, [font, fontSize, ready])
 
-  /**
-   * Mide el ancho real en px de un string con la fuente configurada.
-   */
+  // ── Medir ancho real del documento desde el DOM ──────────────
+  // Se llama desde InstrumentViewer pasando el ref del .iv-document
+  const medirAnchoDOM = useCallback((docElement) => {
+    if (!docElement) return
+    // getComputedStyle devuelve px reales incluyendo zoom y DPR
+    const style       = window.getComputedStyle(docElement)
+    const paddingLeft = parseFloat(style.paddingLeft)  || 0
+    const paddingRight= parseFloat(style.paddingRight) || 0
+    const totalWidth  = docElement.clientWidth
+    anchoRef.current  = totalWidth - paddingLeft - paddingRight
+  }, [])
+
+  // ── Medición de un string ────────────────────────────────────
   const medir = useCallback((texto) => {
     if (!ctxRef.current) return 0
     return ctxRef.current.measureText(texto).width
   }, [ready])
 
-  /**
-   * Ancho real del área de texto en px.
-   */
-  const anchoTextoPx = useCallback(() => {
-    const totalPt = cfg.pageWidthPt - cfg.marginLeftPt - cfg.marginRightPt
-    return totalPt * cfg.ptToPx
-  }, [cfg.pageWidthPt, cfg.marginLeftPt, cfg.marginRightPt, cfg.ptToPx])
+  // ── Ancho del área de texto ──────────────────────────────────
+  const anchoTextoPx = useCallback(() => anchoRef.current, [])
 
-  /**
-   * Calcula los guiones de relleno para un párrafo dado.
-   *
-   * @param {string} textoCompleto  — todo el texto del párrafo ANTES del relleno
-   * @returns {string}              — string de guiones ej. "- - - - - - - - - -"
-   */
-  const calcGuiones = useCallback((textoCompleto) => {
-    if (!ctxRef.current || !textoCompleto) return ''
+  // ── Word-wrap real: devuelve la posición X al final del último renglón ──
+  const _calcXFinal = useCallback((palabras, bold = false) => {
+    if (!ctxRef.current || !anchoRef.current) return 0
+    const ctx       = ctxRef.current
+    const anchoPag  = anchoRef.current
+    const pxBase    = fontSize * (96 / 72)
+    const savedFont = ctx.font
+    ctx.font = bold ? `bold ${pxBase}px "${font}"` : `${pxBase}px "${font}"`
 
-    const ctx        = ctxRef.current
-    const anchoPagina = anchoTextoPx()
-    const texto      = textoCompleto.trimEnd()
-    const terminaPunto = texto.endsWith('.')
-    const sep        = terminaPunto ? SEP_PUNTO : SEP_NORMAL
-
-    // ── Calcular posición real en el último renglón ──────────────────
-    // Usamos word-wrap real: iterar palabra por palabra igual que Word
-    const palabras   = texto.split(' ')
-    let xActual      = 0  // posición en el renglón actual (px)
-    const anchoEspacio = medir(' ')
+    const anchoEsp  = ctx.measureText(' ').width
+    let xActual     = 0
 
     for (let i = 0; i < palabras.length; i++) {
-      const palabra    = palabras[i]
-      const anchoPalab = medir(palabra)
-      const anchoConEsp = (i < palabras.length - 1)
-        ? anchoPalab + anchoEspacio
-        : anchoPalab
+      const palabra = palabras[i]
+      if (!palabra) continue
+      const ancho   = ctx.measureText(palabra).width
+      const total   = i < palabras.length - 1 ? ancho + anchoEsp : ancho
 
-      if (xActual + anchoConEsp > anchoPagina && xActual > 0) {
-        // Esta palabra no cabe → nuevo renglón
-        xActual = anchoConEsp
+      if (xActual > 0 && xActual + total > anchoPag) {
+        xActual = total   // salto de renglón
       } else {
-        xActual += anchoConEsp
+        xActual += total
       }
     }
 
-    // xActual es ahora la posición exacta donde termina el texto en el último renglón
+    ctx.font = savedFont
+    return xActual
+  }, [font, fontSize, ready])
 
-    // ── Calcular cuántos "- " caben en el espacio restante ──────────
-    const anchoSep   = medir(sep)
-    const anchoDash  = medir('- ')
-    if (!anchoDash || !anchoPagina) return ''
-    const espacioLibre = anchoPagina - xActual - anchoSep
+  // ── Construir string de guiones dado xActual ─────────────────
+  const _buildGuiones = useCallback((xActual, terminaPunto) => {
+    if (!ctxRef.current || !anchoRef.current) return ''
+    const ctx      = ctxRef.current
+    const anchoPag = anchoRef.current
+    const sep      = terminaPunto ? SEP_PUNTO : SEP_NORMAL
+    const anchoSep = ctx.measureText(sep).width
+    const anchoDash= ctx.measureText('- ').width
+    if (!anchoDash) return ''
 
-    if (espacioLibre < anchoDash * cfg.minDashes) {
-      // No caben suficientes guiones → renglón nuevo completo
-      const guionesCompleto = Math.floor((anchoPagina - anchoSep) / anchoDash)
-      return sep + Array(guionesCompleto).fill('- ').join('').trimEnd()
+    let espacioLibre = anchoPag - xActual - anchoSep
+
+    if (espacioLibre < anchoDash * MIN_DASHES) {
+      // No caben — renglón nuevo completo
+      espacioLibre = anchoPag - anchoSep
     }
 
-    const cantidad = Math.floor(espacioLibre / anchoDash)
+    const cantidad = Math.max(Math.floor(espacioLibre / anchoDash), 1)
     return sep + Array(cantidad).fill('- ').join('').trimEnd()
-  }, [ready, anchoTextoPx, medir, cfg.minDashes])
+  }, [ready])
 
-  /**
-   * Calcula guiones para texto que ya tiene runs múltiples (bold + normal).
-   * Recibe array de segmentos [{ texto, bold }] y los mide individualmente
-   * porque bold puede tener ancho distinto incluso en monoespaciada.
-   *
-   * @param {Array<{texto: string, bold: boolean}>} segmentos
-   * @returns {string}
-   */
+  // ── API pública: calcGuiones (texto string simple) ────────────
+  const calcGuiones = useCallback((textoCompleto) => {
+    if (!textoCompleto) return ''
+    const texto        = textoCompleto.trimEnd()
+    const terminaPunto = texto.endsWith('.')
+    const palabras     = texto.split(' ')
+    const xFinal       = _calcXFinal(palabras, false)
+    return _buildGuiones(xFinal, terminaPunto)
+  }, [_calcXFinal, _buildGuiones])
+
+  // ── API pública: calcGuionesSegmentos (array de {texto, bold}) ─
   const calcGuionesSegmentos = useCallback((segmentos) => {
-    if (!ctxRef.current || !segmentos?.length) return ''
+    if (!segmentos?.length || !ctxRef.current || !anchoRef.current) return ''
 
-    const ctx         = ctxRef.current
-    const anchoPagina = anchoTextoPx()
-    const pxBase      = cfg.fontSize * cfg.ptToPx
-    const fontNormal  = `${pxBase}px "${cfg.font}"`
-    const fontBold    = `bold ${pxBase}px "${cfg.font}"`
+    const ctx      = ctxRef.current
+    const anchoPag = anchoRef.current
+    const pxBase   = fontSize * (96 / 72)
+    const anchoEsp = ctx.measureText(' ').width
+    let xActual    = 0
 
-    // Reconstruir texto completo para detectar si termina en punto
-    const textoCompleto = segmentos.map(s => s.texto).join('').trimEnd()
-    const terminaPunto  = textoCompleto.endsWith('.')
-    const sep           = terminaPunto ? SEP_PUNTO : SEP_NORMAL
-
-    // Medir cada segmento con su peso correcto haciendo word-wrap real
-    let xActual = 0
-
+    // Iterar todos los segmentos haciendo word-wrap real
     for (const seg of segmentos) {
-      ctx.font = seg.bold ? fontBold : fontNormal
-      const anchoEspacio = ctx.measureText(' ').width
-      const palabras     = seg.texto.split(' ')
+      const fnt    = seg.bold
+        ? `bold ${pxBase}px "${font}"`
+        : `${pxBase}px "${font}"`
+      ctx.font     = fnt
+      const espLocal = ctx.measureText(' ').width
+      const palabras = (seg.texto ?? '').split(' ')
 
       for (let i = 0; i < palabras.length; i++) {
-        const palabra     = palabras[i]
+        const palabra = palabras[i]
         if (!palabra) continue
-        const anchoPalab  = ctx.measureText(palabra).width
-        const anchoConEsp = (i < palabras.length - 1)
-          ? anchoPalab + anchoEspacio
-          : anchoPalab
+        const ancho  = ctx.measureText(palabra).width
+        const total  = i < palabras.length - 1 ? ancho + espLocal : ancho
 
-        if (xActual + anchoConEsp > anchoPagina && xActual > 0) {
-          xActual = anchoConEsp
+        if (xActual > 0 && xActual + total > anchoPag) {
+          xActual = total
         } else {
-          xActual += anchoConEsp
+          xActual += total
         }
       }
     }
 
-    // Restaurar font normal para medir el separador
-    ctx.font = fontNormal
-    const anchoSep  = ctx.measureText(sep).width
-    const anchoDash = ctx.measureText('- ').width
-    if (!anchoDash || !anchoPagina) return ''
-    const espacioLibre = anchoPagina - xActual - anchoSep
+    // Restaurar font base
+    ctx.font = `${pxBase}px "${font}"`
 
-    if (espacioLibre < anchoDash * cfg.minDashes) {
-      const guionesCompleto = Math.floor((anchoPagina - anchoSep) / anchoDash)
-      return sep + Array(guionesCompleto).fill('- ').join('').trimEnd()
-    }
-
-    const cantidad = Math.floor(espacioLibre / anchoDash)
-    return sep + Array(cantidad).fill('- ').join('').trimEnd()
-  }, [ready, anchoTextoPx, cfg.font, cfg.fontSize, cfg.ptToPx, cfg.minDashes])
+    const textoTotal   = segmentos.map(s => s.texto ?? '').join('').trimEnd()
+    const terminaPunto = textoTotal.endsWith('.')
+    return _buildGuiones(xActual, terminaPunto)
+  }, [font, fontSize, _buildGuiones, ready])
 
   return {
     ready,
     medir,
+    medirAnchoDOM,   // ← llamar con el ref del .iv-document
     calcGuiones,
     calcGuionesSegmentos,
     anchoTextoPx,
-    cfg,
   }
 }
