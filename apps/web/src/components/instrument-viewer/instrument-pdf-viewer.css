@@ -1,0 +1,123 @@
+/* ─── Modal PDF ──────────────────────────────────────────────────── */
+
+.pdf-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.pdf-modal {
+  background: #1C1C1E;
+  border-radius: 14px;
+  width: 100%;
+  max-width: 900px;
+  height: 90vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 24px 64px rgba(0,0,0,0.5);
+}
+
+/* ── Header del modal ── */
+.pdf-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 20px;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  flex-shrink: 0;
+}
+
+.pdf-modal-title {
+  font-size: 14px;
+  font-weight: 500;
+  color: rgba(255,255,255,0.85);
+  font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+}
+
+.pdf-modal-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.pdf-btn-download {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  background: #0071E3;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  text-decoration: none;
+  transition: opacity 0.15s;
+  font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+}
+.pdf-btn-download:hover { opacity: 0.85; }
+
+.pdf-btn-close {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255,255,255,0.08);
+  border: none;
+  border-radius: 8px;
+  color: rgba(255,255,255,0.7);
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.pdf-btn-close:hover {
+  background: rgba(255,255,255,0.14);
+  color: white;
+}
+
+/* ── Body: el iframe del PDF ── */
+.pdf-modal-body {
+  flex: 1;
+  overflow: hidden;
+  position: relative;
+  background: #2C2C2E;
+}
+
+/* ── Estados ── */
+.pdf-loading,
+.pdf-error {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  color: rgba(255,255,255,0.6);
+  font-size: 14px;
+  font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+}
+
+.pdf-error { color: #FF6B6B; }
+
+.pdf-spinner {
+  width: 32px;
+  height: 32px;
+  border: 2px solid rgba(255,255,255,0.1);
+  border-top-color: #0071E3;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}

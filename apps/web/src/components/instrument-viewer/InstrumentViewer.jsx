@@ -6,6 +6,8 @@ import { InstrumentParagraph }   from './InstrumentParagraph'
 import { InstrumentHeader }      from './InstrumentHeader'
 import { InstrumentTable }       from './InstrumentTable'
 import { InstrumentSignature }   from './InstrumentSignature'
+import { InstrumentPdfViewer }  from './InstrumentPdfViewer'
+import './instrument-pdf-viewer.css'
 
 const FUENTES_MONO = [
   'Courier New', 'Courier Prime', 'Lucida Console',
@@ -87,6 +89,7 @@ export function InstrumentViewer({
   const [guardando, setGuardando]   = useState(false)
   const [ultimoGuardado, setUltimo] = useState(null)
   const [anchoListo, setAnchoListo] = useState(false)
+  const [visorPdf, setVisorPdf]     = useState(false)
   const saveTimer = useRef(null)
   const docRef    = useRef(null)
 
@@ -294,12 +297,12 @@ export function InstrumentViewer({
       {!readOnly && (
         <div className="iv-toolbar">
           <div className="iv-toolbar-left">
-            <button className="iv-btn-print" onClick={() => window.print()}>
+            <button className="iv-btn-print" onClick={() => setVisorPdf(true)}>
               <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                <path d="M4 4V1h8v3M4 11H2a1 1 0 01-1-1V6a1 1 0 011-1h12a1 1 0 011 1v4a1 1 0 01-1 1h-2M4 8h8v6H4V8z"
+                <path d="M2 4h12v10H2zM5 4V2h6v2M6 8h4M6 11h4"
                   stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
               </svg>
-              Imprimir / PDF
+              Ver PDF
             </button>
           </div>
 
@@ -354,6 +357,23 @@ export function InstrumentViewer({
           {secciones.map((sec, idx) => renderSeccion(sec, idx))}
         </div>
       </div>
+
+      {/* ── Visor PDF ── */}
+      {visorPdf && (
+        <InstrumentPdfViewer
+          secciones={secciones}
+          config={{
+            fontSize:     fontSize,
+            lineHeight:   interlinea,
+            marginTop:    mar.top    * 28.35,
+            marginBottom: mar.bottom * 28.35,
+            marginLeft:   mar.left   * 28.35,
+            marginRight:  mar.right  * 28.35,
+          }}
+          nombreArchivo={`instrumento-${instrumentoId ?? 'borrador'}`}
+          onClose={() => setVisorPdf(false)}
+        />
+      )}
 
     </div>
   )

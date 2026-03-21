@@ -1,27 +1,25 @@
 /* ═══════════════════════════════════════════════════════════════
-   instrument-viewer.css
-   Estilos de pantalla + reglas @media print
+   instrument-viewer.css  v3
    ═══════════════════════════════════════════════════════════════ */
 
-/* ─── Variables ─────────────────────────────────────────────────── */
 :root {
-  --iv-page-w:     21.59cm;   /* US Letter ancho */
-  --iv-page-h:     35.56cm;   /* Oficio alto (14in) */
-  --iv-mar-top:    4.2cm;
-  --iv-mar-bottom: 3.7cm;
-  --iv-mar-left:   4.2cm;
-  --iv-mar-right:  2.7cm;
+  --iv-page-w:   21.59cm;
+  --iv-page-h:   35.56cm;   /* oficio 14in */
 
-  --iv-bg:         #F5F5F7;
-  --iv-doc-bg:     #FFFFFF;
-  --iv-ink:        #1D1D1F;
-  --iv-ink3:       #6E6E73;
-  --iv-ink5:       #AEAEB2;
-  --iv-blue:       #0071E3;
-  --iv-border:     rgba(0,0,0,0.07);
-  --iv-shadow:     0 4px 24px rgba(0,0,0,0.08);
+  --iv-print-mar-top:    4.2cm;
+  --iv-print-mar-bottom: 3.7cm;
+  --iv-print-mar-left:   4.5cm;
+  --iv-print-mar-right:  3.5cm;
 
-  --iv-toolbar-h:  52px;
+  --iv-bg:      #E8E8ED;    /* gris más oscuro para que la hoja resalte */
+  --iv-doc-bg:  #FFFFFF;
+  --iv-ink:     #1D1D1F;
+  --iv-ink3:    #6E6E73;
+  --iv-ink5:    #AEAEB2;
+  --iv-blue:    #0071E3;
+  --iv-border:  rgba(0,0,0,0.07);
+  --iv-shadow:  0 2px 16px rgba(0,0,0,0.12);
+  --iv-toolbar-h: 52px;
 }
 
 /* ─── Root ───────────────────────────────────────────────────────── */
@@ -38,26 +36,22 @@
   top: 0;
   z-index: 100;
   height: var(--iv-toolbar-h);
-  background: rgba(255,255,255,0.85);
+  background: rgba(255,255,255,0.92);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   border-bottom: 1px solid var(--iv-border);
   display: flex;
   align-items: center;
-  padding: 0 24px;
-  gap: 16px;
+  padding: 0 20px;
+  gap: 12px;
 }
-
-.iv-toolbar-left,
-.iv-toolbar-center,
-.iv-toolbar-right {
+.iv-toolbar-left, .iv-toolbar-center, .iv-toolbar-right {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
 }
-
 .iv-toolbar-center { flex: 1; justify-content: center; }
-.iv-toolbar-right  { justify-content: flex-end; min-width: 140px; }
+.iv-toolbar-right  { justify-content: flex-end; min-width: 160px; }
 
 .iv-btn-print {
   display: flex;
@@ -76,6 +70,18 @@
 }
 .iv-btn-print:hover { opacity: 0.85; }
 
+.iv-btn-secondary {
+  padding: 5px 12px;
+  background: #F5F5F7;
+  color: #1D1D1F;
+  border: 1px solid #D1D1D6;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+}
+
 .iv-label {
   font-size: 12px;
   color: var(--iv-ink3);
@@ -84,22 +90,19 @@
 }
 
 .iv-select {
-  height: 32px;
-  padding: 0 28px 0 10px;
+  height: 30px;
+  padding: 0 24px 0 8px;
   border: 1px solid var(--iv-border);
   border-radius: 7px;
-  background: white;
-  font-size: 13px;
+  background: white url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%236E6E73'/%3E%3C/svg%3E") no-repeat right 7px center;
+  font-size: 12px;
   color: var(--iv-ink);
   appearance: none;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%236E6E73'/%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: right 8px center;
   cursor: pointer;
   font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
-  min-width: 160px;
+  min-width: 140px;
 }
-.iv-select-sm { min-width: 70px; }
+.iv-select-sm { min-width: 64px; }
 .iv-select:focus { outline: 2px solid var(--iv-blue); outline-offset: 1px; }
 
 .iv-status {
@@ -108,78 +111,74 @@
   font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
 }
 
-/* ─── Documento wrapper ──────────────────────────────────────────── */
+/* ─── Wrapper ────────────────────────────────────────────────────── */
 .iv-doc-wrap {
   flex: 1;
   display: flex;
   justify-content: center;
-  padding: 40px 24px 80px;
+  /* padding da el "escritorio" alrededor de la hoja */
+  padding: 40px 40px 80px;
   overflow-y: auto;
 }
 
-/* ─── Documento (simula la página física) ────────────────────────── */
+/* ─── Documento — simula hoja física ────────────────────────────── */
 .iv-document {
-  width:  var(--iv-page-w);
+  width:     var(--iv-page-w);
+  /* min-height es el alto de la página oficio */
   min-height: var(--iv-page-h);
   background: var(--iv-doc-bg);
   box-shadow: var(--iv-shadow);
-  border-radius: 2px;
-
-  padding-top:    var(--iv-mar-top);
-  padding-bottom: var(--iv-mar-bottom);
-  padding-left:   var(--iv-mar-left);
-  padding-right:  var(--iv-mar-right);
-
-  color: var(--iv-ink);
-  line-height: 1.6;
-
-  /* Forzar que el contenido no exceda el ancho del área de texto */
+  /* Separación visual entre páginas — el browser hace page-break
+     automáticamente al imprimir, aquí solo simulamos con outline */
+  outline: 1px solid rgba(0,0,0,0.08);
   box-sizing: border-box;
-  word-wrap: break-word;
-  white-space: pre-wrap;
+  color: var(--iv-ink);
+  /* padding viene de style inline */
+}
+
+/* ── Simulación de corte de página en pantalla ───────────────────
+   Marca visualmente dónde terminaría cada página física.
+   En pantalla es solo decorativo — en print el browser lo corta solo. */
+.iv-document {
+  /* Forzar que el contenido no rompa el ancho */
+  word-break: break-word;
+  overflow-wrap: break-word;
 }
 
 /* ─── Párrafos ───────────────────────────────────────────────────── */
 .instrument-paragraph {
   display: block;
+  /* JUSTIFICADO: alinea todos los renglones excepto el último */
   text-align: justify;
+  text-align-last: left;   /* ← fix espacios exagerados en último renglón */
   margin: 0;
   padding: 0;
-  white-space: pre-wrap;
   word-break: break-word;
+  overflow-wrap: break-word;
 }
 
 .instrument-paragraph.centrado {
   text-align: center;
+  text-align-last: center;
 }
 
 .instrument-vacio {
-  height: 1.6em;
+  /* Espacio proporcional al interlineado configurado */
+  height: 1em;
 }
 
 /* Segmentos de texto */
-.seg {
-  display: inline;
-}
-.seg.bold {
-  font-weight: bold;
-}
-.seg.editable {
-  cursor: text;
-  border-radius: 2px;
-  transition: background 0.1s;
-}
+.seg          { display: inline; }
+.seg.bold     { font-weight: bold; }
+.seg.editable { cursor: text; border-radius: 2px; transition: background 0.1s; }
 .seg.editable:hover {
   background: rgba(0,113,227,0.07);
   outline: 1px dashed rgba(0,113,227,0.3);
 }
 
-/* Input de edición inline */
 .seg-input {
   display: inline;
-  font-family: inherit;
-  font-size: inherit;
-  font-weight: inherit;
+  font: inherit;
   color: inherit;
   background: rgba(0,113,227,0.08);
   border: 1px solid rgba(0,113,227,0.4);
@@ -189,36 +188,29 @@
   min-width: 4ch;
 }
 .seg-input.bold { font-weight: bold; }
-
-.guiones {
-  display: inline;
-  color: var(--iv-ink);
-}
+.guiones { display: inline; }
 
 /* ─── Encabezados de sección ─────────────────────────────────────── */
 .instrument-header {
   display: block;
-  text-align: justify;
   font-weight: bold;
   margin: 0;
+  /* pre: mantiene los = sin word-wrap */
   white-space: pre;
+  overflow: hidden;
+  /* Centrado visual — los = llenan a ambos lados */
+  text-align: left;
 }
-.instrument-header.editable {
-  cursor: text;
-  border-radius: 2px;
-  transition: background 0.1s;
-}
+
+.instrument-header.editable  { cursor: text; }
 .instrument-header.editable:hover {
   background: rgba(0,113,227,0.05);
   outline: 1px dashed rgba(0,113,227,0.25);
 }
-.instrument-header.editando {
-  background: rgba(0,113,227,0.06);
-}
+
 .header-input {
   width: 100%;
-  font-family: inherit;
-  font-size: inherit;
+  font: inherit;
   font-weight: bold;
   color: inherit;
   background: transparent;
@@ -229,15 +221,7 @@
 }
 
 /* ─── Tablas ─────────────────────────────────────────────────────── */
-.instrument-table-wrap {
-  margin: 4px 0;
-  width: 100%;
-}
-.table-caption {
-  font-weight: bold;
-  font-size: 0.9em;
-  margin-bottom: 4px;
-}
+.instrument-table-wrap { margin: 4px 0; width: 100%; }
 .instrument-table {
   width: 100%;
   border-collapse: collapse;
@@ -246,105 +230,74 @@
 .instrument-table th,
 .instrument-table td {
   border: 1px solid var(--iv-ink);
-  padding: 4px 6px;
-  vertical-align: top;
+  padding: 3px 6px;
+  vertical-align: middle;
 }
 .instrument-table th {
   background: #C9C9C9;
   font-weight: bold;
   text-align: center;
 }
-.instrument-table td.centrado {
-  text-align: center;
-}
+.instrument-table td { text-align: left; }
+.instrument-table td:not(:first-child) { text-align: center; }
+/* Fila de totales en negrita */
+.instrument-table tr:last-child td { font-weight: bold; }
 
 /* ─── Firmas ─────────────────────────────────────────────────────── */
-.instrument-signature {
-  margin-top: 32px;
-  width: 100%;
-}
-.instrument-signature.corredor {
-  margin-top: 48px;
-}
-.sig-line {
-  border-bottom: 1px solid var(--iv-ink);
-  width: 60%;
-  margin-bottom: 6px;
-}
-.sig-nombre {
-  font-weight: bold;
-  font-size: 0.95em;
-}
+.instrument-signature        { margin-top: 28px; width: 100%; }
+.instrument-signature.corredor { margin-top: 44px; }
+.sig-line   { border-bottom: 1px solid var(--iv-ink); width: 55%; margin-bottom: 5px; }
+.sig-nombre { font-weight: bold; font-size: 0.95em; }
 .sig-labels {
   display: flex;
-  gap: 24px;
-  font-size: 0.85em;
+  gap: 20px;
+  font-size: 0.82em;
   color: var(--iv-ink3);
-  margin-top: 4px;
+  margin-top: 3px;
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   @media print — lo único que se imprime es el documento
+   @media print
    ═══════════════════════════════════════════════════════════════ */
 @media print {
-  /* Ocultar todo lo que no es el documento */
   .iv-toolbar,
-  nav,
-  header,
-  aside,
-  [data-sidebar],
-  [data-topbar] {
+  nav, header, aside,
+  [data-sidebar], [data-topbar] {
     display: none !important;
   }
 
-  /* Configuración de página */
   @page {
-    size: letter;          /* 8.5in × 11in — cambiar a 'legal' si se necesita oficio */
-    margin: 0;             /* Los márgenes los controla el documento */
-  }
-
-  body {
-    background: white !important;
+    size: 8.5in 14in;   /* oficio */
     margin: 0;
-    padding: 0;
   }
 
-  .iv-root {
-    background: white;
-    min-height: unset;
-  }
+  body { background: white !important; margin: 0; padding: 0; }
 
+  .iv-root    { background: white; min-height: unset; }
   .iv-doc-wrap {
-    padding: 0;
+    padding: 0 !important;
+    display: block;
     overflow: visible;
   }
 
-  /* El documento ocupa toda la página */
   .iv-document {
-    width: 100%;
+    width: 100% !important;
     min-height: unset;
     box-shadow: none;
-    border-radius: 0;
-    /* Los márgenes exactos del instrumento */
-    padding-top:    4.2cm;
-    padding-bottom: 3.7cm;
-    padding-left:   4.2cm;
-    padding-right:  2.7cm;
+    outline: none;
     page-break-inside: auto;
   }
 
-  /* Evitar que párrafos largos se corten a mitad */
   .instrument-paragraph,
   .instrument-header,
-  .instrument-signature {
+  .instrument-signature,
+  .instrument-table-wrap {
     page-break-inside: avoid;
   }
 
-  /* Ocultar indicadores de edición */
   .seg.editable:hover,
-  .seg-input {
+  .instrument-header.editable:hover {
     background: transparent !important;
-    border: none !important;
     outline: none !important;
   }
 }
