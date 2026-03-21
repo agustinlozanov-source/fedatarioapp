@@ -60,12 +60,13 @@ export function InstrumentViewer({
   // Se vuelve a medir si cambian márgenes, fuente o tamaño
   useEffect(() => {
     if (!docRef.current || !layout.ready) return
-    // Pequeño delay para que el DOM termine de aplicar el nuevo padding
     const t = setTimeout(() => {
       layout.medirAnchoDOM(docRef.current)
-    }, 50)
+      console.log('ANCHO MEDIDO:', layout.anchoTextoPx())
+      console.log('SECCIONES[0:3]:', JSON.stringify(secciones.slice(0, 3), null, 2))
+    }, 200)
     return () => clearTimeout(t)
-  }, [layout.ready, margenIdx, font, fontSize, interlinea])
+  }, [layout.ready, margenIdx, font, fontSize])
 
   // También medir en resize
   useEffect(() => {
