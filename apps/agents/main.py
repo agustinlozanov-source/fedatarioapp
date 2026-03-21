@@ -374,8 +374,8 @@ async def docx_generar(body: DocxInput):
                     secciones_serializadas = [
                         {
                             "tipo": sec.tipo,
-                            "runs": sec.runs,
-                            "data": sec.data if isinstance(sec.data, dict) else {}
+                            "runs_json": json.dumps([[str(t), bool(b)] for t, b in sec.runs], ensure_ascii=False),
+                            "data": _firestore_safe(sec.data if isinstance(sec.data, dict) else {})
                         }
                         for sec in secciones_obj
                     ]
@@ -440,11 +440,11 @@ def obtener_secciones_de_firestore(instrumento_id: str) -> dict:
 
     # Guardar secciones en Firestore
     if secciones and db:
-        # Firestore no permite arrays de arrays — convertir runs a maps
+        # Firestore no permite arrays de arrays — serializar runs como JSON string
         secciones_serializadas = [
             {
                 "tipo": sec.tipo,
-                "runs": [{"t": str(t), "b": bool(b)} for t, b in sec.runs],
+                "runs_json": json.dumps([[str(t), bool(b)] for t, b in sec.runs], ensure_ascii=False),
                 "data": _firestore_safe(sec.data if isinstance(sec.data, dict) else {})
             }
             for sec in secciones
