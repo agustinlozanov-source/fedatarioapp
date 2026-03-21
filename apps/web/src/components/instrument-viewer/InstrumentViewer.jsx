@@ -8,13 +8,8 @@ import { InstrumentTable }       from './InstrumentTable'
 import { InstrumentSignature }   from './InstrumentSignature'
 
 const FUENTES_MONO = [
-  'Courier New',
-  'Courier Prime',
-  'Lucida Console',
-  'Consolas',
-  'IBM Plex Mono',
-  'Source Code Pro',
-  'Roboto Mono',
+  'Courier New', 'Courier Prime', 'Lucida Console',
+  'Consolas', 'IBM Plex Mono', 'Source Code Pro', 'Roboto Mono',
 ]
 
 const INTERLINEADOS = [
@@ -24,12 +19,56 @@ const INTERLINEADOS = [
   { label: '2.0', value: 2.0 },
 ]
 
-// Márgenes en cm — oficio con márgenes legales de correduría
 const MARGENES_PRESET = [
   { label: 'Correduría (4.5/3.5)', top: 4.2, bottom: 3.7, left: 4.5, right: 3.5 },
   { label: 'Normal (2.5/2.5)',     top: 2.5, bottom: 2.5, left: 2.5, right: 2.5 },
   { label: 'Estrecho (1.5/1.5)',   top: 1.5, bottom: 1.5, left: 1.5, right: 1.5 },
 ]
+
+// ── Parsear socio que llega como string repr de Python ─────────────
+function parseSocio(s) {
+  if (!s) return { nombre: '', rfc: '', acciones: 50 }
+
+  // Si ya es un objeto con las propiedades correctas
+  if (typeof s === 'object' && s !== null) {
+    return {
+      nombre:   s.nombre_completo ?? s.nombre ?? s.name ?? '',
+      rfc:      s.rfc ?? s.RFC ?? '',
+      acciones: Number(s.acciones ?? s.num_acciones ?? s.porcentaje ?? 50) || 50,
+    }
+  }
+
+  // Si es un string con formato repr de Python: key='value' key=value
+  if (typeof s === 'string') {
+    const extract = (key) => {
+      // key='value'
+      const mq = s.match(new RegExp(`${key}='([^']*)'`))
+      if (mq) return mq[1]
+      // key=value (sin comillas)
+      const mn = s.match(new RegExp(`${key}=([^\\s,)]+)`))
+      if (mn) return mn[1]
+      return ''
+    }
+    const pct = parseFloat(extract('porcentaje')) || 50
+    return {
+      nombre:   extract('nombre_completo'),
+      rfc:      extract('rfc'),
+      acciones: Math.round(pct),   // porcentaje = acciones en este caso
+    }
+  }
+
+  return { nombre: '', rfc: '', acciones: 50 }
+}
+
+// ── Detectar si un texto es un encabezado con === ──────────────────
+function esEncabezado(texto) {
+  const t = (texto ?? '').trim()
+  return t.startsWith('=') && t.endsWith('=') && t.length > 4
+}
+
+function limpiarEncabezado(texto) {
+  return (texto ?? '').replace(/^=+\s*/, '').replace(/\s*=+$/, '').trim()
+}
 
 export function InstrumentViewer({
   secciones: seccionesIniciales = [],
@@ -40,46 +79,35 @@ export function InstrumentViewer({
   onRegenerar,
   regenerando = false,
 }) {
-  const [secciones, setSecciones]     = useState(seccionesIniciales)
-  const [font, setFont]               = useState(fontInicial)
-  const [fontSize, setFontSize]       = useState(fontSizeInicial)
-  const [interlinea, setInterlinea]   = useState(1.5)
-  const [margenIdx, setMargenIdx]     = useState(0)
-  const [guardando, setGuardando]     = useState(false)
-  const [ultimoGuardado, setUltimo]   = useState(null)
-  const saveTimer   = useRef(null)
-  // ── ref al elemento .iv-document para medir ancho real ──
-  const docRef      = useRef(null)
+  const [secciones, setSecciones]   = useState(seccionesIniciales)
+  const [font, setFont]             = useState(fontInicial)
+  const [fontSize, setFontSize]     = useState(fontSizeInicial)
+  const [interlinea, setInterlinea] = useState(1.5)
+  const [margenIdx, setMargenIdx]   = useState(0)
+  const [guardando, setGuardando]   = useState(false)
+  const [ultimoGuardado, setUltimo] = useState(null)
+  const [anchoListo, setAnchoListo] = useState(false)
+  const saveTimer = useRef(null)
+  const docRef    = useRef(null)
 
   const layout = useInstrumentLayout({ font, fontSize })
 
-  // Sincronizar props
   useEffect(() => { setSecciones(seccionesIniciales) }, [seccionesIniciales])
 
-  // ── Medir ancho DOM cuando el documento esté en pantalla ──────
-  // Se vuelve a medir si cambian márgenes, fuente o tamaño
+  // ── Medir ancho real del DOM ──────────────────────────────────
   useEffect(() => {
     if (!docRef.current || !layout.ready) return
-    const t = setTimeout(() => {
+    const medir = () => {
       layout.medirAnchoDOM(docRef.current)
-      console.log('ANCHO MEDIDO:', layout.anchoTextoPx())
-      console.log('SECCIONES[0:3]:', JSON.stringify(secciones.slice(0, 3), null, 2))
-      const tablaIdx = secciones.findIndex(s => s.tipo === 'tabla_accionaria')
-      if (tablaIdx >= 0) console.log('TABLA:', JSON.stringify(secciones[tablaIdx], null, 2))
-    }, 200)
-    return () => clearTimeout(t)
+      setAnchoListo(true)  // forzar re-render de párrafos con el ancho correcto
+    }
+    // Primera medición con delay para que el DOM aplique paddings
+    const t = setTimeout(medir, 100)
+    window.addEventListener('resize', medir)
+    return () => { clearTimeout(t); window.removeEventListener('resize', medir) }
   }, [layout.ready, margenIdx, font, fontSize])
 
-  // También medir en resize
-  useEffect(() => {
-    const onResize = () => {
-      if (docRef.current) layout.medirAnchoDOM(docRef.current)
-    }
-    window.addEventListener('resize', onResize)
-    return () => window.removeEventListener('resize', onResize)
-  }, [layout.medirAnchoDOM])
-
-  // ── Autoguardado con debounce ─────────────────────────────────
+  // ── Autoguardado ─────────────────────────────────────────────
   const guardarEdits = useCallback(async (secsActuales) => {
     if (!instrumentoId || readOnly) return
     setGuardando(true)
@@ -125,16 +153,6 @@ export function InstrumentViewer({
     })
   }, [guardarEdits])
 
-  // ── Normalizar un socio que puede venir con diferentes estructuras ──
-  const normalizarSocio = (s) => {
-    if (!s || typeof s !== 'object') return { nombre: '', rfc: '', acciones: 50 }
-    return {
-      nombre:   s.nombre_completo ?? s.nombre ?? s.name ?? 'Sin nombre',
-      rfc:      s.rfc ?? s.RFC ?? '',
-      acciones: Number(s.acciones ?? s.num_acciones ?? 50) || 50,
-    }
-  }
-
   // ── Renderizar sección ────────────────────────────────────────
   const renderSeccion = useCallback((sec, idx) => {
     switch (sec.tipo) {
@@ -142,11 +160,10 @@ export function InstrumentViewer({
       case 'encabezado': {
         const raw    = sec.runs?.[0]
         const titulo = Array.isArray(raw) ? (raw[0] ?? '') : (raw?.texto ?? '')
-        const limpio = titulo.replace(/^=+\s*/, '').replace(/\s*=+$/, '').trim()
         return (
           <InstrumentHeader
             key={idx}
-            titulo={limpio}
+            titulo={limpiarEncabezado(titulo)}
             medir={layout.medir}
             anchoTextoPx={layout.anchoTextoPx}
             readOnly={readOnly}
@@ -159,23 +176,14 @@ export function InstrumentViewer({
         const runs = (sec.runs ?? []).map(r =>
           Array.isArray(r) ? r : [r?.texto ?? '', r?.bold ?? false]
         )
-        const ultimoRun = runs[runs.length - 1]
-        const esGuion   = ultimoRun && (
-          ultimoRun[0]?.startsWith('.- ') ||
-          ultimoRun[0]?.startsWith('- - ') ||
-          ultimoRun[0]?.startsWith('- ')
-        )
-        const segmentos = (esGuion ? runs.slice(0, -1) : runs)
-          .map(([texto, bold]) => ({ texto, bold }))
 
-        // Detectar encabezado inline con ===
+        // ── Detectar encabezado inline con === ──
         const textoCompleto = runs.map(r => r[0] ?? '').join('')
-        if (textoCompleto.trim().startsWith('=') && textoCompleto.trim().endsWith('=')) {
-          const limpio = textoCompleto.replace(/^=+\s*/, '').replace(/\s*=+$/, '').trim()
+        if (esEncabezado(textoCompleto)) {
           return (
             <InstrumentHeader
               key={idx}
-              titulo={limpio}
+              titulo={limpiarEncabezado(textoCompleto)}
               medir={layout.medir}
               anchoTextoPx={layout.anchoTextoPx}
               readOnly={readOnly}
@@ -184,11 +192,22 @@ export function InstrumentViewer({
           )
         }
 
+        // ── Detectar run de guiones al final ──
+        const ultimoRun = runs[runs.length - 1]
+        const esGuion   = ultimoRun && (
+          (ultimoRun[0] ?? '').startsWith('.- ') ||
+          (ultimoRun[0] ?? '').startsWith('- - ') ||
+          (ultimoRun[0] ?? '').match(/^-\s/)
+        )
+        const segmentos = (esGuion ? runs.slice(0, -1) : runs)
+          .map(([texto, bold]) => ({ texto: texto ?? '', bold: !!bold }))
+          .filter(s => s.texto)
+
         return (
           <InstrumentParagraph
-            key={idx}
+            key={`${idx}-${anchoListo}`}  // re-montar cuando el ancho esté listo
             segmentos={segmentos}
-            tieneGuiones={esGuion}
+            tieneGuiones={!!esGuion}
             calcGuionesSegmentos={layout.calcGuionesSegmentos}
             readOnly={readOnly}
             onChange={segs => handleSeccionChange(idx, segs)}
@@ -200,27 +219,22 @@ export function InstrumentViewer({
         return <div key={idx} className="instrument-vacio" />
 
       case 'tabla_accionaria': {
-        // FIX: normalizar socios independientemente de la estructura
-        const socios  = sec.data?.socios ?? []
+        const sociosBrutos = sec.data?.socios ?? []
+        const socios  = sociosBrutos.map(parseSocio)
         const headers = ['Accionista y RFC', 'Acciones', 'Valor nominal', 'Total']
-        const filas   = socios.map(s => {
-          const { nombre, rfc, acciones } = normalizarSocio(s)
-          const total = acciones * 1000
-          return [
-            rfc ? `${nombre} — ${rfc}` : nombre,
-            `${acciones} Serie A`,
-            '$1,000.00',
-            `$${total.toLocaleString('es-MX', { minimumFractionDigits: 2 })}`
-          ]
-        })
-        // Fila de totales
-        const totalAcciones = socios.reduce((acc, s) => acc + (normalizarSocio(s).acciones), 0)
-        const totalMonto    = totalAcciones * 1000
+        const filas   = socios.map(({ nombre, rfc, acciones }) => [
+          rfc ? `${nombre} — ${rfc}` : nombre,
+          `${acciones} Serie A`,
+          '$1,000.00',
+          `$${(acciones * 1000).toLocaleString('es-MX', { minimumFractionDigits: 2 })}`,
+        ])
+        const totalAcc   = socios.reduce((a, s) => a + s.acciones, 0)
+        const totalMonto = totalAcc * 1000
         filas.push([
           'T O T A L',
-          `${totalAcciones} Serie A`,
+          `${totalAcc} Serie A`,
           '$1,000.00',
-          `$${totalMonto.toLocaleString('es-MX', { minimumFractionDigits: 2 })}`
+          `$${totalMonto.toLocaleString('es-MX', { minimumFractionDigits: 2 })}`,
         ])
         return <InstrumentTable key={idx} headers={headers} filas={filas} />
       }
@@ -239,8 +253,7 @@ export function InstrumentViewer({
 
       case 'firma': {
         const nombre = typeof sec.data === 'object'
-          ? (sec.data?.nombre ?? '')
-          : ''
+          ? (sec.data?.nombre ?? '') : ''
         return <InstrumentSignature key={idx} nombre={nombre} />
       }
 
@@ -256,21 +269,18 @@ export function InstrumentViewer({
       default:
         return null
     }
-  }, [layout, readOnly, handleSeccionChange, handleHeaderChange])
+  }, [layout, readOnly, anchoListo, handleSeccionChange, handleHeaderChange])
 
-  // ── Márgenes del preset seleccionado ─────────────────────────
   const mar = MARGENES_PRESET[margenIdx]
 
-  // ── Estilos CSS variables dinámicos ──────────────────────────
   const docStyle = {
-    fontFamily:   `"${font}", monospace`,
-    fontSize:     `${fontSize}pt`,
-    lineHeight:   interlinea,
+    fontFamily:    `"${font}", monospace`,
+    fontSize:      `${fontSize}pt`,
+    lineHeight:    interlinea,
     paddingTop:    `${mar.top}cm`,
     paddingBottom: `${mar.bottom}cm`,
     paddingLeft:   `${mar.left}cm`,
     paddingRight:  `${mar.right}cm`,
-    // Pasar márgenes a CSS vars para que @media print los use también
     '--iv-print-mar-top':    `${mar.top}cm`,
     '--iv-print-mar-bottom': `${mar.bottom}cm`,
     '--iv-print-mar-left':   `${mar.left}cm`,
@@ -322,12 +332,9 @@ export function InstrumentViewer({
 
           <div className="iv-toolbar-right">
             {onRegenerar && (
-              <button
-                onClick={onRegenerar}
-                disabled={regenerando}
+              <button onClick={onRegenerar} disabled={regenerando}
                 className="iv-btn-secondary"
-                style={{ opacity: regenerando ? 0.6 : 1, cursor: regenerando ? 'not-allowed' : 'pointer' }}
-              >
+                style={{ opacity: regenerando ? 0.6 : 1 }}>
                 {regenerando ? 'Regenerando…' : '↺ Regenerar'}
               </button>
             )}
@@ -341,16 +348,13 @@ export function InstrumentViewer({
         </div>
       )}
 
-      {/* ── Documento ── */}
+      {/* ── Páginas del documento ── */}
       <div className="iv-doc-wrap">
-        <div
-          ref={docRef}
-          className="iv-document"
-          style={docStyle}
-        >
+        <div ref={docRef} className="iv-document" style={docStyle}>
           {secciones.map((sec, idx) => renderSeccion(sec, idx))}
         </div>
       </div>
+
     </div>
   )
 }
