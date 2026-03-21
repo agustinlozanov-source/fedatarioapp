@@ -109,6 +109,7 @@ export function useInstrumentLayout(overrides = {}) {
     // ── Calcular cuántos "- " caben en el espacio restante ──────────
     const anchoSep   = medir(sep)
     const anchoDash  = medir('- ')
+    if (!anchoDash || !anchoPagina) return ''
     const espacioLibre = anchoPagina - xActual - anchoSep
 
     if (espacioLibre < anchoDash * cfg.minDashes) {
@@ -171,6 +172,7 @@ export function useInstrumentLayout(overrides = {}) {
     ctx.font = fontNormal
     const anchoSep  = ctx.measureText(sep).width
     const anchoDash = ctx.measureText('- ').width
+    if (!anchoDash || !anchoPagina) return ''
     const espacioLibre = anchoPagina - xActual - anchoSep
 
     if (espacioLibre < anchoDash * cfg.minDashes) {
