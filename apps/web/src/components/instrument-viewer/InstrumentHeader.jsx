@@ -16,21 +16,33 @@ export function InstrumentHeader({
 }) {
   const [editando, setEditando]   = useState(false)
   const [textoLocal, setTextoLocal] = useState(titulo)
-  const [encabezado, setEncabezado] = useState('')
+  const [encabezado, setEncabezado] = useState(titulo ?? '')
 
   useEffect(() => { setTextoLocal(titulo) }, [titulo])
 
   // Calcular === con canvas
   useEffect(() => {
-    if (!medir || !anchoTextoPx) return
-    const anchoPag  = anchoTextoPx()
-    const anchoTxt  = medir(` ${textoLocal} `)
-    const anchoEq   = medir('=')
-    if (!anchoEq || !anchoPag) return
-    const espacio   = anchoPag - anchoTxt
-    const cantidad  = Math.max(Math.floor((espacio / anchoEq) / 2), 2)
-    const eq        = '='.repeat(cantidad)
-    setEncabezado(`${eq} ${textoLocal} ${eq}`)
+    const t = textoLocal.trim()
+    if (!t) return
+
+    // Si no hay ancho disponible todavía, mostrar solo el título
+    const anchoPag = anchoTextoPx ? anchoTextoPx() : 0
+    if (!anchoPag || !medir) {
+      setEncabezado(t)
+      return
+    }
+
+    const anchoTxt = medir(` ${t} `)
+    const anchoEq  = medir('=')
+    if (!anchoEq) {
+      setEncabezado(t)
+      return
+    }
+
+    const espacio  = anchoPag - anchoTxt
+    const cantidad = Math.max(Math.floor((espacio / anchoEq) / 2), 2)
+    const eq       = '='.repeat(cantidad)
+    setEncabezado(`${eq} ${t} ${eq}`)
   }, [textoLocal, medir, anchoTextoPx])
 
   const handleBlur = useCallback(() => {
