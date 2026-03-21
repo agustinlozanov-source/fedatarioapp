@@ -35,10 +35,15 @@ export default function PreviewPage() {
       setDenominacion(instr.denominacion_social ?? '')
 
       if (instr.secciones?.length) {
-        // Parsear runs_json si viene como string (formato nuevo)
+        const sanitizeRuns = (raw: any): [string, boolean][] => {
+          const arr = Array.isArray(raw) ? raw : (typeof raw === 'string' ? JSON.parse(raw) : [])
+          return arr
+            .filter((r: any) => Array.isArray(r) && r.length >= 2)
+            .map((r: any) => [String(r[0] ?? ''), Boolean(r[1])] as [string, boolean])
+        }
         const parsed = instr.secciones.map((s: any) => ({
           ...s,
-          runs: s.runs_json ? JSON.parse(s.runs_json) : (s.runs ?? [])
+          runs: sanitizeRuns(s.runs_json ?? s.runs)
         }))
         setSecciones(parsed)
       } else {
