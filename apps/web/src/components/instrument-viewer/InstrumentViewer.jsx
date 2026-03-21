@@ -64,6 +64,8 @@ export function InstrumentViewer({
       layout.medirAnchoDOM(docRef.current)
       console.log('ANCHO MEDIDO:', layout.anchoTextoPx())
       console.log('SECCIONES[0:3]:', JSON.stringify(secciones.slice(0, 3), null, 2))
+      const tablaIdx = secciones.findIndex(s => s.tipo === 'tabla_accionaria')
+      if (tablaIdx >= 0) console.log('TABLA:', JSON.stringify(secciones[tablaIdx], null, 2))
     }, 200)
     return () => clearTimeout(t)
   }, [layout.ready, margenIdx, font, fontSize])
