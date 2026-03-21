@@ -13,6 +13,7 @@ function resolveLib(pkg, file) {
 
 const nextConfig = {
   transpilePackages: ['@fedatario/shared'],
+  serverExternalPackages: ['@react-pdf/renderer'],
   webpack: (config, { isServer }) => {
     if (!isServer) {
       const rendererBrowser = resolveLib('@react-pdf/renderer', 'react-pdf.browser.js')
@@ -20,6 +21,8 @@ const nextConfig = {
 
       if (rendererBrowser) config.resolve.alias['@react-pdf/renderer'] = rendererBrowser
       if (pdfkitBrowser)   config.resolve.alias['@react-pdf/pdfkit']   = pdfkitBrowser
+
+      config.resolve.alias.canvas = false
 
       config.resolve.fallback = {
         ...config.resolve.fallback,
