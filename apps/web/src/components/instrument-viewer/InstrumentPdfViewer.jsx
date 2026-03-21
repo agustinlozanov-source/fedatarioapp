@@ -30,14 +30,12 @@ function limpiarEncabezado(texto) {
   return (texto ?? '').replace(/^=+\s*/, '').replace(/\s*=+$/, '').trim()
 }
 
-function generarPdf(secciones, config, nombreArchivo) {
+function generarPdf(secciones, config, nombreArchivo, jsPDF) {
   const {
     fontSize = 11, lineHeight = 1.5,
     marginTop = 119, marginBottom = 105,
     marginLeft = 128, marginRight = 99,
   } = config
-
-  const { jsPDF } = window.jspdf
   const doc = new jsPDF({ unit: 'pt', format: [612, 1008], orientation: 'portrait' })
   doc.setFont('Courier', 'normal')
   doc.setFontSize(fontSize)
@@ -135,8 +133,8 @@ export function InstrumentPdfViewer({ secciones = [], config = {}, nombreArchivo
     let objectUrl = null
     async function generar() {
       try {
-        await import('jspdf')
-        const doc = generarPdf(secciones, config, nombreArchivo)
+        const { jsPDF } = await import('jspdf')
+        const doc = generarPdf(secciones, config, nombreArchivo, jsPDF)
         const blob = doc.output('blob')
         objectUrl = URL.createObjectURL(blob)
         setPdfUrl(objectUrl)
