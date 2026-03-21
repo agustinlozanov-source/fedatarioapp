@@ -36,7 +36,7 @@ const FUENTES_MONO = [
  */
 
 /**
- * @param {{ secciones?: Seccion[], instrumentoId: string, readOnly?: boolean, font?: string, fontSize?: number }} props
+ * @param {{ secciones?: Seccion[], instrumentoId: string, readOnly?: boolean, font?: string, fontSize?: number, onRegenerar?: () => void, regenerando?: boolean }} props
  */
 export function InstrumentViewer({
   secciones: seccionesIniciales = [],
@@ -44,6 +44,8 @@ export function InstrumentViewer({
   readOnly = false,
   font: fontInicial = 'Courier New',
   fontSize: fontSizeInicial = 11,
+  onRegenerar,
+  regenerando = false,
 }) {
   const [secciones, setSecciones]   = useState(seccionesIniciales)
   const [font, setFont]             = useState(fontInicial)
@@ -267,6 +269,20 @@ export function InstrumentViewer({
           </div>
 
           <div className="iv-toolbar-right">
+            {onRegenerar && (
+              <button
+                onClick={onRegenerar}
+                disabled={regenerando}
+                style={{
+                  padding: '5px 14px', background: '#F5F5F7', color: '#1D1D1F',
+                  border: '1px solid #D1D1D6', borderRadius: 8, cursor: regenerando ? 'not-allowed' : 'pointer',
+                  fontSize: 12, fontWeight: 500, opacity: regenerando ? 0.6 : 1, marginRight: 8,
+                }}
+                title="Regenerar secciones desde el instrumento"
+              >
+                {regenerando ? 'Regenerando…' : '↺ Regenerar'}
+              </button>
+            )}
             {guardando && <span className="iv-status">Guardando…</span>}
             {!guardando && ultimoGuardado && (
               <span className="iv-status">

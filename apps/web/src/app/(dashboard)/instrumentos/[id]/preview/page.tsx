@@ -109,8 +109,14 @@ export default function PreviewPage() {
     </div>
   )
 
+  // Considerar vacío si no hay secciones O si todas tienen runs vacíos
+  const seccionesVacias = secciones !== null && (
+    secciones.length === 0 ||
+    secciones.every((s: any) => !s.runs || s.runs.length === 0)
+  )
+
   // Estado vacío — secciones no generadas aún
-  if (!loading && secciones !== null && secciones.length === 0 && !error) return (
+  if (!loading && seccionesVacias && !error) return (
     <div style={{
       display: 'flex', flexDirection: 'column', alignItems: 'center',
       justifyContent: 'center', height: '100vh', gap: 16,
@@ -178,6 +184,8 @@ export default function PreviewPage() {
       readOnly={false}
       font="Courier New"
       fontSize={11}
+      onRegenerar={handleGenerar}
+      regenerando={generando}
     />
   )
 }
