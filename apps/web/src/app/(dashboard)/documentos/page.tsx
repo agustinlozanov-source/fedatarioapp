@@ -185,7 +185,7 @@ export default function DocumentosPage() {
                         <button key={t.id} onClick={() => setTab(t.id)}
                             className="px-4 py-2 rounded-lg text-[13px] font-semibold transition-all"
                             style={{
-                                background: tab === t.id ? 'white' : 'transparent',
+                                background: tab === t.id ? 'var(--bg)' : 'transparent',
                                 color: tab === t.id ? 'var(--ink)' : 'var(--ink4)',
                                 boxShadow: tab === t.id ? '0 1px 3px rgba(0,0,0,0.1)' : 'none',
                             }}>
@@ -469,7 +469,7 @@ export default function DocumentosPage() {
                                                                         <ChevronDown size={12} style={{ color: 'var(--ink4)' }} />
                                                                     </button>
                                                                     <button onClick={() => removerCarpeta(doc.id!)} disabled={procesando === doc.id}
-                                                                        className="p-1 rounded-lg hover:bg-red-50">
+                                                                        className="p-1 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/30">
                                                                         <Trash2 size={12} style={{ color: 'var(--red)' }} />
                                                                     </button>
                                                                 </div>
@@ -535,7 +535,7 @@ export default function DocumentosPage() {
                                                                                                 : <button onClick={() => agregarCarpeta(doc.id!)}
                                                                                                     disabled={procesando === doc.id || !!doc.carpetaInstrumentoId}
                                                                                                     title={doc.carpetaInstrumentoId ? 'Ya en otra carpeta' : 'Añadir a carpeta'}
-                                                                                                    className="p-0.5 rounded hover:bg-blue-100 disabled:opacity-30">
+                                                                                                    className="p-0.5 rounded hover:bg-blue-100 dark:hover:bg-blue-900/40 disabled:opacity-30">
                                                                                                     <FolderPlus size={13} style={{ color: 'var(--blue)' }} />
                                                                                                 </button>
                                                                                             }
@@ -572,7 +572,7 @@ export default function DocumentosPage() {
                                     style={{ background: 'var(--blue)', color: 'white' }}>
                                     Abrir en pestaña
                                 </a>
-                                <button onClick={() => setVisorUrl(null)} className="p-1.5 rounded-lg hover:bg-gray-100 dark:bg-gray-700">
+                                <button onClick={() => setVisorUrl(null)} className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700">
                                     <X size={16} style={{ color: 'var(--ink4)' }} />
                                 </button>
                             </div>

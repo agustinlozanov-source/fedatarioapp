@@ -71,7 +71,7 @@ function CampoRow({ campo, onUpdate, onDelete }: {
   const [abierto, setAbierto] = useState(false);
   return (
     <div className="border border-black/[0.06] rounded-xl overflow-hidden mb-2">
-      <div className="flex items-center gap-3 px-3 py-2.5 cursor-pointer hover:bg-[#F5F5F7] dark:bg-gray-700 transition-colors" onClick={() => setAbierto(!abierto)}>
+      <div className="flex items-center gap-3 px-3 py-2.5 cursor-pointer hover:bg-[#F5F5F7] dark:hover:bg-gray-700 transition-colors" onClick={() => setAbierto(!abierto)}>
         <GripVertical size={14} style={{ color: 'var(--ink5)', flexShrink: 0 }} />
         <div className="flex-1 flex items-center gap-2 min-w-0">
           <span className="text-[13px] font-semibold text-[#1D1D1F] dark:text-white truncate">{campo.etiqueta || 'Campo sin nombre'}</span>
@@ -87,28 +87,28 @@ function CampoRow({ campo, onUpdate, onDelete }: {
           <div className="grid grid-cols-2 gap-3 mb-3">
             <div>
               <label className="text-[10px] font-bold text-[#86868B] dark:text-gray-400 uppercase tracking-[0.06em] block mb-1">Etiqueta visible</label>
-              <input value={campo.etiqueta} onChange={e => onUpdate({ ...campo, etiqueta: e.target.value })} className="w-full px-3 py-2 rounded-lg text-[13px] outline-none" style={{ border: '1px solid var(--border)', background: 'white' }} />
+              <input value={campo.etiqueta} onChange={e => onUpdate({ ...campo, etiqueta: e.target.value })} className="w-full px-3 py-2 rounded-lg text-[13px] outline-none text-gray-900 dark:text-white" style={{ border: '1px solid var(--border)', background: 'var(--bg)' }} />
             </div>
             <div>
               <label className="text-[10px] font-bold text-[#86868B] dark:text-gray-400 uppercase tracking-[0.06em] block mb-1">Nombre interno</label>
-              <input value={campo.nombre} onChange={e => onUpdate({ ...campo, nombre: e.target.value })} className="w-full px-3 py-2 rounded-lg text-[13px] font-mono outline-none" style={{ border: '1px solid var(--border)', background: 'white' }} />
+              <input value={campo.nombre} onChange={e => onUpdate({ ...campo, nombre: e.target.value })} className="w-full px-3 py-2 rounded-lg text-[13px] font-mono outline-none text-gray-900 dark:text-white" style={{ border: '1px solid var(--border)', background: 'var(--bg)' }} />
             </div>
             <div>
               <label className="text-[10px] font-bold text-[#86868B] dark:text-gray-400 uppercase tracking-[0.06em] block mb-1">Tipo de campo</label>
-              <select value={campo.tipo} onChange={e => onUpdate({ ...campo, tipo: e.target.value as TipoCampo })} className="w-full px-3 py-2 rounded-lg text-[13px] outline-none" style={{ border: '1px solid var(--border)', background: 'white' }}>
+              <select value={campo.tipo} onChange={e => onUpdate({ ...campo, tipo: e.target.value as TipoCampo })} className="w-full px-3 py-2 rounded-lg text-[13px] outline-none text-gray-900 dark:text-white" style={{ border: '1px solid var(--border)', background: 'var(--bg)' }}>
                 {TIPOS_CAMPO.map(t => <option key={t.id} value={t.id}>{t.label}</option>)}
               </select>
             </div>
             <div>
               <label className="text-[10px] font-bold text-[#86868B] dark:text-gray-400 uppercase tracking-[0.06em] block mb-1">Fuente principal</label>
-              <select value={campo.fuenteDocumento} onChange={e => onUpdate({ ...campo, fuenteDocumento: e.target.value as any })} className="w-full px-3 py-2 rounded-lg text-[13px] outline-none" style={{ border: '1px solid var(--border)', background: 'white' }}>
+              <select value={campo.fuenteDocumento} onChange={e => onUpdate({ ...campo, fuenteDocumento: e.target.value as any })} className="w-full px-3 py-2 rounded-lg text-[13px] outline-none text-gray-900 dark:text-white" style={{ border: '1px solid var(--border)', background: 'var(--bg)' }}>
                 {FUENTES.map(f => <option key={f.id} value={f.id}>{f.label}</option>)}
               </select>
             </div>
           </div>
           <div className="mb-3">
             <label className="text-[10px] font-bold text-[#86868B] dark:text-gray-400 uppercase tracking-[0.06em] block mb-1">Valor por defecto (opcional)</label>
-            <input value={campo.valorDefault || ''} onChange={e => onUpdate({ ...campo, valorDefault: e.target.value })} placeholder="Dejar vacío si no aplica" className="w-full px-3 py-2 rounded-lg text-[13px] outline-none" style={{ border: '1px solid var(--border)', background: 'white' }} />
+            <input value={campo.valorDefault || ''} onChange={e => onUpdate({ ...campo, valorDefault: e.target.value })} placeholder="Dejar vacío si no aplica" className="w-full px-3 py-2 rounded-lg text-[13px] outline-none text-gray-900 dark:text-white" style={{ border: '1px solid var(--border)', background: 'var(--bg)' }} />
           </div>
           <div className="flex items-center gap-4">
             <label className="flex items-center gap-2 cursor-pointer">
@@ -229,7 +229,7 @@ export default function ConfigPage() {
           <div className="bg-white dark:bg-gray-800 rounded-3xl p-6 shadow-sm">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-purple-100 rounded-2xl flex items-center justify-center text-purple-600">
+                <div className="w-12 h-12 bg-purple-100 dark:bg-purple-900/40 rounded-2xl flex items-center justify-center text-purple-600 dark:text-purple-400">
                   <Bell size={24} />
                 </div>
                 <div>
@@ -247,7 +247,7 @@ export default function ConfigPage() {
           <div className="bg-white dark:bg-gray-800 rounded-3xl p-6 shadow-sm">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-green-100 rounded-2xl flex items-center justify-center text-green-600">
+                <div className="w-12 h-12 bg-green-100 dark:bg-green-900/40 rounded-2xl flex items-center justify-center text-green-600 dark:text-green-400">
                   <Shield size={24} />
                 </div>
                 <div>
@@ -255,7 +255,7 @@ export default function ConfigPage() {
                   <p className="text-sm text-gray-600 dark:text-gray-400 dark:text-gray-400">Controla quién puede ver tus documentos</p>
                 </div>
               </div>
-              <button className="px-4 py-2 bg-gray-200 text-gray-700 dark:text-gray-300 rounded-full hover:bg-gray-300 transition-colors font-semibold text-sm">
+              <button className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-full hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors font-semibold text-sm">
                 Editar
               </button>
             </div>
@@ -265,7 +265,7 @@ export default function ConfigPage() {
           <div className="bg-white dark:bg-gray-800 rounded-3xl p-6 shadow-sm">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-red-100 rounded-2xl flex items-center justify-center text-red-600">
+                <div className="w-12 h-12 bg-red-100 dark:bg-red-900/40 rounded-2xl flex items-center justify-center text-red-600 dark:text-red-400">
                   <Lock size={24} />
                 </div>
                 <div>
@@ -302,14 +302,14 @@ export default function ConfigPage() {
                   <div key={sec.id} className="p-4 bg-gray-50 dark:bg-gray-700 rounded-2xl">
                     <div className="flex items-center justify-between mb-3">
                       <h4 className="font-semibold text-gray-900 dark:text-white dark:text-white">{sec.nombre}</h4>
-                      <span className="text-xs px-2 py-1 bg-blue-100 text-blue-700 rounded-full">{sec.campos.length} campos</span>
+                      <span className="text-xs px-2 py-1 bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-400 rounded-full">{sec.campos.length} campos</span>
                     </div>
-                    <button onClick={() => eliminarSeccion(sec.id)} className="text-xs px-3 py-1.5 bg-red-100 text-red-600 rounded-full hover:bg-red-200 transition-colors font-semibold">
+                    <button onClick={() => eliminarSeccion(sec.id)} className="text-xs px-3 py-1.5 bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded-full hover:bg-red-200 dark:hover:bg-red-900/50 transition-colors font-semibold">
                       Eliminar sección
                     </button>
                   </div>
                 ))}
-                <button onClick={() => {}} className="w-full py-3 px-4 border-2 border-dashed border-gray-300 rounded-2xl text-gray-600 dark:text-gray-400 hover:text-blue-600 hover:border-blue-600 transition-colors font-semibold text-sm flex items-center justify-center gap-2">
+                <button onClick={() => {}} className="w-full py-3 px-4 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-2xl text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 hover:border-blue-600 dark:hover:border-blue-400 transition-colors font-semibold text-sm flex items-center justify-center gap-2">
                   <Plus size={16} /> Agregar sección
                 </button>
               </div>

@@ -72,7 +72,7 @@ export default function LibroPage() {
               </thead>
               <tbody>
                 {mockLibro.map((lib, idx) => (
-                  <tr key={lib.id} className="border-b border-gray-200 dark:border-gray-700 hover:bg-gray-50 transition-colors">
+                  <tr key={lib.id} className="border-b border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
                     <td className="px-6 py-4">
                       <span className="font-mono font-bold text-gray-900 dark:text-white dark:text-white">{lib.numeroInstrumento}</span>
                     </td>
@@ -91,10 +91,10 @@ export default function LibroPage() {
                       {lib.fechaFirma ? formatDate(lib.fechaFirma) : "—"}
                     </td>
                     <td className="px-6 py-4">
-                      <span className="px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs font-semibold">Firmado</span>
+                      <span className="px-3 py-1 bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-400 rounded-full text-xs font-semibold">Firmado</span>
                     </td>
                     <td className="px-6 py-4 text-right">
-                      <button className="px-3 py-1.5 bg-gray-200 text-gray-700 dark:text-gray-300 rounded-full hover:bg-gray-300 transition-colors text-xs font-semibold flex items-center gap-1.5 ml-auto">
+                      <button className="px-3 py-1.5 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-full hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors text-xs font-semibold flex items-center gap-1.5 ml-auto">
                         <Download size={14} /> PDF
                       </button>
                     </td>
@@ -104,7 +104,7 @@ export default function LibroPage() {
             </table>
           </div>
 
-          <div className="px-6 py-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 flex justify-between items-center">
+          <div className="px-6 py-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 flex justify-between items-center">
             <span className="text-sm text-gray-600 dark:text-gray-400 dark:text-gray-400">{mockLibro.length} instrumentos · {totalFolios} folios totales</span>
             <button className="px-6 py-2.5 bg-blue-600 text-white rounded-full hover:bg-blue-700 transition-colors font-semibold text-sm flex items-center gap-2">
               <Download size={16} /> Exportar para encuadernación

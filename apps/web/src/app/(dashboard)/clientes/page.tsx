@@ -99,7 +99,7 @@ export default function ClientesPage() {
             <Plus size={18} /> Nuevo cliente
           </Link>
           <Link href="/clientes/carga-masiva"
-            className="flex items-center gap-2 px-6 py-3 bg-gray-200 text-gray-700 dark:text-gray-300 rounded-full hover:bg-gray-300 transition-colors font-semibold text-sm whitespace-nowrap">
+            className="flex items-center gap-2 px-6 py-3 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-full hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors font-semibold text-sm whitespace-nowrap">
             <Upload size={18} /> Carga masiva
           </Link>
         </div>
@@ -123,7 +123,7 @@ export default function ClientesPage() {
                   Nuevo cliente
                 </Link>
                 <Link href="/clientes/carga-masiva"
-                  className="px-6 py-3 bg-gray-200 text-gray-700 dark:text-gray-300 rounded-full hover:bg-gray-300 transition-colors font-semibold text-sm">
+                  className="px-6 py-3 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-full hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors font-semibold text-sm">
                   Carga masiva
                 </Link>
               </div>
@@ -161,12 +161,12 @@ export default function ClientesPage() {
                       <button
                         onClick={() => handleEliminar(cliente.id!)}
                         disabled={eliminandoId === cliente.id}
-                        className="text-[11px] font-bold px-1.5 py-0.5 rounded-lg bg-red-50 text-red-600 hover:bg-red-100">
+                        className="text-[11px] font-bold px-1.5 py-0.5 rounded-lg bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/50">
                         {eliminandoId === cliente.id ? '...' : 'Sí'}
                       </button>
                       <button
                         onClick={() => setConfirmandoId(null)}
-                        className="text-[11px] font-bold px-1.5 py-0.5 rounded-lg bg-gray-100 text-gray-600 dark:text-gray-400 hover:bg-gray-200">
+                        className="text-[11px] font-bold px-1.5 py-0.5 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600">
                         No
                       </button>
                     </div>
