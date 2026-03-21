@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
-import { doc, getDoc, getDocFromServer } from 'firebase/firestore'
+import { doc, getDoc, getDocFromServer, deleteDoc } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
 import { InstrumentViewer } from '@/components/instrument-viewer/InstrumentViewer'
 import '@/styles/instrument-viewer.css'
@@ -89,6 +89,8 @@ export default function PreviewPage() {
       const data = await res.json()
       if (!res.ok) throw new Error(data.detail ?? 'Error generando secciones')
       if (!data.total) throw new Error('No se generaron secciones. Verifica que el instrumento tenga todos sus datos.')
+      // Borrar preview_edits stale para que cargar() lea el instrumento recién generado
+      await deleteDoc(doc(db, 'instrumentos', id as string, 'preview_edits', 'current')).catch(() => {})
       await cargar()
     } catch (e: any) {
       setError(e.message)
